@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build output
+.next
+out
+build
+
+# Git
+.git
+.gitignore
+
+# Dev environment files
+.env.local
+.env.development
+.zscripts/
+tool-results/
+scripts/
+examples/
+upload/
+worklog.md
+
+# Misc
+.DS_Store
+*.pem
+*.pid
+*.log
+*.sh
+daemon.sh
+run.sh
+run-server.sh
+start-server.sh
+start.sh
+keep-alive.js
+keep-alive.sh
+launcher.cjs
+Caddyfile
+README.md
