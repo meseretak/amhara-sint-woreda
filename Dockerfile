@@ -15,14 +15,16 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client (even if not fully used, avoids import errors)
+# Generate Prisma client (avoids import errors)
 RUN npx prisma generate || true
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=--max-old-space-size=512
 
-# Build Next.js standalone, then copy static assets
+# Build Next.js standalone output
 RUN npx next build
+
+# Copy static assets into standalone folder
 RUN cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
 
 # ── Stage 3: Production runner ────────────────────────────────
@@ -31,24 +33,24 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=8000
 ENV HOSTNAME=0.0.0.0
 
-# Create a non-root user
+# Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the standalone build (already contains public/ from builder step)
+# Copy standalone build (includes public/)
 COPY --from=builder /app/.next/standalone ./
 
-# Copy data directory (JSON-based storage) — writable at runtime
+# Copy data directory (JSON file storage — writable at runtime)
 COPY --from=builder /app/data ./data
 
-# Create uploads directory with correct ownership
+# Create uploads directory and set ownership
 RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs /app
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 8000
 
 CMD ["node", "server.js"]
