@@ -52,3 +52,22 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Tool results (not needed for deploy)
+tool-results/
+scripts/*.json
+scripts/*.py
+scripts/*.sh
+tadbaba_wiki.json
+upload/
+*.pid
+daemon.sh
+run.sh
+run-server.sh
+start-server.sh
+start.sh
+keep-alive.js
+keep-alive.sh
+launcher.cjs
+server.log
+dev.log
+worklog.md
