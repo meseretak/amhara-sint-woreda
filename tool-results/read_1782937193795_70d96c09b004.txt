@@ -1,0 +1,502 @@
+  1801→  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  1802→    e.preventDefault();
+  1803→    setFormStatus("loading");
+  1804→    try {
+  1805→      const formData = new FormData(e.currentTarget);
+  1806→      const data = Object.fromEntries(formData.entries());
+  1807→      const res = await fetch("/api/applications", {
+  1808→        method: "POST",
+  1809→        headers: { "Content-Type": "application/json" },
+  1810→        body: JSON.stringify({ ...data, vacancyId: selectedVacancy?.id, vacancyTitle: selectedVacancy?.title }),
+  1811→      });
+  1812→      if (res.ok) {
+  1813→        setFormStatus("success");
+  1814→        setTimeout(() => {
+  1815→          setSelectedVacancy(null);
+  1816→          setFormStatus("idle");
+  1817→        }, 3000);
+  1818→      } else {
+  1819→        setFormStatus("error");
+  1820→      }
+  1821→    } catch {
+  1822→      setFormStatus("error");
+  1823→    }
+  1824→  };
+  1825→
+  1826→  return (
+  1827→    <SubPage onNavigate={onNavigate} title="Job Vacancies" breadcrumb="News / Vacancy" badge="Careers">
+  1828→      <div className="max-w-4xl mx-auto space-y-6">
+  1829→        {formStatus === "success" && (
+  1830→          <ContentCard>
+  1831→            <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+  1832→              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+  1833→                <ThumbsUp className="w-7 h-7 text-green-600" />
+  1834→              </div>
+  1835→              <h3 className="font-bold text-green-800 text-lg mb-1">Application Submitted Successfully!</h3>
+  1836→              <p className="text-green-600 text-sm">Thank you for applying for the {selectedVacancy?.title} position. We will review your application and contact you if shortlisted.</p>
+  1837→            </div>
+  1838→          </ContentCard>
+  1839→        )}
+  1840→
+  1841→        {!selectedVacancy ? (
+  1842→          <>
+  1843→            <ContentCard>
+  1844→              <h2 className="text-xl font-bold text-[#0B3D2E] mb-2">Open Positions</h2>
+  1845→              <p className="text-[#0B3D2E]/60 text-sm">Browse available positions and click &quot;Apply Now&quot; to submit your application online.</p>
+  1846→            </ContentCard>
+  1847→            {vacancies.map((item, i) => (
+  1848→              <AnimatedSection key={item.id} delay={i * 60}>
+  1849→                <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all">
+  1850→                  <CardContent className="p-5 md:p-6">
+  1851→                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+  1852→                      <div className="min-w-0 flex-1">
+  1853→                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+  1854→                          <Badge className="bg-[#0B3D2E] text-white text-xs">{item.type}</Badge>
+  1855→                          <Badge variant="secondary" className="text-xs">{item.dept}</Badge>
+  1856→                          <Badge className="bg-[#EAB308]/15 text-[#A16207] text-xs border-[#EAB308]/30">{item.salary}</Badge>
+  1857→                        </div>
+  1858→                        <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1859→                        <p className="text-[#0B3D2E]/50 text-xs mb-1">Requirement: {item.requirement}</p>
+  1860→                        <p className="text-[#0B3D2E]/40 text-xs">Deadline: {item.deadline}</p>
+  1861→                      </div>
+  1862→                      <button
+  1863→                        onClick={() => { setSelectedVacancy(item); setFormStatus("idle"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+  1864→                        className="shrink-0 inline-flex items-center gap-2 bg-[#0B3D2E] hover:bg-[#145A44] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg"
+  1865→                      >
+  1866→                        Apply Now <ChevronRight className="w-4 h-4" />
+  1867→                      </button>
+  1868→                    </div>
+  1869→                  </CardContent>
+  1870→                </Card>
+  1871→              </AnimatedSection>
+  1872→            ))}
+  1873→          </>
+  1874→        ) : (
+  1875→          <>
+  1876→            <button
+  1877→              onClick={() => { setSelectedVacancy(null); setFormStatus("idle"); }}
+  1878→              className="inline-flex items-center gap-2 text-[#0B3D2E]/60 hover:text-[#0B3D2E] text-sm font-medium transition-colors mb-2"
+  1879→            >
+  1880→              <ArrowLeft className="w-4 h-4" /> Back to Vacancies
+  1881→            </button>
+  1882→            <ContentCard>
+  1883→              <div className="bg-gradient-to-r from-[#0B3D2E] to-[#145A44] rounded-xl p-5 text-white mb-6">
+  1884→                <div className="flex items-center gap-2 mb-2">
+  1885→                  <Badge className="bg-[#EAB308] text-[#0B3D2E] text-xs font-bold">{selectedVacancy.type}</Badge>
+  1886→                  <Badge className="bg-white/15 text-white text-xs">{selectedVacancy.dept}</Badge>
+  1887→                </div>
+  1888→                <h2 className="text-lg md:text-xl font-bold mb-1">{selectedVacancy.title}</h2>
+  1889→                <div className="flex flex-wrap gap-4 text-xs text-white/70 mt-2">
+  1890→                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Deadline: {selectedVacancy.deadline}</span>
+  1891→                  <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />{selectedVacancy.salary}</span>
+  1892→                </div>
+  1893→              </div>
+  1894→
+  1895→              <form onSubmit={handleSubmit} className="space-y-6">
+  1896→                {/* Personal Information */}
+  1897→                <div>
+  1898→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Users className="w-5 h-5 text-[#EAB308]" /> Personal Information</h3>
+  1899→                  <div className="grid md:grid-cols-2 gap-4">
+  1900→                    <div>
+  1901→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Full Name *</label>
+  1902→                      <input name="fullName" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="Enter your full name" />
+  1903→                    </div>
+  1904→                    <div>
+  1905→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Phone Number *</label>
+  1906→                      <input name="phone" required type="tel" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="+251 9XX XXX XXX" />
+  1907→                    </div>
+  1908→                    <div>
+  1909→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Email Address *</label>
+  1910→                      <input name="email" required type="email" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="your@email.com" />
+  1911→                    </div>
+  1912→                    <div>
+  1913→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Address</label>
+  1914→                      <input name="address" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="City, Woreda, Zone" />
+  1915→                    </div>
+  1916→                    <div>
+  1917→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Age *</label>
+  1918→                      <input name="age" required type="number" min="18" max="65" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="18-65" />
+  1919→                    </div>
+  1920→                    <div>
+  1921→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Gender *</label>
+  1922→                      <select name="gender" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  1923→                        <option value="">Select</option>
+  1924→                        <option value="Male">Male</option>
+  1925→                        <option value="Female">Female</option>
+  1926→                      </select>
+  1927→                    </div>
+  1928→                    <div className="md:col-span-2">
+  1929→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Marital Status</label>
+  1930→                      <select name="maritalStatus" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  1931→                        <option value="">Select</option>
+  1932→                        <option value="Single">Single</option>
+  1933→                        <option value="Married">Married</option>
+  1934→                        <option value="Divorced">Divorced</option>
+  1935→                        <option value="Widowed">Widowed</option>
+  1936→                      </select>
+  1937→                    </div>
+  1938→                  </div>
+  1939→                </div>
+  1940→
+  1941→                {/* Educational Background */}
+  1942→                <div>
+  1943→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-[#EAB308]" /> Educational Background</h3>
+  1944→                  <div className="grid md:grid-cols-2 gap-4">
+  1945→                    <div>
+  1946→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Highest Qualification *</label>
+  1947→                      <select name="qualification" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  1948→                        <option value="">Select</option>
+  1949→                        <option value="Certificate">Certificate</option>
+  1950→                        <option value="Diploma">Diploma</option>
+  1951→                        <option value="BA/BSc">BA / BSc Degree</option>
+  1952→                        <option value="MA/MSc">MA / MSc Degree</option>
+  1953→                        <option value="PhD">PhD</option>
+  1954→                      </select>
+  1955→                    </div>
+  1956→                    <div>
+  1957→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Field of Study *</label>
+  1958→                      <input name="fieldOfStudy" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="e.g., Accounting, Computer Science" />
+  1959→                    </div>
+  1960→                    <div>
+  1961→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Institution *</label>
+  1962→                      <input name="institution" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="University/College name" />
+  1963→                    </div>
+  1964→                    <div>
+  1965→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Year of Graduation *</label>
+  1966→                      <input name="gradYear" required type="number" min="1980" max="2026" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="e.g., 2022" />
+  1967→                    </div>
+  1968→                  </div>
+  1969→                </div>
+  1970→
+  1971→                {/* Work Experience */}
+  1972→                <div>
+  1973→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5 text-[#EAB308]" /> Work Experience</h3>
+  1974→                  <div className="grid md:grid-cols-2 gap-4">
+  1975→                    <div className="md:col-span-2">
+  1976→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Most Recent Organization</label>
+  1977→                      <input name="company" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="Company / Organization name" />
+  1978→                    </div>
+  1979→                    <div>
+  1980→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Position Held</label>
+  1981→                      <input name="position" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="Job title" />
+  1982→                    </div>
+  1983→                    <div>
+  1984→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Duration</label>
+  1985→                      <input name="duration" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="e.g., 2 years, 6 months" />
+  1986→                    </div>
+  1987→                    <div className="md:col-span-2">
+  1988→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Key Responsibilities</label>
+  1989→                      <textarea name="responsibilities" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all resize-none" placeholder="Describe your key responsibilities..." />
+  1990→                    </div>
+  1991→                  </div>
+  1992→                </div>
+  1993→
+  1994→                {/* Documents */}
+  1995→                <div>
+  1996→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><FileText className="w-5 h-5 text-[#EAB308]" /> Documents</h3>
+  1997→                  <div className="grid md:grid-cols-2 gap-4">
+  1998→                    <div>
+  1999→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Upload CV / Resume (PDF) *</label>
+  2000→                      <input name="cv" required type="file" accept=".pdf,.doc,.docx" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-[#0B3D2E] file:text-white file:text-xs file:font-semibold file:cursor-pointer" />
+  2001→                    </div>
+  2002→                    <div>
+  2003→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Upload Cover Letter (PDF)</label>
+  2004→                      <input name="coverLetter" type="file" accept=".pdf,.doc,.docx" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-[#0B3D2E] file:text-white file:text-xs file:font-semibold file:cursor-pointer" />
+  2005→                    </div>
+  2006→                  </div>
+  2007→                </div>
+  2008→
+  2009→                {/* Additional Info */}
+  2010→                <div>
+  2011→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Globe className="w-5 h-5 text-[#EAB308]" /> Additional Information</h3>
+  2012→                  <div className="grid md:grid-cols-2 gap-4">
+  2013→                    <div>
+  2014→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">How did you hear about this position?</label>
+  2015→                      <select name="source" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  2016→                        <option value="">Select</option>
+  2017→                        <option value="Website">Woreda Website</option>
+  2018→                        <option value="Social Media">Social Media</option>
+  2019→                        <option value="Friend/Colleague">Friend / Colleague</option>
+  2020→                        <option value="Newspaper">Newspaper</option>
+  2021→                        <option value="Other">Other</option>
+  2022→                      </select>
+  2023→                    </div>
+  2024→                    <div>
+  2025→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Available Start Date *</label>
+  2026→                      <input name="startDate" required type="date" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" />
+  2027→                    </div>
+  2028→                  </div>
+  2029→                </div>
+  2030→
+  2031→                {formStatus === "error" && (
+  2032→                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">Something went wrong. Please try again or submit your application in person.</div>
+  2033→                )}
+  2034→
+  2035→                <div className="flex items-center gap-3 pt-2">
+  2036→                  <button
+  2037→                    type="submit"
+  2038→                    disabled={formStatus === "loading"}
+  2039→                    className="inline-flex items-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-bold text-sm px-8 py-3 rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+  2040→                  >
+  2041→                    {formStatus === "loading" ? (
+  2042→                      <><span className="w-4 h-4 border-2 border-[#0B3D2E]/30 border-t-[#0B3D2E] rounded-full animate-spin" /> Submitting...</>
+  2043→                    ) : (
+  2044→                      <><FileText className="w-4 h-4" /> Submit Application</>
+  2045→                    )}
+  2046→                  </button>
+  2047→                  <button
+  2048→                    type="button"
+  2049→                    onClick={() => { setSelectedVacancy(null); setFormStatus("idle"); }}
+  2050→                    className="inline-flex items-center gap-2 text-[#0B3D2E]/50 hover:text-[#0B3D2E] text-sm font-medium transition-colors px-4 py-3"
+  2051→                  >
+  2052→                    Cancel
+  2053→                  </button>
+  2054→                </div>
+  2055→              </form>
+  2056→            </ContentCard>
+  2057→          </>
+  2058→        )}
+  2059→      </div>
+  2060→    </SubPage>
+  2061→  );
+  2062→}
+  2063→
+  2064→/* ─── NEWS: Announcements ──────────────────────────────────── */
+  2065→function AnnouncementsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2066→  return (
+  2067→    <SubPage onNavigate={onNavigate} title="Announcements" breadcrumb="News / Announcements" badge="Public Notices">
+  2068→      <div className="max-w-4xl mx-auto space-y-4">
+  2069→        {[
+  2070→          { date: "June 25, 2026", title: "Public Holiday Notice - Eid al-Adha", summary: "All woreda offices will be closed for the Eid al-Adha public holiday.", icon: Flag },
+  2071→          { date: "June 20, 2026", title: "Community Meeting on New Development Plan", summary: "All residents are invited to attend the public consultation on the 5-year development plan.", icon: UsersRound },
+  2072→          { date: "June 12, 2026", title: "Tax Payment Deadline Extended", summary: "The deadline for annual property and income tax payments has been extended to August 30.", icon: Banknote },
+  2073→          { date: "June 1, 2026", title: "New Kebele Boundaries Announced", summary: "Following the recent census, adjustments to kebele administrative boundaries take effect.", icon: MapPin },
+  2074→          { date: "May 28, 2026", title: "Vaccination Campaign for Livestock", summary: "Free livestock vaccination campaign across all kebeles. All farmers encouraged to participate.", icon: Baby },
+  2075→        ].map((item, i) => (
+  2076→          <ContentCard key={item.title} delay={i * 60}>
+  2077→            <div className="flex items-start gap-4">
+  2078→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAB308] to-[#F59E0B] flex items-center justify-center shrink-0 shadow">
+  2079→                <item.icon className="w-5 h-5 text-white" />
+  2080→              </div>
+  2081→              <div className="min-w-0">
+  2082→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+  2083→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  2084→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+  2085→              </div>
+  2086→            </div>
+  2087→          </ContentCard>
+  2088→        ))}
+  2089→      </div>
+  2090→    </SubPage>
+  2091→  );
+  2092→}
+  2093→
+  2094→/* ─── CONTACT PAGE ─────────────────────────────────────────── */
+  2095→function ContactPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2096→  return (
+  2097→    <SubPage onNavigate={onNavigate} title="Contact Us" breadcrumb="Contact" badge="Get In Touch">
+  2098→      <div className="max-w-4xl mx-auto">
+  2099→        <div className="grid md:grid-cols-3 gap-6 mb-10">
+  2100→          {[
+  2101→            { title: "Office Location", detail: "Amhara Sint Town\nSouth Wollo Zone\nAmhara Region, Ethiopia", icon: MapPinned, color: "from-[#0B3D2E] to-[#10B981]" },
+  2102→            { title: "Phone", detail: "+251 33 XXX XXXX\n\nOffice Hours:\nMon-Fri, 8:00 AM - 5:00 PM", icon: Phone, color: "from-[#EAB308] to-[#F59E0B]" },
+  2103→            { title: "Email", detail: "info@amharasint.gov.et\n\nFor general inquiries\nand service requests", icon: Mail, color: "from-[#DC2626] to-[#EF4444]" },
+  2104→          ].map((c, i) => (
+  2105→            <ContentCard key={c.title} delay={i * 100}>
+  2106→              <div className="text-center">
+  2107→                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+  2108→                  <c.icon className="w-7 h-7 text-white" />
+  2109→                </div>
+  2110→                <h3 className="font-bold text-[#0B3D2E] mb-2">{c.title}</h3>
+  2111→                <p className="text-[#0B3D2E]/55 text-sm whitespace-pre-line">{c.detail}</p>
+  2112→              </div>
+  2113→            </ContentCard>
+  2114→          ))}
+  2115→        </div>
+  2116→        <ContentCard delay={300}>
+  2117→          <h2 className="text-xl font-bold text-[#0B3D2E] mb-4">Key Office Contacts</h2>
+  2118→          <div className="overflow-x-auto">
+  2119→            <table className="w-full text-sm">
+  2120→              <thead>
+  2121→                <tr className="border-b border-[#0B3D2E]/10">
+  2122→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Office</th>
+  2123→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Contact Person</th>
+  2124→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Phone</th>
+  2125→                </tr>
+  2126→              </thead>
+  2127→              <tbody className="divide-y divide-[#0B3D2E]/5">
+  2128→                {[
+  2129→                  { office: "Woreda Administrator", person: "Chief Administrator", phone: "+251 33 XXX XXXX" },
+  2130→                  { office: "Education Office", person: "Head of Education", phone: "+251 33 XXX XXXX" },
+  2131→                  { office: "Health Office", person: "Head of Health", phone: "+251 33 XXX XXXX" },
+  2132→                  { office: "Agriculture Office", person: "Head of Agriculture", phone: "+251 33 XXX XXXX" },
+  2133→                  { office: "Finance Office", person: "Head of Finance", phone: "+251 33 XXX XXXX" },
+  2134→                ].map((row) => (
+  2135→                  <tr key={row.office} className="hover:bg-[#F0FDF4] transition-colors">
+  2136→                    <td className="py-3 px-4 text-[#0B3D2E] font-medium">{row.office}</td>
+  2137→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.person}</td>
+  2138→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.phone}</td>
+  2139→                  </tr>
+  2140→                ))}
+  2141→              </tbody>
+  2142→            </table>
+  2143→          </div>
+  2144→        </ContentCard>
+  2145→      </div>
+  2146→    </SubPage>
+  2147→  );
+  2148→}
+  2149→
+  2150→/* ─── NEWSLETTER WIDGET ────────────────────────────────────── */
+  2151→function NewsletterWidget() {
+  2152→  const [email, setEmail] = useState("");
+  2153→  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  2154→
+  2155→  const handleSubscribe = async (e: React.FormEvent) => {
+  2156→    e.preventDefault();
+  2157→    if (!email) return;
+  2158→    setStatus("loading");
+  2159→    try {
+  2160→      const res = await fetch("/api/subscribe", {
+  2161→        method: "POST",
+  2162→        headers: { "Content-Type": "application/json" },
+  2163→        body: JSON.stringify({ email }),
+  2164→      });
+  2165→      if (res.ok) {
+  2166→        setStatus("success");
+  2167→        setEmail("");
+  2168→      } else {
+  2169→        setStatus("error");
+  2170→      }
+  2171→    } catch {
+  2172→      setStatus("error");
+  2173→    }
+  2174→  };
+  2175→
+  2176→  return (
+  2177→    <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+  2178→      <div className="flex">
+  2179→        <input
+  2180→          type="email"
+  2181→          value={email}
+  2182→          onChange={(e) => setEmail(e.target.value)}
+  2183→          placeholder="Your email"
+  2184→          required
+  2185→          className="flex-1 min-w-0 h-9 bg-white/10 border border-white/15 rounded-l-lg px-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#EAB308]/50"
+  2186→        />
+  2187→        <button
+  2188→          type="submit"
+  2189→          disabled={status === "loading"}
+  2190→          className="h-9 px-3 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-semibold text-xs rounded-r-lg transition-colors disabled:opacity-60 shrink-0"
+  2191→        >
+  2192→          {status === "loading" ? "..." : "Join"}
+  2193→        </button>
+  2194→      </div>
+  2195→      {status === "success" && (
+  2196→        <p className="text-[#86EFAC] text-xs">Subscribed successfully!</p>
+  2197→      )}
+  2198→      {status === "error" && (
+  2199→        <p className="text-red-300 text-xs">Something went wrong. Try again.</p>
+  2200→      )}
+  2201→    </form>
+  2202→  );
+  2203→}
+  2204→
+  2205→/* ─── FOOTER ───────────────────────────────────────────────── */
+  2206→function Footer({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2207→  const goPage = (p: PageId) => {
+  2208→    onNavigate(p);
+  2209→    window.scrollTo({ top: 0, behavior: "smooth" });
+  2210→  };
+  2211→  return (
+  2212→    <footer className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #062B1F 0%, #0B3D2E 30%, #0D4A35 50%, #0B3D2E 70%, #062B1F 100%)" }}>
+  2213→      <div className="h-1 bg-gradient-to-r from-[#EAB308] via-[#FACC15] to-[#EAB308]" />
+  2214→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+  2215→        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 md:gap-8">
+  2216→          <div>
+  2217→            <div className="flex items-center gap-3 mb-5">
+  2218→              <img src="/logo.png" alt="Amhara Sint Woreda Logo" className="h-16 w-auto rounded-xl shadow-lg ring-2 ring-white/20" />
+  2219→              <div>
+  2220→                <h3 className="text-white font-bold text-base leading-tight">Amhara Sint</h3>
+  2221→                <p className="text-[#86EFAC] text-xs font-medium">Woreda Administration</p>
+  2222→              </div>
+  2223→            </div>
+  2224→            <p className="text-white/50 text-sm leading-relaxed">Committed to transparency, development, and the well-being of every citizen.</p>
+  2225→          </div>
+  2226→          <div>
+  2227→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">About</h4>
+  2228→            <ul className="space-y-2.5">
+  2229→              {[
+  2230→                { label: "History & Background", href: "about-history" as PageId },
+  2231→                { label: "Overview", href: "about-overview" as PageId },
+  2232→                { label: "Location", href: "about-location" as PageId },
+  2233→              ].map((l) => (
+  2234→                <li key={l.href}><button onClick={() => goPage(l.href)} className="text-white/50 hover:text-[#EAB308] text-sm transition-colors flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" />{l.label}</button></li>
+  2235→              ))}
+  2236→            </ul>
+  2237→          </div>
+  2238→          <div>
+  2239→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Services</h4>
+  2240→            <ul className="space-y-2.5">
+  2241→              {[
+  2242→                { label: "Education", href: "svc-education" as PageId },
+  2243→                { label: "Health", href: "svc-health" as PageId },
+  2244→                { label: "Agriculture", href: "svc-agriculture" as PageId },
+  2245→                { label: "Transport", href: "svc-transport" as PageId },
+  2246→              ].map((l) => (
+  2247→                <li key={l.href}><button onClick={() => goPage(l.href)} className="text-white/50 hover:text-[#EAB308] text-sm transition-colors flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" />{l.label}</button></li>
+  2248→              ))}
+  2249→            </ul>
+  2250→          </div>
+  2251→          <div>
+  2252→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Contact</h4>
+  2253→            <div className="space-y-3">
+  2254→              <div className="flex items-start gap-2.5"><MapPinned className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" /><p className="text-white/50 text-sm">Amhara Sint Town, South Wollo Zone, Amhara, Ethiopia</p></div>
+  2255→              <div className="flex items-center gap-2.5"><Phone className="w-4 h-4 text-[#EAB308] shrink-0" /><p className="text-white/50 text-sm">+251 33 XXX XXXX</p></div>
+  2256→              <div className="flex items-center gap-2.5"><Mail className="w-4 h-4 text-[#EAB308] shrink-0" /><p className="text-white/50 text-sm">info@amharasint.gov.et</p></div>
+  2257→            </div>
+  2258→          </div>
+  2259→          <div>
+  2260→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Newsletter</h4>
+  2261→            <p className="text-white/50 text-sm mb-3">Stay updated with the latest from Amhara Sint.</p>
+  2262→            <NewsletterWidget />
+  2263→          </div>
+  2264→          <div>
+  2265→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Follow Us</h4>
+  2266→            <div className="flex flex-wrap gap-2.5">
+  2267→              {[
+  2268→                { icon: Facebook, url: "https://facebook.com/AmharaSint", color: "bg-[#1877F2] hover:bg-[#1565C0]" },
+  2269→                { icon: Youtube, url: "https://youtube.com/@AmharaSint", color: "bg-[#FF0000] hover:bg-[#CC0000]" },
+  2270→                { icon: Linkedin, url: "https://linkedin.com/company/AmharaSint", color: "bg-[#0A66C2] hover:bg-[#084F97]" },
+  2271→                { icon: Github, url: "https://github.com/AmharaSint", color: "bg-[#333] hover:bg-[#24292F]" },
+  2272→                { icon: Instagram, url: "https://instagram.com/AmharaSint", color: "bg-[#E4405F] hover:bg-[#C13584]" },
+  2273→                { icon: Twitter, url: "https://twitter.com/AmharaSint", color: "bg-[#1DA1F2] hover:bg-[#0D8BD9]" },
+  2274→              ].map((s) => (
+  2275→                <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200`}>
+  2276→                  <s.icon className="w-4.5 h-4.5" />
+  2277→                </a>
+  2278→              ))}
+  2279→            </div>
+  2280→          </div>
+  2281→        </div>
+  2282→      </div>
+  2283→      <div className="border-t border-white/10">
+  2284→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col items-center gap-3">
+  2285→          <p className="text-white/40 text-xs">&copy; {new Date().getFullYear()} Amhara Sint Woreda Administration. All rights reserved.</p>
+  2286→          <div className="flex items-center gap-3 bg-[#EAB308]/15 border border-[#EAB308]/25 rounded-full px-5 py-2.5 hover:bg-[#EAB308]/25 transition-all duration-300 group">
+  2287→            <div className="w-8 h-8 rounded-full bg-[#EAB308] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+  2288→              <span className="text-[#0B3D2E] font-extrabold text-xs">MA</span>
+  2289→            </div>
+  2290→            <div className="flex flex-col">
+  2291→              <span className="text-white font-bold text-sm leading-tight">Developed by Meseret Akalu</span>
+  2292→              <span className="text-[#EAB308] font-semibold text-xs leading-tight">+251 912 465 247</span>
+  2293→            </div>
+  2294→          </div>
+  2295→        </div>
+  2296→      </div>
+  2297→    </footer>
+  2298→  );
+  2299→}
+  2300→
+
+[showing lines 1801-2300 of 2633; use offset=2301 with limit to continue reading]

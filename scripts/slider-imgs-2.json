@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "query": "Ethiopian rural village community development Africa",
+  "count": 3,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg",
+      "caption": "",
+      "source": "Mongabay",
+      "original_width": "1280px",
+      "original_height": "960px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg",
+      "caption": "",
+      "source": "The Conversation",
+      "original_width": "1356px",
+      "original_height": "668px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/4db62da31bf6.png",
+      "caption": "",
+      "source": "Millennium Promise Alliance",
+      "original_width": "1920px",
+      "original_height": "1452px"
+    }
+  ]
+}

@@ -1,0 +1,932 @@
+     1→"use client";
+     2→import { useState, useEffect, useRef } from "react";
+     3→import {
+     4→  ChevronRight, BookOpen, Globe, MapPin, TreePine, Landmark, UserCheck, Building, Shield,
+     5→  GraduationCap, HeartPulse, Tractor, Truck, Droplets, Scale, Banknote, Newspaper, Briefcase,
+     6→  Award, PieChart, Baby, Wheat, UsersRound, Users, Siren, ClipboardList, Flag, Phone, Mail, MapPinned,
+     7→  Facebook, Youtube, Linkedin, Github, Instagram, Twitter, ExternalLink, Image as ImageIcon, Camera, School, X,
+     8→  Upload, FileText, Clock, CheckCircle, AlertCircle, ChevronDown, ChevronUp, Send,
+     9→} from "lucide-react";
+    10→import { Card, CardContent } from "@/components/ui/card";
+    11→import { Badge } from "@/components/ui/badge";
+    12→import { Progress } from "@/components/ui/progress";
+    13→import { AnimatedSection } from "./animations";
+    14→import type { PageId } from "@/lib/types";
+    15→
+    16→/* ─── SIDEBAR ──────────────────────────────────────────────── */
+    17→export function Sidebar({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+    18→  const goPage = (p: PageId) => {
+    19→    onNavigate(p);
+    20→    window.scrollTo({ top: 0, behavior: "smooth" });
+    21→  };
+    22→  const socialLinks = [
+    23→    { label: "Facebook", icon: Facebook, url: "https://facebook.com/AmharaSint", color: "hover:bg-[#1877F2] hover:text-white" },
+    24→    { label: "YouTube", icon: Youtube, url: "https://youtube.com/@AmharaSint", color: "hover:bg-[#FF0000] hover:text-white" },
+    25→    { label: "LinkedIn", icon: Linkedin, url: "https://linkedin.com/company/AmharaSint", color: "hover:bg-[#0A66C2] hover:text-white" },
+    26→    { label: "GitHub", icon: Github, url: "https://github.com/AmharaSint", color: "hover:bg-[#333] hover:text-white" },
+    27→    { label: "Instagram", icon: Instagram, url: "https://instagram.com/AmharaSint", color: "hover:bg-[#E4405F] hover:text-white" },
+    28→    { label: "Twitter / X", icon: Twitter, url: "https://twitter.com/AmharaSint", color: "hover:bg-[#1DA1F2] hover:text-white" },
+    29→    { label: "Telegram", icon: ExternalLink, url: "https://t.me/AmharaSint", color: "hover:bg-[#0088CC] hover:text-white" },
+    30→  ];
+    31→  return (
+    32→    <aside className="space-y-6">
+    33→      {/* Quick Links */}
+    34→      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+    35→        <div className="bg-gradient-to-r from-[#0B3D2E] to-[#145A44] px-5 py-3.5">
+    36→          <h4 className="text-white font-bold text-sm uppercase tracking-wider">Quick Links</h4>
+    37→        </div>
+    38→        <div className="p-4 space-y-1.5">
+    39→          <button onClick={() => goPage("bids")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+    40→            <Briefcase className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+    41→            Bids & Tenders
+    42→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+    43→          </button>
+    44→          <button onClick={() => goPage("vacancy")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+    45→            <ClipboardList className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+    46→            Vacancy
+    47→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+    48→          </button>
+    49→          <button onClick={() => goPage("news-news")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+    50→            <Newspaper className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+    51→            Latest News
+    52→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+    53→          </button>
+    54→          <button onClick={() => goPage("gallery")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+    55→            <ImageIcon className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+    56→            Photo Gallery
+    57→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+    58→          </button>
+    59→        </div>
+    60→      </div>
+    61→      {/* Social Media */}
+    62→      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+    63→        <div className="bg-gradient-to-r from-[#EAB308] to-[#CA8A04] px-5 py-3.5">
+    64→          <h4 className="text-[#0B3D2E] font-bold text-sm uppercase tracking-wider">Follow Us</h4>
+    65→        </div>
+    66→        <div className="p-4 grid grid-cols-2 gap-2.5">
+    67→          {socialLinks.map((social) => (
+    68→            <a
+    69→              key={social.label}
+    70→              href={social.url}
+    71→              target="_blank"
+    72→              rel="noopener noreferrer"
+    73→              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 text-[#0B3D2E]/60 text-xs font-medium transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${social.color}`}
+    74→            >
+    75→              <social.icon className="w-4 h-4 shrink-0" />
+    76→              <span className="truncate">{social.label}</span>
+    77→            </a>
+    78→          ))}
+    79→        </div>
+    80→      </div>
+    81→    </aside>
+    82→  );
+    83→}
+    84→
+    85→/* ─── SUB PAGE WRAPPER ──────────────────────────────────────── */
+    86→export function SubPage({
+    87→  title,
+    88→  breadcrumb,
+    89→  badge,
+    90→  badgeColor,
+    91→  onNavigate,
+    92→  children,
+    93→}: {
+    94→  title: string;
+    95→  breadcrumb: string;
+    96→  badge: string;
+    97→  badgeColor?: string;
+    98→  onNavigate: (p: PageId) => void;
+    99→  children: React.ReactNode;
+   100→}) {
+   101→  return (
+   102→    <div className="pt-24 pb-16">
+   103→      {/* Page Header */}
+   104→      <div className="bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] py-12 md:py-16">
+   105→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   106→          <p className="text-white/50 text-sm mb-2">Home / {breadcrumb}</p>
+   107→          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">{title}</h1>
+   108→          <Badge className={`${badgeColor || "bg-[#EAB308]/20 text-[#EAB308] border-[#EAB308]/30"} text-sm font-medium`}>{badge}</Badge>
+   109→        </div>
+   110→      </div>
+   111→      {/* Content with Sidebar */}
+   112→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col lg:flex-row gap-8">
+   113→        <div className="flex-1 min-w-0">{children}</div>
+   114→        <div className="w-full lg:w-72 shrink-0">
+   115→          <Sidebar onNavigate={onNavigate} />
+   116→        </div>
+   117→      </div>
+   118→    </div>
+   119→  );
+   120→}
+   121→
+   122→/* ─── Content Card ──────────────────────────────────────────── */
+   123→export function ContentCard({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+   124→  return (
+   125→    <AnimatedSection delay={delay}>
+   126→      <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all duration-300">
+   127→        <CardContent className="p-6 md:p-8">{children}</CardContent>
+   128→      </Card>
+   129→    </AnimatedSection>
+   130→  );
+   131→}
+   132→
+   133→/* ─── ABOUT: History & Background ───────────────────────────── */
+   134→export function AboutHistoryPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   135→  return (
+   136→    <SubPage onNavigate={onNavigate} title="History & Background" breadcrumb="About / History" badge="About the Woreda">
+   137→      <div className="space-y-8 max-w-4xl mx-auto">
+   138→        <ContentCard>
+   139→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   140→            <BookOpen className="w-6 h-6 text-[#EAB308]" /> Origins of Amhara Sint
+   141→          </h2>
+   142→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   143→            Amhara Sint is one of the historic woredas in the South Wollo Zone of the Amhara Region, Ethiopia. The name &ldquo;Sayint&rdquo; carries deep historical significance in the local Amharic context, referring to a place of gathering and administration. The woreda was formally established during the imperial era and has since evolved through various administrative reorganizations under the Derg regime and the current federal system.
+   144→          </p>
+   145→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   146→            Throughout its history, Amhara Sint has been known for its strategic location along trade routes connecting the highlands to the lowlands. The area has witnessed significant historical events, including resistance movements and community-led development initiatives that have shaped the character of the woreda.
+   147→          </p>
+   148→        </ContentCard>
+   149→        <ContentCard delay={100}>
+   150→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   151→            <Landmark className="w-6 h-6 text-[#EAB308]" /> Cultural Heritage
+   152→          </h2>
+   153→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   154→            The woreda is home to a rich cultural heritage that includes traditional Ethiopian Orthodox Christian practices, unique musical traditions, and vibrant festival celebrations. The community maintains strong ties to customary dispute resolution mechanisms and communal labor traditions such as &ldquo;Debo&rdquo; and &ldquo;Idir.&rdquo;
+   155→          </p>
+   156→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   157→            Local crafts, including pottery, weaving, and blacksmithing, continue to be practiced and passed down through generations. The woreda&apos;s cultural identity is further enriched by its connection to the broader Amhara cultural sphere while maintaining its own unique local traditions and practices.
+   158→          </p>
+   159→        </ContentCard>
+   160→      </div>
+   161→    </SubPage>
+   162→  );
+   163→}
+   164→
+   165→/* ─── ABOUT: Overview ──────────────────────────────────────── */
+   166→export function AboutOverviewPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   167→  return (
+   168→    <SubPage onNavigate={onNavigate} title="Overview" breadcrumb="About / Overview" badge="General Information">
+   169→      <div className="space-y-8 max-w-4xl mx-auto">
+   170→        <ContentCard>
+   171→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   172→            <Globe className="w-6 h-6 text-[#EAB308]" /> About Amhara Sint Woreda
+   173→          </h2>
+   174→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   175→            Amhara Sint Woreda is an administrative district located in the South Wollo Zone of the Amhara Regional State, Ethiopia. Covering an area of approximately 1,245 square kilometers, the woreda is home to an estimated population of 142,350 people spread across 22 kebeles (local administrative units). The woreda administration is headquartered in the town of Amhara Sint.
+   176→          </p>
+   177→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   178→            The woreda operates under the federal governance structure of Ethiopia, with administrative layers including the woreda council, executive committee, and kebele-level administrations. The local government is responsible for delivering public services, managing development programs, and maintaining law and order within its jurisdiction.
+   179→          </p>
+   180→        </ContentCard>
+   181→        <div className="grid md:grid-cols-2 gap-6">
+   182→          <ContentCard delay={100}>
+   183→            <h3 className="font-bold text-[#0B3D2E] mb-3">Key Facts</h3>
+   184→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   185→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Zone: South Wollo</li>
+   186→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Region: Amhara Regional State</li>
+   187→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Population: ~142,350</li>
+   188→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Area: ~1,245 km&sup2;</li>
+   189→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Kebeles: 22</li>
+   190→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Elevation: 1,500 - 3,200m</li>
+   191→            </ul>
+   192→          </ContentCard>
+   193→          <ContentCard delay={150}>
+   194→            <h3 className="font-bold text-[#0B3D2E] mb-3">Economy</h3>
+   195→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   196→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Primary: Agriculture (75%+)</li>
+   197→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Crops: Teff, Barley, Wheat, Sorghum</li>
+   198→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Livestock: Cattle, Sheep, Goats</li>
+   199→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Growing: Small enterprises & trade</li>
+   200→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Cooperatives: 120+ registered</li>
+   201→            </ul>
+   202→          </ContentCard>
+   203→        </div>
+   204→      </div>
+   205→    </SubPage>
+   206→  );
+   207→}
+   208→
+   209→/* ─── ABOUT: Location ─────────────────────────────────────── */
+   210→export function AboutLocationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   211→  return (
+   212→    <SubPage onNavigate={onNavigate} title="Location & Geography" breadcrumb="About / Location" badge="Geographic Profile">
+   213→      <div className="space-y-8 max-w-4xl mx-auto">
+   214→        <ContentCard>
+   215→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   216→            <MapPin className="w-6 h-6 text-[#EAB308]" /> Geographic Location
+   217→          </h2>
+   218→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   219→            Amhara Sint Woreda is situated in the South Wollo Zone of the Amhara Regional State, in the northern highlands of Ethiopia. The woreda is characterized by its diverse topography, featuring deep river gorges, rolling highland plateaus, and fertile agricultural valleys that drain into the Blue Nile basin.
+   220→          </p>
+   221→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   222→            The landscape ranges from 1,500 meters in the lowland river valleys to over 3,200 meters in the highland peaks, creating distinct agro-ecological zones that support diverse agricultural activities. The area is fed by several seasonal rivers and streams, making it a critical watershed for the larger region.
+   223→          </p>
+   224→        </ContentCard>
+   225→        <ContentCard delay={100}>
+   226→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   227→            <TreePine className="w-6 h-6 text-[#EAB308]" /> Climate & Environment
+   228→          </h2>
+   229→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   230→            The woreda experiences a tropical highland climate with two main rainy seasons. The &ldquo;Kiremt&rdquo; (main rainy season) runs from June to September, while the &ldquo;Belg&rdquo; (short rains) occur from February to April. Average annual rainfall ranges from 800 to 1,200 mm, supporting both rain-fed and irrigated agriculture.
+   231→          </p>
+   232→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   233→            Forest coverage stands at approximately 18%, with ongoing reforestation and soil conservation efforts aimed at reversing historical deforestation. The woreda is home to several endemic plant species and serves as a habitat for diverse wildlife, including birds and small mammals unique to the Ethiopian highland ecosystem.
+   234→          </p>
+   235→        </ContentCard>
+   236→      </div>
+   237→    </SubPage>
+   238→  );
+   239→}
+   240→
+   241→/* ─── GOVERNMENT: Leadership ───────────────────────────────── */
+   242→export function GovLeadershipPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   243→  return (
+   244→    <SubPage onNavigate={onNavigate} title="Leadership" breadcrumb="Government / Leadership" badge="Woreda Leadership">
+   245→      <div className="space-y-8 max-w-4xl mx-auto">
+   246→        <ContentCard>
+   247→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   248→            <UserCheck className="w-6 h-6 text-[#EAB308]" /> Woreda Administration
+   249→          </h2>
+   250→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   251→            Amhara Sint Woreda is led by an elected Woreda Council and an Executive Committee headed by the Woreda Administrator (Chief Executive). The leadership team is responsible for implementing development plans, delivering public services, and ensuring good governance at the local level.
+   252→          </p>
+   253→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   254→            The administration operates under the principles of democratic governance, transparency, and accountability. Regular council meetings are held to discuss development priorities, budget allocations, and policy decisions that affect the community.
+   255→          </p>
+   256→        </ContentCard>
+   257→        <div className="grid md:grid-cols-2 gap-6">
+   258→          {[
+   259→            { title: "Woreda Administrator", desc: "Chief executive officer responsible for overall administration and policy implementation.", icon: Shield },
+   260→            { title: "Deputy Administrator", desc: "Supports the administrator and oversees specific departments and programs.", icon: UsersRound },
+   261→            { title: "Woreda Council", desc: "Elected legislative body that approves budgets, plans, and policies for the woreda.", icon: Landmark },
+   262→            { title: "Kebele Administrations", desc: "22 local councils responsible for community-level governance and service delivery.", icon: Building },
+   263→          ].map((role, i) => (
+   264→            <ContentCard key={role.title} delay={i * 100}>
+   265→              <div className="flex items-start gap-4">
+   266→                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow-md">
+   267→                  <role.icon className="w-6 h-6 text-white" />
+   268→                </div>
+   269→                <div>
+   270→                  <h3 className="font-bold text-[#0B3D2E] mb-1">{role.title}</h3>
+   271→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{role.desc}</p>
+   272→                </div>
+   273→              </div>
+   274→            </ContentCard>
+   275→          ))}
+   276→        </div>
+   277→      </div>
+   278→    </SubPage>
+   279→  );
+   280→}
+   281→
+   282→/* ─── GOVERNMENT: Structure ─────────────────────────────────── */
+   283→export function GovStructurePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   284→  return (
+   285→    <SubPage onNavigate={onNavigate} title="Administrative Structure" breadcrumb="Government / Structure" badge="Governance">
+   286→      <div className="space-y-8 max-w-4xl mx-auto">
+   287→        <ContentCard>
+   288→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   289→            <Building className="w-6 h-6 text-[#EAB308]" /> Organizational Hierarchy
+   290→          </h2>
+   291→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   292→            The administrative structure of Amhara Sint Woreda follows the three-tier governance system of Ethiopia: the Woreda Council at the top, followed by sectoral offices and departments, and finally the Kebele administrations at the community level.
+   293→          </p>
+   294→          <div className="space-y-4">
+   295→            {[
+   296→              { level: "Tier 1: Woreda Council", desc: "Supreme decision-making body with elected representatives from all kebeles. Meets regularly to approve plans, budgets, and policies." },
+   297→              { level: "Tier 2: Executive Committee", desc: "Implements council decisions. Chaired by the Woreda Administrator with heads of major departments." },
+   298→              { level: "Tier 3: Sectoral Offices", desc: "Specialized departments including Education, Health, Agriculture, Finance, and Infrastructure offices." },
+   299→              { level: "Tier 4: Kebele Administration", desc: "22 local government units that deliver services directly to communities and collect local data." },
+   300→            ].map((tier, i) => (
+   301→              <div key={tier.level} className="flex items-start gap-4 p-4 rounded-xl bg-[#F0FDF4]">
+   302→                <div className="w-10 h-10 rounded-lg bg-[#0B3D2E] text-white flex items-center justify-center text-sm font-bold shrink-0">{i + 1}</div>
+   303→                <div>
+   304→                  <h4 className="font-bold text-[#0B3D2E] mb-1">{tier.level}</h4>
+   305→                  <p className="text-[#0B3D2E]/60 text-sm">{tier.desc}</p>
+   306→                </div>
+   307→              </div>
+   308→            ))}
+   309→          </div>
+   310→        </ContentCard>
+   311→      </div>
+   312→    </SubPage>
+   313→  );
+   314→}
+   315→
+   316→/* ─── GOVERNMENT: Offices ──────────────────────────────────── */
+   317→export function GovOfficesPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   318→  const offices = [
+   319→    { name: "Woreda Administrator&apos;s Office", head: "Chief Administrator", icon: Shield },
+   320→    { name: "Finance & Economic Development Office", head: "Head of Finance", icon: Banknote },
+   321→    { name: "Education Office", head: "Head of Education", icon: GraduationCap },
+   322→    { name: "Health Office", head: "Head of Health", icon: HeartPulse },
+   323→    { name: "Agriculture & Natural Resources Office", head: "Head of Agriculture", icon: Tractor },
+   324→    { name: "Road & Transport Office", head: "Head of Transport", icon: Truck },
+   325→    { name: "Water, Mines & Energy Office", head: "Head of Water", icon: Droplets },
+   326→    { name: "Justice & Security Office", head: "Head of Justice", icon: Scale },
+   327→    { name: "Women & Children Affairs Office", head: "Head of Women Affairs", icon: Users },
+   328→    { name: "Youth & Sports Office", head: "Head of Youth Affairs", icon: Award },
+   329→    { name: "Trade & Industry Office", head: "Head of Trade", icon: Briefcase },
+   330→    { name: "Information & Communication Office", head: "Head of Information", icon: Newspaper },
+   331→  ];
+   332→  return (
+   333→    <SubPage onNavigate={onNavigate} title="Offices & Departments" breadcrumb="Government / Offices" badge="Government Offices">
+   334→      <div className="max-w-4xl mx-auto">
+   335→        <div className="grid md:grid-cols-2 gap-4">
+   336→          {offices.map((office, i) => (
+   337→            <ContentCard key={office.name} delay={i * 60}>
+   338→              <div className="flex items-center gap-4">
+   339→                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+   340→                  <office.icon className="w-5 h-5 text-white" />
+   341→                </div>
+   342→                <div className="min-w-0">
+   343→                  <h3 className="font-bold text-[#0B3D2E] text-sm truncate">{office.name}</h3>
+   344→                  <p className="text-[#0B3D2E]/50 text-xs">{office.head}</p>
+   345→                </div>
+   346→              </div>
+   347→            </ContentCard>
+   348→          ))}
+   349→        </div>
+   350→      </div>
+   351→    </SubPage>
+   352→  );
+   353→}
+   354→
+   355→/* ─── SERVICE: Education ────────────────────────────────────── */
+   356→export function ServiceEducationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   357→  return (
+   358→    <SubPage onNavigate={onNavigate} title="Education Services" breadcrumb="Services / Education" badge="Education Sector">
+   359→      <div className="space-y-8 max-w-4xl mx-auto">
+   360→        <ContentCard>
+   361→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   362→            <GraduationCap className="w-6 h-6 text-[#EAB308]" /> Education in Amhara Sint
+   363→          </h2>
+   364→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   365→            The Amhara Sint Woreda Education Office oversees 55 educational institutions serving the community, including 47 primary schools (grades 1-8) and 8 secondary schools (grades 9-12). The education sector is one of the largest employers in the woreda, with over 600 teachers and administrative staff.
+   366→          </p>
+   367→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   368→            The woreda is committed to achieving universal primary education and improving transition rates to secondary education. Current initiatives include school construction programs, teacher training, curriculum improvement, and community awareness campaigns to increase enrollment, particularly for girls and children in remote areas.
+   369→          </p>
+   370→        </ContentCard>
+   371→        <div className="grid md:grid-cols-3 gap-6">
+   372→          {[
+   373→            { stat: "47", label: "Primary Schools" },
+   374→            { stat: "8", label: "Secondary Schools" },
+   375→            { stat: "600+", label: "Teachers" },
+   376→            { stat: "38,000+", label: "Students Enrolled" },
+   377→            { stat: "85%", label: "Primary Enrollment" },
+   378→            { stat: "62%", label: "Secondary Enrollment" },
+   379→          ].map((s, i) => (
+   380→            <ContentCard key={s.label} delay={i * 80}>
+   381→              <div className="text-center">
+   382→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+   383→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+   384→              </div>
+   385→            </ContentCard>
+   386→          ))}
+   387→        </div>
+   388→        <ContentCard delay={200}>
+   389→          <h3 className="font-bold text-[#0B3D2E] mb-3">Current Programs</h3>
+   390→          <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   391→            {["School feeding program for rural schools", "Girls&apos; education acceleration initiative", "Alternative basic education (ABE) centers", "Community-based school management committees", "Digital literacy and ICT integration program"].map((item) => (
+   392→              <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+   393→            ))}
+   394→          </ul>
+   395→        </ContentCard>
+   396→      </div>
+   397→    </SubPage>
+   398→  );
+   399→}
+   400→
+   401→/* ─── SERVICE: Health ───────────────────────────────────────── */
+   402→export function ServiceHealthPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   403→  return (
+   404→    <SubPage onNavigate={onNavigate} title="Health Services" breadcrumb="Services / Health" badge="Health Sector">
+   405→      <div className="space-y-8 max-w-4xl mx-auto">
+   406→        <ContentCard>
+   407→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   408→            <HeartPulse className="w-6 h-6 text-[#EAB308]" /> Healthcare in Amhara Sint
+   409→          </h2>
+   410→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   411→            The woreda&apos;s health system consists of 1 primary hospital, 4 health centers, and 18 health posts strategically distributed across all 22 kebeles. The Health Extension Program (HEP) forms the backbone of community health delivery, with over 40 health extension workers providing preventive and basic curative services at the kebele level.
+   412→          </p>
+   413→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   414→            Key health indicators have shown improvement in recent years, including reductions in maternal and child mortality, increased immunization coverage, and expanded access to antenatal care. The woreda is working towards universal health coverage through community-based health insurance schemes.
+   415→          </p>
+   416→        </ContentCard>
+   417→        <div className="grid md:grid-cols-3 gap-6">
+   418→          {[
+   419→            { stat: "1", label: "Primary Hospital" },
+   420→            { stat: "4", label: "Health Centers" },
+   421→            { stat: "18", label: "Health Posts" },
+   422→            { stat: "40+", label: "Health Workers" },
+   423→            { stat: "92%", label: "Immunization Rate" },
+   424→            { stat: "78%", label: "ANC Coverage" },
+   425→          ].map((s, i) => (
+   426→            <ContentCard key={s.label} delay={i * 80}>
+   427→              <div className="text-center">
+   428→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+   429→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+   430→              </div>
+   431→            </ContentCard>
+   432→          ))}
+   433→        </div>
+   434→        <ContentCard delay={200}>
+   435→          <h3 className="font-bold text-[#0B3D2E] mb-3">Health Programs</h3>
+   436→          <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   437→            {["Health Extension Program (HEP)", "Maternal & child health services", "Immunization & vaccination campaigns", "Malaria prevention & control", "HIV/AIDS awareness & testing", "Community-based health insurance (CBHI)", "Nutrition screening & supplementation"].map((item) => (
+   438→              <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+   439→            ))}
+   440→          </ul>
+   441→        </ContentCard>
+   442→      </div>
+   443→    </SubPage>
+   444→  );
+   445→}
+   446→
+   447→/* ─── SERVICE: Agriculture ─────────────────────────────────── */
+   448→export function ServiceAgriculturePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   449→  return (
+   450→    <SubPage onNavigate={onNavigate} title="Agriculture Services" breadcrumb="Services / Agriculture" badge="Agriculture Sector">
+   451→      <div className="space-y-8 max-w-4xl mx-auto">
+   452→        <ContentCard>
+   453→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   454→            <Tractor className="w-6 h-6 text-[#EAB308]" /> Agriculture in Amhara Sint
+   455→          </h2>
+   456→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   457→            Agriculture is the backbone of Amhara Sint&apos;s economy, employing over 75% of the population. The woreda supports a diverse farming system that includes cereal crop production, livestock rearing, horticulture, and increasingly, apiculture (beekeeping) and spice cultivation.
+   458→          </p>
+   459→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   460→            The Agriculture and Natural Resources Office provides extension services, improved seed distribution, fertilizer access, soil conservation training, and veterinary services to farmers across all kebeles. Climate-smart agriculture practices are being promoted to build resilience against increasing weather variability.
+   461→          </p>
+   462→        </ContentCard>
+   463→        <div className="grid md:grid-cols-2 gap-6">
+   464→          <ContentCard delay={100}>
+   465→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Wheat className="w-5 h-5 text-[#EAB308]" /> Major Crops</h3>
+   466→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   467→              {["Teff (staple crop)", "Barley & Wheat", "Sorghum & Maize", "Fava Beans & Peas", "Chickpeas & Lentils", "Potatoes & Vegetables"].map((item) => (
+   468→                <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+   469→              ))}
+   470→            </ul>
+   471→          </ContentCard>
+   472→          <ContentCard delay={150}>
+   473→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Baby className="w-5 h-5 text-[#EAB308]" /> Livestock</h3>
+   474→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   475→              {["Cattle (oxen, cows)", "Sheep & Goats", "Poultry", "Donkeys & Mules (transport)", "Beekeeping (apiculture)", "Modern dairy farming initiatives"].map((item) => (
+   476→                <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+   477→              ))}
+   478→            </ul>
+   479→          </ContentCard>
+   480→        </div>
+   481→      </div>
+   482→    </SubPage>
+   483→  );
+   484→}
+   485→
+   486→/* ─── SERVICE: Transport ──────────────────────────────────── */
+   487→export function ServiceTransportPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   488→  return (
+   489→    <SubPage onNavigate={onNavigate} title="Transport Services" breadcrumb="Services / Transport" badge="Infrastructure">
+   490→      <div className="space-y-8 max-w-4xl mx-auto">
+   491→        <ContentCard>
+   492→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   493→            <Truck className="w-6 h-6 text-[#EAB308]" /> Transport & Roads
+   494→          </h2>
+   495→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   496→            Amhara Sint Woreda has made significant progress in expanding its road network to connect remote kebeles to the woreda capital and zonal centers. The road infrastructure development is a top priority, with both all-weather gravel roads and dry-weather roads being constructed and maintained.
+   497→          </p>
+   498→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   499→            The woreda currently has approximately 85 km of all-weather roads, with an ambitious target of reaching 150 km within the next five years. Rural accessibility remains a challenge, and the administration is working with regional and federal authorities to secure funding for road construction projects.
+   500→          </p>
+   501→        </ContentCard>
+   502→        <div className="grid md:grid-cols-2 gap-6">
+   503→          {[
+   504→            { stat: "85 km", label: "All-Weather Roads (current)", pct: 57 },
+   505→            { stat: "150 km", label: "All-Weather Roads (target)", pct: 100 },
+   506→            { stat: "12", label: "Bridges Constructed", pct: 60 },
+   507→            { stat: "14 / 22", label: "Kebeles Road Connected", pct: 64 },
+   508→          ].map((s, i) => (
+   509→            <ContentCard key={s.label} delay={i * 100}>
+   510→              <div className="flex justify-between mb-2">
+   511→                <span className="text-sm font-semibold text-[#0B3D2E]">{s.label}</span>
+   512→                <span className="text-sm font-bold text-[#EAB308]">{s.stat}</span>
+   513→              </div>
+   514→              <div className="h-3 bg-[#0B3D2E]/10 rounded-full overflow-hidden">
+   515→                <div className="h-full rounded-full bg-gradient-to-r from-[#0B3D2E] to-[#10B981]" style={{ width: `${s.pct}%` }} />
+   516→              </div>
+   517→            </ContentCard>
+   518→          ))}
+   519→        </div>
+   520→      </div>
+   521→    </SubPage>
+   522→  );
+   523→}
+   524→
+   525→/* ─── SERVICE: Water ───────────────────────────────────────── */
+   526→export function ServiceWaterPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   527→  return (
+   528→    <SubPage onNavigate={onNavigate} title="Water & Sanitation" breadcrumb="Services / Water" badge="Water Sector">
+   529→      <div className="space-y-8 max-w-4xl mx-auto">
+   530→        <ContentCard>
+   531→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   532→            <Droplets className="w-6 h-6 text-[#EAB308]" /> Water Supply & Sanitation
+   533→          </h2>
+   534→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   535→            Access to clean water remains one of the most critical challenges in Amhara Sint Woreda. The Water, Mines & Energy Office manages 64 clean water access points, including hand-dug wells, protected springs, and boreholes equipped with hand pumps. Despite this progress, many rural communities still rely on unprotected water sources.
+   536→          </p>
+   537→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   538→            The woreda is implementing an ambitious water supply expansion program with support from regional and international partners. The goal is to achieve 85% clean water coverage within the next five years, combined with comprehensive sanitation and hygiene promotion activities.
+   539→          </p>
+   540→        </ContentCard>
+   541→        <div className="grid md:grid-cols-3 gap-6">
+   542→          {[
+   543→            { stat: "64", label: "Water Points" },
+   544→            { stat: "52%", label: "Clean Water Coverage" },
+   545→            { stat: "85%", label: "Target Coverage (5yr)" },
+   546→            { stat: "35%", label: "Sanitation Coverage" },
+   547→            { stat: "18", label: "New Projects Planned" },
+   548→            { stat: "22", label: "Kebeles Served" },
+   549→          ].map((s, i) => (
+   550→            <ContentCard key={s.label} delay={i * 80}>
+   551→              <div className="text-center">
+   552→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+   553→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+   554→              </div>
+   555→            </ContentCard>
+   556→          ))}
+   557→        </div>
+   558→      </div>
+   559→    </SubPage>
+   560→  );
+   561→}
+   562→
+   563→/* ─── SERVICE: Justice ─────────────────────────────────────── */
+   564→export function ServiceJusticePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   565→  return (
+   566→    <SubPage onNavigate={onNavigate} title="Justice & Security" breadcrumb="Services / Justice" badge="Justice Sector">
+   567→      <div className="space-y-8 max-w-4xl mx-auto">
+   568→        <ContentCard>
+   569→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   570→            <Scale className="w-6 h-6 text-[#EAB308]" /> Justice & Security Services
+   571→          </h2>
+   572→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   573→            Amhara Sint Woreda maintains a justice system that includes a woreda court, social courts, and alternative dispute resolution mechanisms. The Justice Office works to ensure the rule of law, protect citizens&apos; rights, and provide accessible justice services to all community members.
+   574→          </p>
+   575→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   576→            Community-based dispute resolution through elders and local mediators remains an important part of the justice landscape, particularly for civil and family matters. The woreda also maintains law enforcement through the local police department, which works to maintain peace and security across all kebeles.
+   577→          </p>
+   578→        </ContentCard>
+   579→        <div className="grid md:grid-cols-2 gap-6">
+   580→          {[
+   581→            { title: "Woreda Court", desc: "Handles major civil and criminal cases within the woreda jurisdiction.", icon: Scale },
+   582→            { title: "Social Courts", desc: "Community-level courts for minor disputes, family law, and local matters.", icon: Building },
+   583→            { title: "Police Department", desc: "Maintains public safety, prevents crime, and enforces laws.", icon: Siren },
+   584→            { title: "Legal Aid", desc: "Free legal consultation and support for vulnerable community members.", icon: Shield },
+   585→          ].map((s, i) => (
+   586→            <ContentCard key={s.title} delay={i * 100}>
+   587→              <div className="flex items-start gap-4">
+   588→                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+   589→                  <s.icon className="w-5 h-5 text-white" />
+   590→                </div>
+   591→                <div>
+   592→                  <h3 className="font-bold text-[#0B3D2E] mb-1">{s.title}</h3>
+   593→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{s.desc}</p>
+   594→                </div>
+   595→              </div>
+   596→            </ContentCard>
+   597→          ))}
+   598→        </div>
+   599→      </div>
+   600→    </SubPage>
+   601→  );
+   602→}
+   603→
+   604→/* ─── SERVICE: Finance ───────────────────────────────────── */
+   605→export function ServiceFinancePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   606→  return (
+   607→    <SubPage onNavigate={onNavigate} title="Finance & Revenue" breadcrumb="Services / Finance" badge="Finance Sector">
+   608→      <div className="space-y-8 max-w-4xl mx-auto">
+   609→        <ContentCard>
+   610→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   611→            <Banknote className="w-6 h-6 text-[#EAB308]" /> Finance & Revenue
+   612→          </h2>
+   613→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   614→            The Finance and Economic Development Office manages the woreda&apos;s budget, revenue collection, and financial planning. The office is responsible for collecting local taxes, fees, and duties, as well as managing the disbursement of funds to various departments and development programs.
+   615→          </p>
+   616→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   617→            The woreda budget is funded through a combination of federal and regional government transfers, local revenue collection, and donor support for specific development projects. Transparency and accountability in financial management are key priorities, with regular audits and public financial reporting.
+   618→          </p>
+   619→        </ContentCard>
+   620→        <div className="grid md:grid-cols-3 gap-6">
+   621→          {[
+   622→            { stat: "120+", label: "Registered Cooperatives" },
+   623→            { stat: "5,000+", label: "Tax-Paying Households" },
+   624→            { stat: "85%", label: "Budget Utilization Rate" },
+   625→            { stat: "22", label: "Revenue Collection Points" },
+   626→            { stat: "150+", label: "Micro Enterprises Supported" },
+   627→            { stat: "3", label: "Financial Audits Per Year" },
+   628→          ].map((s, i) => (
+   629→            <ContentCard key={s.label} delay={i * 80}>
+   630→              <div className="text-center">
+   631→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+   632→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+   633→              </div>
+   634→            </ContentCard>
+   635→          ))}
+   636→        </div>
+   637→      </div>
+   638→    </SubPage>
+   639→  );
+   640→}
+   641→
+   642→/* ─── NEWS: Latest News ───────────────────────────────────── */
+   643→export function NewsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   644→  const newsItems = [
+   645→    { date: "June 28, 2026", title: "New Primary School Construction Completed in Gonder Ber Kebele", summary: "A new 8-classroom primary school has been completed and handed over to the community, serving over 400 students.", icon: School },
+   646→    { date: "June 15, 2026", title: "Health Center Expansion Project Launched", summary: "Construction has begun on expanding the main health center to include maternity and pediatric wards.", icon: HeartPulse },
+   647→    { date: "June 5, 2026", title: "Road Construction Connecting 3 Remote Kebeles Approved", summary: "The regional government has approved funding for 25 km of new all-weather roads.", icon: Truck },
+   648→    { date: "May 22, 2026", title: "Annual Agricultural Input Distribution Campaign", summary: "Over 10,000 households received improved seeds and fertilizer for the planting season.", icon: Tractor },
+   649→    { date: "May 10, 2026", title: "Woreda Council Approves Annual Budget", summary: "The council approved a budget of ETB 85 million for the fiscal year 2026/27.", icon: PieChart },
+   650→    { date: "April 28, 2026", title: "Clean Water Project Benefits 5,000 Residents", summary: "Five new deep boreholes with solar-powered pumps now provide clean water access.", icon: Droplets },
+   651→  ];
+   652→  return (
+   653→    <SubPage onNavigate={onNavigate} title="Latest News" breadcrumb="News / Latest News" badge="News & Updates">
+   654→      <div className="max-w-4xl mx-auto space-y-4">
+   655→        {newsItems.map((item, i) => (
+   656→          <ContentCard key={item.title} delay={i * 60}>
+   657→            <div className="flex items-start gap-4">
+   658→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+   659→                <item.icon className="w-5 h-5 text-white" />
+   660→              </div>
+   661→              <div className="min-w-0 flex-1">
+   662→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+   663→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+   664→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+   665→              </div>
+   666→            </div>
+   667→          </ContentCard>
+   668→        ))}
+   669→      </div>
+   670→    </SubPage>
+   671→  );
+   672→}
+   673→
+   674→/* ─── NEWS: Bids ──────────────────────────────────────────── */
+   675→export function BidsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   676→  return (
+   677→    <SubPage onNavigate={onNavigate} title="Bid Announcements" breadcrumb="News / Bids" badge="Procurement">
+   678→      <div className="max-w-4xl mx-auto space-y-4">
+   679→        {[
+   680→          { deadline: "July 30, 2026", title: "Construction of All-Weather Road (Kebele A to Kebele B)", budget: "ETB 15 Million", status: "Open" },
+   681→          { deadline: "July 20, 2026", title: "Supply of Medical Equipment for Health Center Expansion", budget: "ETB 3.2 Million", status: "Open" },
+   682→          { deadline: "July 15, 2026", title: "Office Furniture Procurement for Woreda Administration", budget: "ETB 850,000", status: "Open" },
+   683→          { deadline: "June 30, 2026", title: "Borehole Drilling in 5 Kebeles (Water Supply Project)", budget: "ETB 8 Million", status: "Closed" },
+   684→          { deadline: "June 15, 2026", title: "School Construction (4 Classroom Blocks)", budget: "ETB 12 Million", status: "Awarded" },
+   685→        ].map((item, i) => (
+   686→          <ContentCard key={item.title} delay={i * 60}>
+   687→            <div className="flex items-start justify-between gap-4">
+   688→              <div className="min-w-0">
+   689→                <div className="flex items-center gap-2 mb-2">
+   690→                  <Badge className={item.status === "Open" ? "bg-green-100 text-green-700 border-green-200" : item.status === "Closed" ? "bg-gray-100 text-gray-600" : "bg-amber-100 text-amber-700 border-amber-200"}>{item.status}</Badge>
+   691→                  <span className="text-xs text-[#0B3D2E]/50">Deadline: {item.deadline}</span>
+   692→                </div>
+   693→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+   694→                <p className="text-[#EAB308] text-sm font-semibold">{item.budget}</p>
+   695→              </div>
+   696→            </div>
+   697→          </ContentCard>
+   698→        ))}
+   699→      </div>
+   700→    </SubPage>
+   701→  );
+   702→}
+   703→
+   704→/* ─── NEWS: Vacancy ────────────────────────────────────────── */
+   705→interface VacancyData { id: string; title: string; department: string; type: string; salary?: string; deadline: string; description?: string; requirements?: string; status?: string; }
+   706→
+   707→export function VacancyPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   708→  const [vacancies, setVacancies] = useState<VacancyData[]>([]);
+   709→  const [loading, setLoading] = useState(true);
+   710→  const [expandedId, setExpandedId] = useState<string | null>(null);
+   711→  const [applyId, setApplyId] = useState<string | null>(null);
+   712→  const [applyForm, setApplyForm] = useState({ fullName: "", email: "", phone: "", education: "", experience: "", coverLetter: "" });
+   713→  const [cvFile, setCvFile] = useState<File | null>(null);
+   714→  const [submitting, setSubmitting] = useState(false);
+   715→  const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
+   716→  const fileInputRef = useRef<HTMLInputElement>(null);
+   717→
+   718→  useEffect(() => {
+   719→    fetch("/api/vacancies")
+   720→      .then(r => r.json())
+   721→      .then(d => { setVacancies(Array.isArray(d) ? d : []); setLoading(false); })
+   722→      .catch(() => { setVacancies([]); setLoading(false); });
+   723→  }, []);
+   724→
+   725→  const handleApply = async (vacancy: VacancyData) => {
+   726→    if (!cvFile) { setSubmitResult({ success: false, message: "Please upload your CV" }); return; }
+   727→    if (!applyForm.fullName || !applyForm.email || !applyForm.phone) {
+   728→      setSubmitResult({ success: false, message: "Please fill in all required fields" }); return;
+   729→    }
+   730→    setSubmitting(true);
+   731→    try {
+   732→      const fd = new FormData();
+   733→      fd.append("vacancyId", vacancy.id);
+   734→      fd.append("vacancyTitle", vacancy.title);
+   735→      fd.append("fullName", applyForm.fullName);
+   736→      fd.append("email", applyForm.email);
+   737→      fd.append("phone", applyForm.phone);
+   738→      fd.append("education", applyForm.education);
+   739→      fd.append("experience", applyForm.experience);
+   740→      fd.append("coverLetter", applyForm.coverLetter);
+   741→      fd.append("cv", cvFile);
+   742→      const res = await fetch("/api/vacancies", { method: "POST", body: fd });
+   743→      const data = await res.json();
+   744→      if (res.ok && data.success) {
+   745→        setSubmitResult({ success: true, message: "Application submitted successfully! We will contact you soon." });
+   746→        setApplyForm({ fullName: "", email: "", phone: "", education: "", experience: "", coverLetter: "" });
+   747→        setCvFile(null);
+   748→        if (fileInputRef.current) fileInputRef.current.value = "";
+   749→      } else {
+   750→        setSubmitResult({ success: false, message: data.error || "Failed to submit. Please try again." });
+   751→      }
+   752→    } catch {
+   753→      setSubmitResult({ success: false, message: "Network error. Please check your connection." });
+   754→    }
+   755→    setSubmitting(false);
+   756→  };
+   757→
+   758→  const openApply = (id: string) => { setApplyId(id); setSubmitResult(null); setApplyForm({ fullName: "", email: "", phone: "", education: "", experience: "", coverLetter: "" }); setCvFile(null); };
+   759→
+   760→  return (
+   761→    <SubPage onNavigate={onNavigate} title="Job Vacancies" breadcrumb="News / Vacancy" badge="Careers">
+   762→      <div className="max-w-4xl mx-auto space-y-4">
+   763→        {loading ? (
+   764→          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-[3px] border-[#0B3D2E]/20 border-t-[#0B3D2E] rounded-full animate-spin" /></div>
+   765→        ) : vacancies.length === 0 ? (
+   766→          <ContentCard><div className="text-center py-10"><Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" /><p className="text-gray-500">No open vacancies at the moment. Check back soon!</p></div></ContentCard>
+   767→        ) : vacancies.map((v, i) => (
+   768→          <ContentCard key={v.id} delay={i * 60}>
+   769→            <div className="flex items-start justify-between gap-4">
+   770→              <div className="min-w-0 flex-1">
+   771→                <div className="flex items-center gap-2 mb-2 flex-wrap">
+   772→                  <Badge className="bg-[#0B3D2E] text-white text-xs">{v.type}</Badge>
+   773→                  <Badge variant="secondary" className="text-xs">{v.department}</Badge>
+   774→                  {v.salary && <Badge className="bg-[#EAB308]/15 text-[#A16207] text-xs border-[#EAB308]/30">{v.salary}</Badge>}
+   775→                </div>
+   776→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1.5">{v.title}</h3>
+   777→                <div className="flex items-center gap-3 text-xs text-[#0B3D2E]/50">
+   778→                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Deadline: {v.deadline}</span>
+   779→                </div>
+   780→              </div>
+   781→              <div className="flex items-center gap-2 shrink-0">
+   782→                <button onClick={() => setExpandedId(expandedId === v.id ? null : v.id)} className="flex items-center gap-1 text-xs font-medium text-[#0B3D2E] hover:text-[#145A44] px-3 py-1.5 rounded-lg hover:bg-[#F0FDF4] transition-all">
+   783→                  Details {expandedId === v.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+   784→                </button>
+   785→                <button onClick={() => openApply(v.id)} className="flex items-center gap-1.5 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-semibold text-xs px-4 py-1.5 rounded-lg transition-all shadow-sm hover:shadow-md">
+   786→                  Apply Now
+   787→                </button>
+   788→              </div>
+   789→            </div>
+   790→
+   791→            {/* Expanded Details */}
+   792→            {expandedId === v.id && (
+   793→              <div className="mt-4 pt-4 border-t border-gray-100 space-y-3 animate-fade-in-up">
+   794→                {v.description && <div><h4 className="font-semibold text-[#0B3D2E] text-sm mb-1">Job Description</h4><p className="text-[#0B3D2E]/60 text-sm leading-relaxed whitespace-pre-wrap">{v.description}</p></div>}
+   795→                {v.requirements && <div><h4 className="font-semibold text-[#0B3D2E] text-sm mb-1">Requirements</h4><p className="text-[#0B3D2E]/60 text-sm leading-relaxed whitespace-pre-wrap">{v.requirements}</p></div>}
+   796→              </div>
+   797→            )}
+   798→
+   799→            {/* Apply Form */}
+   800→            {applyId === v.id && (
+   801→              <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in-up">
+   802→                <h4 className="font-bold text-[#0B3D2E] text-base mb-4 flex items-center gap-2"><Send className="w-4 h-4 text-[#EAB308]" />Apply for: {v.title}</h4>
+   803→                {submitResult && (
+   804→                  <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 text-sm ${submitResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+   805→                    {submitResult.success ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+   806→                    {submitResult.message}
+   807→                  </div>
+   808→                )}
+   809→                <div className="grid md:grid-cols-2 gap-3">
+   810→                  <div><label className="block text-xs font-medium text-gray-600 mb-1">Full Name *</label><input type="text" value={applyForm.fullName} onChange={e => setApplyForm({ ...applyForm, fullName: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" placeholder="Your full name" /></div>
+   811→                  <div><label className="block text-xs font-medium text-gray-600 mb-1">Email *</label><input type="email" value={applyForm.email} onChange={e => setApplyForm({ ...applyForm, email: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20" placeholder="your@email.com" /></div>
+   812→                  <div><label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label><input type="tel" value={applyForm.phone} onChange={e => setApplyForm({ ...applyForm, phone: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20" placeholder="+251 9XX XXX XXX" /></div>
+   813→                  <div><label className="block text-xs font-medium text-gray-600 mb-1">Education</label><input type="text" value={applyForm.education} onChange={e => setApplyForm({ ...applyForm, education: e.target.value })} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20" placeholder="BSc in ..." /></div>
+   814→                </div>
+   815→                <div className="mt-3"><label className="block text-xs font-medium text-gray-600 mb-1">Work Experience</label><textarea value={applyForm.experience} onChange={e => setApplyForm({ ...applyForm, experience: e.target.value })} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20" placeholder="Brief work experience..." /></div>
+   816→                <div className="mt-3"><label className="block text-xs font-medium text-gray-600 mb-1">Cover Letter</label><textarea value={applyForm.coverLetter} onChange={e => setApplyForm({ ...applyForm, coverLetter: e.target.value })} rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20" placeholder="Why are you interested in this position?" /></div>
+   817→                <div className="mt-3">
+   818→                  <label className="block text-xs font-medium text-gray-600 mb-1">Upload CV (PDF, DOC, DOCX) *</label>
+   819→                  <div className="flex items-center gap-3">
+   820→                    <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={e => setCvFile(e.target.files?.[0] || null)} className="hidden" id="cv-upload" />
+   821→                    <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#0B3D2E] hover:text-[#0B3D2E] transition-colors">
+   822→                      <Upload className="w-4 h-4" />{cvFile ? cvFile.name : "Choose CV File"}
+   823→                    </button>
+   824→                    {cvFile && <span className="flex items-center gap-1 text-xs text-green-600"><CheckCircle className="w-3.5 h-3.5" />{cvFile.name}</span>}
+   825→                  </div>
+   826→                </div>
+   827→                <div className="mt-4 flex items-center gap-3">
+   828→                  <button onClick={() => handleApply(v)} disabled={submitting} className="flex items-center gap-2 bg-[#0B3D2E] hover:bg-[#145A44] text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-all shadow-sm disabled:opacity-50">
+   829→                    {submitting ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</> : <><Send className="w-4 h-4" />Submit Application</>}
+   830→                  </button>
+   831→                  <button onClick={() => { setApplyId(null); setSubmitResult(null); }} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
+   832→                </div>
+   833→              </div>
+   834→            )}
+   835→          </ContentCard>
+   836→        ))}
+   837→        <ContentCard delay={400}>
+   838→          <div className="bg-[#F0FDF4] rounded-xl p-6 text-center">
+   839→            <h3 className="font-bold text-[#0B3D2E] mb-2">How to Apply</h3>
+   840→            <p className="text-[#0B3D2E]/60 text-sm">Click &quot;Apply Now&quot; on any vacancy above to submit your application online. You can also submit in person at the Woreda Administration Office, Amhara Sint Town, or email: info@amharasint.gov.et</p>
+   841→          </div>
+   842→        </ContentCard>
+   843→      </div>
+   844→    </SubPage>
+   845→  );
+   846→}
+   847→
+   848→/* ─── NEWS: Announcements ──────────────────────────────────── */
+   849→export function AnnouncementsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   850→  return (
+   851→    <SubPage onNavigate={onNavigate} title="Announcements" breadcrumb="News / Announcements" badge="Public Notices">
+   852→      <div className="max-w-4xl mx-auto space-y-4">
+   853→        {[
+   854→          { date: "June 25, 2026", title: "Public Holiday Notice - Eid al-Adha", summary: "All woreda offices will be closed for the Eid al-Adha public holiday.", icon: Flag },
+   855→          { date: "June 20, 2026", title: "Community Meeting on New Development Plan", summary: "All residents are invited to attend the public consultation on the 5-year development plan.", icon: UsersRound },
+   856→          { date: "June 12, 2026", title: "Tax Payment Deadline Extended", summary: "The deadline for annual property and income tax payments has been extended to August 30.", icon: Banknote },
+   857→          { date: "June 1, 2026", title: "New Kebele Boundaries Announced", summary: "Following the recent census, adjustments to kebele administrative boundaries take effect.", icon: MapPin },
+   858→          { date: "May 28, 2026", title: "Vaccination Campaign for Livestock", summary: "Free livestock vaccination campaign across all kebeles. All farmers encouraged to participate.", icon: Baby },
+   859→        ].map((item, i) => (
+   860→          <ContentCard key={item.title} delay={i * 60}>
+   861→            <div className="flex items-start gap-4">
+   862→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAB308] to-[#F59E0B] flex items-center justify-center shrink-0 shadow">
+   863→                <item.icon className="w-5 h-5 text-white" />
+   864→              </div>
+   865→              <div className="min-w-0">
+   866→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+   867→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+   868→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+   869→              </div>
+   870→            </div>
+   871→          </ContentCard>
+   872→        ))}
+   873→      </div>
+   874→    </SubPage>
+   875→  );
+   876→}
+   877→
+   878→/* ─── CONTACT PAGE ─────────────────────────────────────────── */
+   879→export function ContactPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   880→  return (
+   881→    <SubPage onNavigate={onNavigate} title="Contact Us" breadcrumb="Contact" badge="Get In Touch">
+   882→      <div className="max-w-4xl mx-auto">
+   883→        <div className="grid md:grid-cols-3 gap-6 mb-10">
+   884→          {[
+   885→            { title: "Office Location", detail: "Amhara Sint Town\nSouth Wollo Zone\nAmhara Region, Ethiopia", icon: MapPinned, color: "from-[#0B3D2E] to-[#10B981]" },
+   886→            { title: "Phone", detail: "+251 33 XXX XXXX\n\nOffice Hours:\nMon-Fri, 8:00 AM - 5:00 PM", icon: Phone, color: "from-[#EAB308] to-[#F59E0B]" },
+   887→            { title: "Email", detail: "info@amharasint.gov.et\n\nFor general inquiries\nand service requests", icon: Mail, color: "from-[#DC2626] to-[#EF4444]" },
+   888→          ].map((c, i) => (
+   889→            <ContentCard key={c.title} delay={i * 100}>
+   890→              <div className="text-center">
+   891→                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+   892→                  <c.icon className="w-7 h-7 text-white" />
+   893→                </div>
+   894→                <h3 className="font-bold text-[#0B3D2E] mb-2">{c.title}</h3>
+   895→                <p className="text-[#0B3D2E]/55 text-sm whitespace-pre-line">{c.detail}</p>
+   896→              </div>
+   897→            </ContentCard>
+   898→          ))}
+   899→        </div>
+   900→        <ContentCard delay={300}>
+   901→          <h2 className="text-xl font-bold text-[#0B3D2E] mb-4">Key Office Contacts</h2>
+   902→          <div className="overflow-x-auto">
+   903→            <table className="w-full text-sm">
+   904→              <thead>
+   905→                <tr className="border-b border-[#0B3D2E]/10">
+   906→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Office</th>
+   907→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Contact Person</th>
+   908→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Phone</th>
+   909→                </tr>
+   910→              </thead>
+   911→              <tbody className="divide-y divide-[#0B3D2E]/5">
+   912→                {[
+   913→                  { office: "Woreda Administrator", person: "Chief Administrator", phone: "+251 33 XXX XXXX" },
+   914→                  { office: "Education Office", person: "Head of Education", phone: "+251 33 XXX XXXX" },
+   915→                  { office: "Health Office", person: "Head of Health", phone: "+251 33 XXX XXXX" },
+   916→                  { office: "Agriculture Office", person: "Head of Agriculture", phone: "+251 33 XXX XXXX" },
+   917→                  { office: "Finance Office", person: "Head of Finance", phone: "+251 33 XXX XXXX" },
+   918→                ].map((row) => (
+   919→                  <tr key={row.office} className="hover:bg-[#F0FDF4] transition-colors">
+   920→                    <td className="py-3 px-4 text-[#0B3D2E] font-medium">{row.office}</td>
+   921→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.person}</td>
+   922→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.phone}</td>
+   923→                  </tr>
+   924→                ))}
+   925→              </tbody>
+   926→            </table>
+   927→          </div>
+   928→        </ContentCard>
+   929→      </div>
+   930→    </SubPage>
+   931→  );
+   932→}

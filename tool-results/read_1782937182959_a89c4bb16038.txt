@@ -1,0 +1,502 @@
+  2001→                    </div>
+  2002→                    <div>
+  2003→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Upload Cover Letter (PDF)</label>
+  2004→                      <input name="coverLetter" type="file" accept=".pdf,.doc,.docx" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-[#0B3D2E] file:text-white file:text-xs file:font-semibold file:cursor-pointer" />
+  2005→                    </div>
+  2006→                  </div>
+  2007→                </div>
+  2008→
+  2009→                {/* Additional Info */}
+  2010→                <div>
+  2011→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Globe className="w-5 h-5 text-[#EAB308]" /> Additional Information</h3>
+  2012→                  <div className="grid md:grid-cols-2 gap-4">
+  2013→                    <div>
+  2014→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">How did you hear about this position?</label>
+  2015→                      <select name="source" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  2016→                        <option value="">Select</option>
+  2017→                        <option value="Website">Woreda Website</option>
+  2018→                        <option value="Social Media">Social Media</option>
+  2019→                        <option value="Friend/Colleague">Friend / Colleague</option>
+  2020→                        <option value="Newspaper">Newspaper</option>
+  2021→                        <option value="Other">Other</option>
+  2022→                      </select>
+  2023→                    </div>
+  2024→                    <div>
+  2025→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Available Start Date *</label>
+  2026→                      <input name="startDate" required type="date" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" />
+  2027→                    </div>
+  2028→                  </div>
+  2029→                </div>
+  2030→
+  2031→                {formStatus === "error" && (
+  2032→                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">Something went wrong. Please try again or submit your application in person.</div>
+  2033→                )}
+  2034→
+  2035→                <div className="flex items-center gap-3 pt-2">
+  2036→                  <button
+  2037→                    type="submit"
+  2038→                    disabled={formStatus === "loading"}
+  2039→                    className="inline-flex items-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-bold text-sm px-8 py-3 rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+  2040→                  >
+  2041→                    {formStatus === "loading" ? (
+  2042→                      <><span className="w-4 h-4 border-2 border-[#0B3D2E]/30 border-t-[#0B3D2E] rounded-full animate-spin" /> Submitting...</>
+  2043→                    ) : (
+  2044→                      <><FileText className="w-4 h-4" /> Submit Application</>
+  2045→                    )}
+  2046→                  </button>
+  2047→                  <button
+  2048→                    type="button"
+  2049→                    onClick={() => { setSelectedVacancy(null); setFormStatus("idle"); }}
+  2050→                    className="inline-flex items-center gap-2 text-[#0B3D2E]/50 hover:text-[#0B3D2E] text-sm font-medium transition-colors px-4 py-3"
+  2051→                  >
+  2052→                    Cancel
+  2053→                  </button>
+  2054→                </div>
+  2055→              </form>
+  2056→            </ContentCard>
+  2057→          </>
+  2058→        )}
+  2059→      </div>
+  2060→    </SubPage>
+  2061→  );
+  2062→}
+  2063→
+  2064→/* ─── NEWS: Announcements ──────────────────────────────────── */
+  2065→function AnnouncementsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2066→  return (
+  2067→    <SubPage onNavigate={onNavigate} title="Announcements" breadcrumb="News / Announcements" badge="Public Notices">
+  2068→      <div className="max-w-4xl mx-auto space-y-4">
+  2069→        {[
+  2070→          { date: "June 25, 2026", title: "Public Holiday Notice - Eid al-Adha", summary: "All woreda offices will be closed for the Eid al-Adha public holiday.", icon: Flag },
+  2071→          { date: "June 20, 2026", title: "Community Meeting on New Development Plan", summary: "All residents are invited to attend the public consultation on the 5-year development plan.", icon: UsersRound },
+  2072→          { date: "June 12, 2026", title: "Tax Payment Deadline Extended", summary: "The deadline for annual property and income tax payments has been extended to August 30.", icon: Banknote },
+  2073→          { date: "June 1, 2026", title: "New Kebele Boundaries Announced", summary: "Following the recent census, adjustments to kebele administrative boundaries take effect.", icon: MapPin },
+  2074→          { date: "May 28, 2026", title: "Vaccination Campaign for Livestock", summary: "Free livestock vaccination campaign across all kebeles. All farmers encouraged to participate.", icon: Baby },
+  2075→        ].map((item, i) => (
+  2076→          <ContentCard key={item.title} delay={i * 60}>
+  2077→            <div className="flex items-start gap-4">
+  2078→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAB308] to-[#F59E0B] flex items-center justify-center shrink-0 shadow">
+  2079→                <item.icon className="w-5 h-5 text-white" />
+  2080→              </div>
+  2081→              <div className="min-w-0">
+  2082→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+  2083→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  2084→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+  2085→              </div>
+  2086→            </div>
+  2087→          </ContentCard>
+  2088→        ))}
+  2089→      </div>
+  2090→    </SubPage>
+  2091→  );
+  2092→}
+  2093→
+  2094→/* ─── CONTACT PAGE ─────────────────────────────────────────── */
+  2095→function ContactPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2096→  return (
+  2097→    <SubPage onNavigate={onNavigate} title="Contact Us" breadcrumb="Contact" badge="Get In Touch">
+  2098→      <div className="max-w-4xl mx-auto">
+  2099→        <div className="grid md:grid-cols-3 gap-6 mb-10">
+  2100→          {[
+  2101→            { title: "Office Location", detail: "Amhara Sint Town\nSouth Wollo Zone\nAmhara Region, Ethiopia", icon: MapPinned, color: "from-[#0B3D2E] to-[#10B981]" },
+  2102→            { title: "Phone", detail: "+251 33 XXX XXXX\n\nOffice Hours:\nMon-Fri, 8:00 AM - 5:00 PM", icon: Phone, color: "from-[#EAB308] to-[#F59E0B]" },
+  2103→            { title: "Email", detail: "info@amharasint.gov.et\n\nFor general inquiries\nand service requests", icon: Mail, color: "from-[#DC2626] to-[#EF4444]" },
+  2104→          ].map((c, i) => (
+  2105→            <ContentCard key={c.title} delay={i * 100}>
+  2106→              <div className="text-center">
+  2107→                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+  2108→                  <c.icon className="w-7 h-7 text-white" />
+  2109→                </div>
+  2110→                <h3 className="font-bold text-[#0B3D2E] mb-2">{c.title}</h3>
+  2111→                <p className="text-[#0B3D2E]/55 text-sm whitespace-pre-line">{c.detail}</p>
+  2112→              </div>
+  2113→            </ContentCard>
+  2114→          ))}
+  2115→        </div>
+  2116→        <ContentCard delay={300}>
+  2117→          <h2 className="text-xl font-bold text-[#0B3D2E] mb-4">Key Office Contacts</h2>
+  2118→          <div className="overflow-x-auto">
+  2119→            <table className="w-full text-sm">
+  2120→              <thead>
+  2121→                <tr className="border-b border-[#0B3D2E]/10">
+  2122→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Office</th>
+  2123→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Contact Person</th>
+  2124→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Phone</th>
+  2125→                </tr>
+  2126→              </thead>
+  2127→              <tbody className="divide-y divide-[#0B3D2E]/5">
+  2128→                {[
+  2129→                  { office: "Woreda Administrator", person: "Chief Administrator", phone: "+251 33 XXX XXXX" },
+  2130→                  { office: "Education Office", person: "Head of Education", phone: "+251 33 XXX XXXX" },
+  2131→                  { office: "Health Office", person: "Head of Health", phone: "+251 33 XXX XXXX" },
+  2132→                  { office: "Agriculture Office", person: "Head of Agriculture", phone: "+251 33 XXX XXXX" },
+  2133→                  { office: "Finance Office", person: "Head of Finance", phone: "+251 33 XXX XXXX" },
+  2134→                ].map((row) => (
+  2135→                  <tr key={row.office} className="hover:bg-[#F0FDF4] transition-colors">
+  2136→                    <td className="py-3 px-4 text-[#0B3D2E] font-medium">{row.office}</td>
+  2137→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.person}</td>
+  2138→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.phone}</td>
+  2139→                  </tr>
+  2140→                ))}
+  2141→              </tbody>
+  2142→            </table>
+  2143→          </div>
+  2144→        </ContentCard>
+  2145→      </div>
+  2146→    </SubPage>
+  2147→  );
+  2148→}
+  2149→
+  2150→/* ─── NEWSLETTER WIDGET ────────────────────────────────────── */
+  2151→function NewsletterWidget() {
+  2152→  const [email, setEmail] = useState("");
+  2153→  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  2154→
+  2155→  const handleSubscribe = async (e: React.FormEvent) => {
+  2156→    e.preventDefault();
+  2157→    if (!email) return;
+  2158→    setStatus("loading");
+  2159→    try {
+  2160→      const res = await fetch("/api/subscribe", {
+  2161→        method: "POST",
+  2162→        headers: { "Content-Type": "application/json" },
+  2163→        body: JSON.stringify({ email }),
+  2164→      });
+  2165→      if (res.ok) {
+  2166→        setStatus("success");
+  2167→        setEmail("");
+  2168→      } else {
+  2169→        setStatus("error");
+  2170→      }
+  2171→    } catch {
+  2172→      setStatus("error");
+  2173→    }
+  2174→  };
+  2175→
+  2176→  return (
+  2177→    <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+  2178→      <div className="flex">
+  2179→        <input
+  2180→          type="email"
+  2181→          value={email}
+  2182→          onChange={(e) => setEmail(e.target.value)}
+  2183→          placeholder="Your email"
+  2184→          required
+  2185→          className="flex-1 min-w-0 h-9 bg-white/10 border border-white/15 rounded-l-lg px-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#EAB308]/50"
+  2186→        />
+  2187→        <button
+  2188→          type="submit"
+  2189→          disabled={status === "loading"}
+  2190→          className="h-9 px-3 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-semibold text-xs rounded-r-lg transition-colors disabled:opacity-60 shrink-0"
+  2191→        >
+  2192→          {status === "loading" ? "..." : "Join"}
+  2193→        </button>
+  2194→      </div>
+  2195→      {status === "success" && (
+  2196→        <p className="text-[#86EFAC] text-xs">Subscribed successfully!</p>
+  2197→      )}
+  2198→      {status === "error" && (
+  2199→        <p className="text-red-300 text-xs">Something went wrong. Try again.</p>
+  2200→      )}
+  2201→    </form>
+  2202→  );
+  2203→}
+  2204→
+  2205→/* ─── FOOTER ───────────────────────────────────────────────── */
+  2206→function Footer({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2207→  const goPage = (p: PageId) => {
+  2208→    onNavigate(p);
+  2209→    window.scrollTo({ top: 0, behavior: "smooth" });
+  2210→  };
+  2211→  return (
+  2212→    <footer className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #062B1F 0%, #0B3D2E 30%, #0D4A35 50%, #0B3D2E 70%, #062B1F 100%)" }}>
+  2213→      <div className="h-1 bg-gradient-to-r from-[#EAB308] via-[#FACC15] to-[#EAB308]" />
+  2214→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+  2215→        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 md:gap-8">
+  2216→          <div>
+  2217→            <div className="flex items-center gap-3 mb-5">
+  2218→              <img src="/logo.png" alt="Amhara Sint Woreda Logo" className="h-16 w-auto rounded-xl shadow-lg ring-2 ring-white/20" />
+  2219→              <div>
+  2220→                <h3 className="text-white font-bold text-base leading-tight">Amhara Sint</h3>
+  2221→                <p className="text-[#86EFAC] text-xs font-medium">Woreda Administration</p>
+  2222→              </div>
+  2223→            </div>
+  2224→            <p className="text-white/50 text-sm leading-relaxed">Committed to transparency, development, and the well-being of every citizen.</p>
+  2225→          </div>
+  2226→          <div>
+  2227→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">About</h4>
+  2228→            <ul className="space-y-2.5">
+  2229→              {[
+  2230→                { label: "History & Background", href: "about-history" as PageId },
+  2231→                { label: "Overview", href: "about-overview" as PageId },
+  2232→                { label: "Location", href: "about-location" as PageId },
+  2233→              ].map((l) => (
+  2234→                <li key={l.href}><button onClick={() => goPage(l.href)} className="text-white/50 hover:text-[#EAB308] text-sm transition-colors flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" />{l.label}</button></li>
+  2235→              ))}
+  2236→            </ul>
+  2237→          </div>
+  2238→          <div>
+  2239→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Services</h4>
+  2240→            <ul className="space-y-2.5">
+  2241→              {[
+  2242→                { label: "Education", href: "svc-education" as PageId },
+  2243→                { label: "Health", href: "svc-health" as PageId },
+  2244→                { label: "Agriculture", href: "svc-agriculture" as PageId },
+  2245→                { label: "Transport", href: "svc-transport" as PageId },
+  2246→              ].map((l) => (
+  2247→                <li key={l.href}><button onClick={() => goPage(l.href)} className="text-white/50 hover:text-[#EAB308] text-sm transition-colors flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" />{l.label}</button></li>
+  2248→              ))}
+  2249→            </ul>
+  2250→          </div>
+  2251→          <div>
+  2252→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Contact</h4>
+  2253→            <div className="space-y-3">
+  2254→              <div className="flex items-start gap-2.5"><MapPinned className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" /><p className="text-white/50 text-sm">Amhara Sint Town, South Wollo Zone, Amhara, Ethiopia</p></div>
+  2255→              <div className="flex items-center gap-2.5"><Phone className="w-4 h-4 text-[#EAB308] shrink-0" /><p className="text-white/50 text-sm">+251 33 XXX XXXX</p></div>
+  2256→              <div className="flex items-center gap-2.5"><Mail className="w-4 h-4 text-[#EAB308] shrink-0" /><p className="text-white/50 text-sm">info@amharasint.gov.et</p></div>
+  2257→            </div>
+  2258→          </div>
+  2259→          <div>
+  2260→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Newsletter</h4>
+  2261→            <p className="text-white/50 text-sm mb-3">Stay updated with the latest from Amhara Sint.</p>
+  2262→            <NewsletterWidget />
+  2263→          </div>
+  2264→          <div>
+  2265→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Follow Us</h4>
+  2266→            <div className="flex flex-wrap gap-2.5">
+  2267→              {[
+  2268→                { icon: Facebook, url: "https://facebook.com/AmharaSint", color: "bg-[#1877F2] hover:bg-[#1565C0]" },
+  2269→                { icon: Youtube, url: "https://youtube.com/@AmharaSint", color: "bg-[#FF0000] hover:bg-[#CC0000]" },
+  2270→                { icon: Linkedin, url: "https://linkedin.com/company/AmharaSint", color: "bg-[#0A66C2] hover:bg-[#084F97]" },
+  2271→                { icon: Github, url: "https://github.com/AmharaSint", color: "bg-[#333] hover:bg-[#24292F]" },
+  2272→                { icon: Instagram, url: "https://instagram.com/AmharaSint", color: "bg-[#E4405F] hover:bg-[#C13584]" },
+  2273→                { icon: Twitter, url: "https://twitter.com/AmharaSint", color: "bg-[#1DA1F2] hover:bg-[#0D8BD9]" },
+  2274→              ].map((s) => (
+  2275→                <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200`}>
+  2276→                  <s.icon className="w-4.5 h-4.5" />
+  2277→                </a>
+  2278→              ))}
+  2279→            </div>
+  2280→          </div>
+  2281→        </div>
+  2282→      </div>
+  2283→      <div className="border-t border-white/10">
+  2284→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col items-center gap-3">
+  2285→          <p className="text-white/40 text-xs">&copy; {new Date().getFullYear()} Amhara Sint Woreda Administration. All rights reserved.</p>
+  2286→          <div className="flex items-center gap-3 bg-[#EAB308]/15 border border-[#EAB308]/25 rounded-full px-5 py-2.5 hover:bg-[#EAB308]/25 transition-all duration-300 group">
+  2287→            <div className="w-8 h-8 rounded-full bg-[#EAB308] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+  2288→              <span className="text-[#0B3D2E] font-extrabold text-xs">MA</span>
+  2289→            </div>
+  2290→            <div className="flex flex-col">
+  2291→              <span className="text-white font-bold text-sm leading-tight">Developed by Meseret Akalu</span>
+  2292→              <span className="text-[#EAB308] font-semibold text-xs leading-tight">+251 912 465 247</span>
+  2293→            </div>
+  2294→          </div>
+  2295→        </div>
+  2296→      </div>
+  2297→    </footer>
+  2298→  );
+  2299→}
+  2300→
+  2301→/* ─── NEWS FEED (Home Page) ─────────────────────────────────── */
+  2302→const NEWS_FEED = [
+  2303→  {
+  2304→    image: "https://sfile.chatglm.cn/images-ppt/634822b7ff39.jpg",
+  2305→    title: "New Primary School Construction Completed in Gonder Ber Kebele",
+  2306→    summary: "A new 8-classroom primary school has been completed and handed over to the community, serving over 400 students from the surrounding areas. The school includes a library and administrative offices.",
+  2307→    author: "Communication Office",
+  2308→    date: "June 28, 2026",
+  2309→    likes: 142,
+  2310→    category: "Education",
+  2311→  },
+  2312→  {
+  2313→    image: "https://sfile.chatglm.cn/images-ppt/93701603d414.png",
+  2314→    title: "Health Center Expansion Project Launched in Amhara Sint Town",
+  2315→    summary: "Construction has begun on expanding the main health center to include maternity and pediatric wards. The project is expected to be completed within 8 months.",
+  2316→    author: "Health Office",
+  2317→    date: "June 25, 2026",
+  2318→    likes: 98,
+  2319→    category: "Health",
+  2320→  },
+  2321→  {
+  2322→    image: "https://sfile.chatglm.cn/images-ppt/e31dc4b12d41.jpg",
+  2323→    title: "Annual Agricultural Input Distribution Campaign Reaches 10,000 Households",
+  2324→    summary: "Over 10,000 farming households across all 22 kebeles have received improved seeds and fertilizer for the main planting season, boosting food security prospects.",
+  2325→    author: "Agriculture Office",
+  2326→    date: "June 22, 2026",
+  2327→    likes: 215,
+  2328→    category: "Agriculture",
+  2329→  },
+  2330→  {
+  2331→    image: "https://sfile.chatglm.cn/images-ppt/6710c8032383.jpeg",
+  2332→    title: "Road Construction Connecting 3 Remote Kebeles Approved",
+  2333→    summary: "The regional government has approved funding for 25 km of new all-weather roads connecting remote kebeles to the woreda capital, improving access to services.",
+  2334→    author: "Road & Transport Office",
+  2335→    date: "June 18, 2026",
+  2336→    likes: 176,
+  2337→    category: "Infrastructure",
+  2338→  },
+  2339→  {
+  2340→    image: "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg",
+  2341→    title: "Woreda Council Approves Record Annual Budget of ETB 85 Million",
+  2342→    summary: "The council approved a budget of ETB 85 million for the fiscal year 2026/27, with major allocations for education, health, and road infrastructure.",
+  2343→    author: "Finance Office",
+  2344→    date: "June 15, 2026",
+  2345→    likes: 134,
+  2346→    category: "Governance",
+  2347→  },
+  2348→  {
+  2349→    image: "https://sfile.chatglm.cn/images-ppt/d57be5c1e89d.jpg",
+  2350→    title: "Clean Water Project Benefits 5,000 Residents in 5 Kebeles",
+  2351→    summary: "Five new deep boreholes with solar-powered pumps now provide clean, safe water access to approximately 5,000 residents in previously underserved communities.",
+  2352→    author: "Water Office",
+  2353→    date: "June 10, 2026",
+  2354→    likes: 203,
+  2355→    category: "Water",
+  2356→  },
+  2357→];
+  2358→
+  2359→function NewsFeedSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  2360→  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  2361→  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(
+  2362→    Object.fromEntries(NEWS_FEED.map((n) => [n.title, n.likes]))
+  2363→  );
+  2364→
+  2365→  const toggleLike = (title: string) => {
+  2366→    setLiked((prev) => {
+  2367→      const isLiked = prev[title];
+  2368→      setLikeCounts((counts) => ({
+  2369→        ...counts,
+  2370→        [title]: (counts[title] || 0) + (isLiked ? -1 : 1),
+  2371→      }));
+  2372→      return { ...prev, [title]: !isLiked };
+  2373→    });
+  2374→  };
+  2375→
+  2376→  return (
+  2377→    <section className="py-16 md:py-20 bg-[#F0FDF4]">
+  2378→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  2379→        <AnimatedSection className="text-center mb-10">
+  2380→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#EAB308]/10 text-[#A16207]">
+  2381→            <Newspaper className="w-4 h-4 mr-1.5" />
+  2382→            Latest News & Updates
+  2383→          </Badge>
+  2384→          <h2 className="text-3xl md:text-4xl font-extrabold text-[#0B3D2E] mb-3">
+  2385→            What&apos;s <span className="text-[#EAB308]">Happening</span>
+  2386→          </h2>
+  2387→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-base">
+  2388→            Stay informed with the latest developments from Amhara Sint Woreda
+  2389→          </p>
+  2390→        </AnimatedSection>
+  2391→
+  2392→        {/* Featured (first 2 large) */}
+  2393→        <div className="grid md:grid-cols-2 gap-6 mb-6">
+  2394→          {NEWS_FEED.slice(0, 2).map((item, i) => (
+  2395→            <AnimatedSection key={item.title} delay={i * 100}>
+  2396→              <Card className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group h-full">
+  2397→                <div className="relative h-52 md:h-64 overflow-hidden">
+  2398→                  <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+  2399→                  <div className="absolute top-3 left-3">
+  2400→                    <Badge className="bg-[#0B3D2E] text-white text-xs">{item.category}</Badge>
+  2401→                  </div>
+  2402→                </div>
+  2403→                <CardContent className="p-5 md:p-6">
+  2404→                  <h3 className="font-bold text-[#0B3D2E] text-base md:text-lg mb-2 line-clamp-2 group-hover:text-[#145A44] transition-colors">{item.title}</h3>
+  2405→                  <p className="text-[#0B3D2E]/55 text-sm leading-relaxed mb-4 line-clamp-3">{item.summary}</p>
+  2406→                  <div className="flex items-center justify-between">
+  2407→                    <div className="flex items-center gap-3 text-xs text-[#0B3D2E]/50">
+  2408→                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{item.author}</span>
+  2409→                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{item.date}</span>
+  2410→                    </div>
+  2411→                    <button
+  2412→                      onClick={() => toggleLike(item.title)}
+  2413→                      className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full transition-all ${liked[item.title] ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-400"}`}
+  2414→                    >
+  2415→                      <ThumbsUp className={`w-4 h-4 ${liked[item.title] ? "fill-red-500" : ""}`} />
+  2416→                      {likeCounts[item.title]}
+  2417→                    </button>
+  2418→                  </div>
+  2419→                </CardContent>
+  2420→              </Card>
+  2421→            </AnimatedSection>
+  2422→          ))}
+  2423→        </div>
+  2424→
+  2425→        {/* Grid (remaining 4) */}
+  2426→        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+  2427→          {NEWS_FEED.slice(2, 6).map((item, i) => (
+  2428→            <AnimatedSection key={item.title} delay={i * 80}>
+  2429→              <Card className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group h-full">
+  2430→                <div className="relative h-36 overflow-hidden">
+  2431→                  <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+  2432→                  <div className="absolute top-2 left-2">
+  2433→                    <Badge className="bg-[#0B3D2E] text-white text-[10px]">{item.category}</Badge>
+  2434→                  </div>
+  2435→                </div>
+  2436→                <CardContent className="p-4">
+  2437→                  <h3 className="font-bold text-[#0B3D2E] text-sm mb-1.5 line-clamp-2 group-hover:text-[#145A44] transition-colors">{item.title}</h3>
+  2438→                  <p className="text-[#0B3D2E]/50 text-xs leading-relaxed mb-3 line-clamp-2">{item.summary}</p>
+  2439→                  <div className="flex items-center justify-between">
+  2440→                    <div className="flex items-center gap-2 text-[10px] text-[#0B3D2E]/45">
+  2441→                      <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />{item.author}</span>
+  2442→                      <span>{item.date}</span>
+  2443→                    </div>
+  2444→                    <button
+  2445→                      onClick={() => toggleLike(item.title)}
+  2446→                      className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full transition-all ${liked[item.title] ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:text-red-400"}`}
+  2447→                    >
+  2448→                      <ThumbsUp className={`w-3 h-3 ${liked[item.title] ? "fill-red-500" : ""}`} />
+  2449→                      {likeCounts[item.title]}
+  2450→                    </button>
+  2451→                  </div>
+  2452→                </CardContent>
+  2453→              </Card>
+  2454→            </AnimatedSection>
+  2455→          ))}
+  2456→        </div>
+  2457→
+  2458→        <div className="text-center mt-10">
+  2459→          <button
+  2460→            onClick={() => { onNavigate("news-news"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+  2461→            className="inline-flex items-center gap-2 bg-[#0B3D2E] hover:bg-[#145A44] text-white font-semibold text-sm px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
+  2462→          >
+  2463→            View All News
+  2464→            <ChevronRight className="w-4 h-4" />
+  2465→          </button>
+  2466→        </div>
+  2467→      </div>
+  2468→    </section>
+  2469→  );
+  2470→}
+  2471→
+  2472→/* ─── GALLERY PAGE ─────────────────────────────────────────── */
+  2473→const GALLERY_IMAGES = [
+  2474→  { src: "https://sfile.chatglm.cn/images-ppt/d57be5c1e89d.jpg", title: "Highland Landscape", category: "Nature" },
+  2475→  { src: "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg", title: "Mountain Scenery", category: "Nature" },
+  2476→  { src: "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg", title: "Community Life", category: "People" },
+  2477→  { src: "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg", title: "Development Progress", category: "Development" },
+  2478→  { src: "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg", title: "Agricultural Fields", category: "Agriculture" },
+  2479→  { src: "https://sfile.chatglm.cn/images-ppt/56336ff1a645.jpg", title: "Infrastructure", category: "Infrastructure" },
+  2480→  { src: "https://sfile.chatglm.cn/images-ppt/4db62da31bf6.png", title: "Woreda Vision", category: "Governance" },
+  2481→  { src: "https://sfile.chatglm.cn/images-ppt/ba8313230e3e.jpg", title: "Administration Building", category: "Governance" },
+  2482→  { src: "https://sfile.chatglm.cn/images-ppt/634822b7ff39.jpg", title: "Education Activities", category: "Education" },
+  2483→  { src: "https://sfile.chatglm.cn/images-ppt/5f0a9b467c16.png", title: "Students Learning", category: "Education" },
+  2484→  { src: "https://sfile.chatglm.cn/images-ppt/e31dc4b12d41.jpg", title: "Farmland", category: "Agriculture" },
+  2485→  { src: "https://sfile.chatglm.cn/images-ppt/8f5a14b48d88.jpg", title: "Harvest Season", category: "Agriculture" },
+  2486→  { src: "https://sfile.chatglm.cn/images-ppt/93701603d414.png", title: "Health Services", category: "Health" },
+  2487→  { src: "https://sfile.chatglm.cn/images-ppt/c452da5a0fb8.png", title: "Health Center", category: "Health" },
+  2488→  { src: "https://sfile.chatglm.cn/images-ppt/6710c8032383.jpeg", title: "Road Network", category: "Infrastructure" },
+  2489→  { src: "https://sfile.chatglm.cn/images-ppt/7f04de62e14f.jpg", title: "Town Development", category: "Infrastructure" },
+  2490→];
+  2491→
+  2492→function GalleryPage() {
+  2493→  const [selected, setSelected] = useState<string | null>(null);
+  2494→  const [filter, setFilter] = useState("All");
+  2495→  const categories = ["All", ...Array.from(new Set(GALLERY_IMAGES.map((i) => i.category)))];
+  2496→  const filtered = filter === "All" ? GALLERY_IMAGES : GALLERY_IMAGES.filter((i) => i.category === filter);
+  2497→
+  2498→  return (
+  2499→    <div className="pt-24 pb-16 min-h-screen">
+  2500→      {/* Header */}
+
+[showing lines 2001-2500 of 2633; use offset=2501 with limit to continue reading]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bid-1",
+    "title": "Construction of All-Weather Road (Kebele A to Kebele B)",
+    "description": "Construction of 25 km all-weather road connecting three remote kebeles to the woreda capital. Includes culverts, drainage systems, and road signage.",
+    "budget": "ETB 15 Million",
+    "budgetAmount": 15000000,
+    "deadline": "2026-07-30",
+    "status": "Open",
+    "createdAt": "2026-06-15T10:00:00Z"
+  },
+  {
+    "id": "bid-2",
+    "title": "Supply of Medical Equipment for Health Center Expansion",
+    "description": "Procurement of medical equipment including maternity ward supplies, pediatric equipment, laboratory instruments, and pharmacy shelving for the expanded health center.",
+    "budget": "ETB 3.2 Million",
+    "budgetAmount": 3200000,
+    "deadline": "2026-07-20",
+    "status": "Open",
+    "createdAt": "2026-06-18T09:00:00Z"
+  },
+  {
+    "id": "bid-3",
+    "title": "Office Furniture Procurement for Woreda Administration",
+    "description": "Supply and delivery of office furniture including desks, chairs, filing cabinets, and bookshelves for the woreda administration building renovation.",
+    "budget": "ETB 850,000",
+    "budgetAmount": 850000,
+    "deadline": "2026-07-15",
+    "status": "Open",
+    "createdAt": "2026-06-20T11:00:00Z"
+  },
+  {
+    "id": "bid-4",
+    "title": "Borehole Drilling in 5 Kebeles (Water Supply Project)",
+    "description": "Drilling of 5 deep boreholes with installation of solar-powered pumps, water storage tanks, and distribution points in 5 underserved kebeles.",
+    "budget": "ETB 8 Million",
+    "budgetAmount": 8000000,
+    "deadline": "2026-06-30",
+    "status": "Closed",
+    "createdAt": "2026-05-15T08:00:00Z"
+  },
+  {
+    "id": "bid-5",
+    "title": "School Construction (4 Classroom Blocks)",
+    "description": "Construction of 4 classroom blocks each with 8 classrooms, including furniture, blackboards, and administrative offices in Gonder Ber Kebele.",
+    "budget": "ETB 12 Million",
+    "budgetAmount": 12000000,
+    "deadline": "2026-06-15",
+    "status": "Awarded",
+    "createdAt": "2026-05-01T10:00:00Z"
+  }
+]

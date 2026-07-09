@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian farmers harvesting wheat"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian farmers harvesting wheat",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg",
+      "caption": "",
+      "source": "Dreamstime.com",
+      "original_width": "1600px",
+      "original_height": "1157px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/b9034d2fe345.jpeg",
+      "caption": "",
+      "source": "The Rockefeller Foundation",
+      "original_width": "1660px",
+      "original_height": "1245px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/419b55a60ae2.jpg",
+      "caption": "",
+      "source": "New York Daily News",
+      "original_width": "1600px",
+      "original_height": "900px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/4a4485efe246.jpg",
+      "caption": "",
+      "source": "Nature's Pharmacy - Substack",
+      "original_width": "2024px",
+      "original_height": "1518px"
+    }
+  ]
+}

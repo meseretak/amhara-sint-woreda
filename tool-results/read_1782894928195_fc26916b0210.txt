@@ -1,0 +1,402 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState, useCallback } from "react";
+     4→
+     5→/* ─── types ─── */
+     6→type AdminPage = "dashboard" | "news" | "news-new" | "news-edit" | "bids" | "bids-new" | "bids-edit" | "vacancy" | "vacancy-new" | "vacancy-edit" | "subscribers" | "settings";
+     7→
+     8→interface DashboardStats {
+     9→  totalNews: number;
+    10→  totalBids: number;
+    11→  totalVacancies: number;
+    12→  totalSubscribers: number;
+    13→  openBids: number;
+    14→  publishedNews: number;
+    15→  newsByMonth: Record<string, number>;
+    16→  recentActivity: { type: string; message: string; date: string }[];
+    17→}
+    18→
+    19→interface NewsItem { id: string; title: string; summary: string; category: string; author: string; status: string; featured: boolean; date: string; content?: string; imageUrl?: string; }
+    20→interface BidItem { id: string; title: string; description: string; budget: string; budgetAmount: number; deadline: string; status: string; }
+    21→interface VacancyItem { id: string; title: string; department: string; type: string; deadline: string; description?: string; requirements?: string; }
+    22→interface Subscriber { id: string; email: string; subscribedAt: string; }
+    23→
+    24→const CATEGORIES = ["Education", "Health", "Agriculture", "Infrastructure", "Governance", "Water", "Finance", "Transport", "Other"];
+    25→const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    26→
+    27→/* ─── spinner ─── */
+    28→function Spinner() {
+    29→  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-[3px] border-[#0B3D2E]/20 border-t-[#0B3D2E] rounded-full animate-spin" /></div>;
+    30→}
+    31→
+    32→/* ─── SIDEBAR ─── */
+    33→function Sidebar({ page, nav, onLogout }: { page: AdminPage; nav: (p: AdminPage) => void; onLogout: () => void }) {
+    34→  const items: { label: string; key: AdminPage; icon: string }[] = [
+    35→    { label: "Dashboard", key: "dashboard", icon: "📊" },
+    36→    { label: "News", key: "news", icon: "📰" },
+    37→    { label: "Bids & Tenders", key: "bids", icon: "💼" },
+    38→    { label: "Vacancies", key: "vacancy", icon: "📋" },
+    39→    { label: "Subscribers", key: "subscribers", icon: "✉️" },
+    40→    { label: "Settings", key: "settings", icon: "⚙️" },
+    41→  ];
+    42→
+    43→  const active = (key: AdminPage) => {
+    44→    if (key === "dashboard") return page === "dashboard";
+    45→    return page === key || page === (key + "-new" as AdminPage) || page === (key + "-edit" as AdminPage);
+    46→  };
+    47→
+    48→  return (
+    49→    <>
+    50→      <div id="sidebar-overlay" className="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} />
+    51→      <aside id="admin-sidebar" className="fixed top-0 left-0 z-50 w-64 h-screen bg-[#0B3D2E] flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    52→        <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+    53→          <button onClick={() => nav("dashboard")} className="flex items-center gap-3">
+    54→            <div className="w-9 h-9 rounded-lg bg-[#EAB308] flex items-center justify-center shadow-md text-sm">🏛️</div>
+    55→            <div>
+    56→              <div className="text-white font-bold text-sm leading-tight">Admin Panel</div>
+    57→              <div className="text-[#86EFAC] text-[10px] font-medium">Amhara Sint</div>
+    58→            </div>
+    59→          </button>
+    60→          <button onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} className="lg:hidden text-white/60 hover:text-white p-1">✕</button>
+    61→        </div>
+    62→        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    63→          {items.map((item) => (
+    64→            <button key={item.key} onClick={() => nav(item.key)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active(item.key) ? "bg-[#EAB308]/15 text-[#EAB308]" : "text-white/60 hover:text-white hover:bg-white/8"}`}>
+    65→              <span className="w-[18px] text-center shrink-0">{item.icon}</span>
+    66→              {item.label}
+    67→            </button>
+    68→          ))}
+    69→        </nav>
+    70→        <div className="px-3 pb-4 space-y-1 border-t border-white/10 pt-3">
+    71→          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all duration-200">
+    72→            <span className="w-[18px] text-center">↗</span> Back to Website
+    73→          </a>
+    74→          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200">
+    75→            <span className="w-[18px] text-center">↩</span> Logout
+    76→          </button>
+    77→        </div>
+    78→      </aside>
+    79→    </>
+    80→  );
+    81→}
+    82→
+    83→/* ─── DASHBOARD ─── */
+    84→function DashboardPage({ nav }: { nav: (p: AdminPage) => void }) {
+    85→  const [stats, setStats] = useState<DashboardStats | null>(null);
+    86→  useEffect(() => { fetch("/admin/api/stats").then(r => r.json()).then(setStats); }, []);
+    87→  if (!stats) return <Spinner />;
+    88→
+    89→  const maxCount = Math.max(...Object.values(stats.newsByMonth), 1);
+    90→  const barData = MONTHS.map((m, i) => { const key = `2026-${String(i + 1).padStart(2, "0")}`; return { month: m, count: stats.newsByMonth[key] || 0 }; });
+    91→
+    92→  const cards = [
+    93→    { label: "Total News", value: stats.totalNews, icon: "📰", bg: "bg-[#0B3D2E]", click: () => nav("news") },
+    94→    { label: "Total Bids", value: stats.totalBids, icon: "💼", bg: "bg-amber-50", click: () => nav("bids") },
+    95→    { label: "Vacancies", value: stats.totalVacancies, icon: "📋", bg: "bg-emerald-50", click: () => nav("vacancy") },
+    96→    { label: "Subscribers", value: stats.totalSubscribers, icon: "✉️", bg: "bg-rose-50", click: () => nav("subscribers") },
+    97→  ];
+    98→
+    99→  const actions = [
+   100→    { label: "Add News", desc: "Create a new news article", page: "news-new" as AdminPage },
+   101→    { label: "Add Bid", desc: "Post a new tender", page: "bids-new" as AdminPage },
+   102→    { label: "Add Vacancy", desc: "Post a job opening", page: "vacancy-new" as AdminPage },
+   103→    { label: "View Subscribers", desc: "Manage email list", page: "subscribers" as AdminPage },
+   104→  ];
+   105→
+   106→  return (
+   107→    <div className="space-y-6">
+   108→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   109→        <div>
+   110→          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+   111→          <p className="text-sm text-gray-500 mt-1">Overview of your woreda administration</p>
+   112→        </div>
+   113→        <div className="flex gap-2">
+   114→          <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ New Post</button>
+   115→          <button onClick={() => nav("bids-new")} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">＋ New Bid</button>
+   116→        </div>
+   117→      </div>
+   118→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   119→        {cards.map((c) => (
+   120→          <button key={c.label} onClick={c.click} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 text-left">
+   121→            <div className="flex items-center justify-between">
+   122→              <div>
+   123→                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{c.label}</p>
+   124→                <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
+   125→              </div>
+   126→              <div className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center text-lg`}>{c.icon}</div>
+   127→            </div>
+   128→          </button>
+   129→        ))}
+   130→      </div>
+   131→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   132→        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+   133→          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">📈 Posts Over Time</h3>
+   134→          <div className="flex items-end gap-2 h-48 mt-4">
+   135→            {barData.map((d) => (
+   136→              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+   137→                <span className="text-[10px] text-gray-400 font-medium">{d.count > 0 ? d.count : ""}</span>
+   138→                <div className="w-full rounded-t-md transition-all duration-500 min-h-[4px]" style={{ height: `${Math.max((d.count / maxCount) * 100, 4)}%`, backgroundColor: d.count > 0 ? "#0B3D2E" : "#f3f4f6" }} />
+   139→                <span className="text-[10px] text-gray-400">{d.month}</span>
+   140→              </div>
+   141→            ))}
+   142→          </div>
+   143→        </div>
+   144→        <div className="bg-white rounded-xl shadow-sm p-6">
+   145→          <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
+   146→          <div className="space-y-2">
+   147→            {actions.map((a) => (
+   148→              <button key={a.page} onClick={() => nav(a.page)} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group text-left">
+   149→                <div>
+   150→                  <p className="text-sm font-medium text-gray-900">{a.label}</p>
+   151→                  <p className="text-xs text-gray-400">{a.desc}</p>
+   152→                </div>
+   153→                <span className="text-gray-300 group-hover:text-[#0B3D2E] transition-colors">→</span>
+   154→              </button>
+   155→            ))}
+   156→          </div>
+   157→        </div>
+   158→      </div>
+   159→      <div className="bg-white rounded-xl shadow-sm p-6">
+   160→        <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h3>
+   161→        <div className="space-y-3">
+   162→          {stats.recentActivity.length === 0 && <p className="text-sm text-gray-400 text-center py-6">No recent activity</p>}
+   163→          {stats.recentActivity.map((a, i) => (
+   164→            <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+   165→              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${a.type === "news" ? "bg-blue-50 text-blue-600" : a.type === "bid" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>{a.type}</span>
+   166→              <p className="text-sm text-gray-600 flex-1 truncate">{a.message}</p>
+   167→              <span className="text-xs text-gray-400 shrink-0">{new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+   168→            </div>
+   169→          ))}
+   170→        </div>
+   171→      </div>
+   172→    </div>
+   173→  );
+   174→}
+   175→
+   176→/* ─── NEWS LIST ─── */
+   177→function NewsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   178→  const [news, setNews] = useState<NewsItem[]>([]);
+   179→  const [search, setSearch] = useState("");
+   180→  const [loading, setLoading] = useState(true);
+   181→  const load = () => { fetch("/admin/api/news").then(r => r.json()).then(setNews).finally(() => setLoading(false)); };
+   182→  useEffect(() => { load(); }, []);
+   183→  const handleDelete = async (id: string) => { if (!confirm("Delete this article?")) return; await fetch(`/admin/api/news?id=${id}`, { method: "DELETE" }); load(); };
+   184→  const filtered = news.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+   185→  if (loading) return <Spinner />;
+   186→  return (
+   187→    <div className="space-y-6">
+   188→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   189→        <div><h1 className="text-2xl font-bold text-gray-900">News Management</h1><p className="text-sm text-gray-500 mt-1">{news.length} articles total</p></div>
+   190→        <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add News</button>
+   191→      </div>
+   192→      <div className="relative max-w-sm">
+   193→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   194→        <input placeholder="Search news..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   195→      </div>
+   196→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   197→        <div className="overflow-x-auto">
+   198→          <table className="w-full text-sm">
+   199→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   200→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   201→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Category</th>
+   202→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Date</th>
+   203→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   204→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   205→            </tr></thead>
+   206→            <tbody className="divide-y divide-gray-50">
+   207→              {filtered.map(item => (
+   208→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   209→                  <td className="py-3 px-4">
+   210→                    <div className="flex items-center gap-2">
+   211→                      {item.featured && <span className="bg-[#EAB308]/10 text-[#A16207] text-[10px] px-1.5 py-0.5 rounded font-medium">Featured</span>}
+   212→                      <span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span>
+   213→                    </div>
+   214→                  </td>
+   215→                  <td className="py-3 px-4 hidden md:table-cell"><span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{item.category}</span></td>
+   216→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.date}</td>
+   217→                  <td className="py-3 px-4">
+   218→                    <span className={`text-xs px-2 py-0.5 rounded ${item.status === "published" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>{item.status === "published" ? "👁 Published" : "🚫 Draft"}</span>
+   219→                  </td>
+   220→                  <td className="py-3 px-4">
+   221→                    <div className="flex items-center justify-end gap-1">
+   222→                      <button onClick={() => { nav("news-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   223→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   224→                    </div>
+   225→                  </td>
+   226→                </tr>
+   227→              ))}
+   228→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No news articles found.</td></tr>}
+   229→            </tbody>
+   230→          </table>
+   231→        </div>
+   232→      </div>
+   233→    </div>
+   234→  );
+   235→}
+   236→
+   237→/* ─── NEWS FORM (new + edit) ─── */
+   238→function NewsForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   239→  const [loading, setLoading] = useState(!!editId);
+   240→  const [saving, setSaving] = useState(false);
+   241→  const [form, setForm] = useState({ title: "", summary: "", content: "", category: "Education", author: "", imageUrl: "", featured: false, status: "draft" as "published" | "draft", date: new Date().toISOString().split("T")[0] });
+   242→
+   243→  useEffect(() => {
+   244→    if (!editId) return;
+   245→    fetch("/admin/api/news").then(r => r.json()).then((items: NewsItem[]) => {
+   246→      const item = items.find(n => n.id === editId);
+   247→      if (item) setForm({ title: item.title || "", summary: item.summary || "", content: item.content || "", category: item.category || "Education", author: item.author || "", imageUrl: item.imageUrl || "", featured: item.featured || false, status: item.status || "draft", date: item.date || "" });
+   248→    }).finally(() => setLoading(false));
+   249→  }, [editId]);
+   250→
+   251→  const handleSubmit = async (e: React.FormEvent) => {
+   252→    e.preventDefault();
+   253→    if (!form.title.trim()) return;
+   254→    setSaving(true);
+   255→    try {
+   256→      await fetch("/admin/api/news", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   257→      onBack();
+   258→    } catch { alert("Failed to save article"); } finally { setSaving(false); }
+   259→  };
+   260→
+   261→  if (loading) return <Spinner />;
+   262→  const u = (k: string, v: string | boolean) => setForm({ ...form, [k]: v });
+   263→
+   264→  return (
+   265→    <div className="max-w-3xl mx-auto space-y-6">
+   266→      <div className="flex items-center gap-3">
+   267→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   268→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} News Article</h1>
+   269→      </div>
+   270→      <div className="bg-white rounded-xl shadow-sm p-6">
+   271→        <h3 className="text-base font-semibold text-gray-900 mb-4">Article Details</h3>
+   272→        <form onSubmit={handleSubmit} className="space-y-5">
+   273→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter article title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   274→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   275→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Category</label><select value={form.category} onChange={e => u("category", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+   276→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Author</label><input value={form.author} onChange={e => u("author", e.target.value)} placeholder="e.g. Communication Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   277→          </div>
+   278→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   279→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Publish Date</label><input type="date" value={form.date} onChange={e => u("date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   280→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Image URL</label><input value={form.imageUrl} onChange={e => u("imageUrl", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   281→          </div>
+   282→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Summary</label><textarea value={form.summary} onChange={e => u("summary", e.target.value)} placeholder="Brief summary" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   283→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Full Content</label><textarea value={form.content} onChange={e => u("content", e.target.value)} placeholder="Full article content..." rows={8} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-y" /></div>
+   284→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   285→            <div><p className="text-sm font-medium text-gray-700">Featured Article</p><p className="text-xs text-gray-400">Featured articles appear on the homepage</p></div>
+   286→            <button type="button" onClick={() => u("featured", !form.featured)} className={`relative w-11 h-6 rounded-full transition-colors ${form.featured ? "bg-[#0B3D2E]" : "bg-gray-300"}`}><span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${form.featured ? "translate-x-5" : ""}`} /></button>
+   287→          </div>
+   288→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   289→            <div><p className="text-sm font-medium text-gray-700">Status</p><p className="text-xs text-gray-400">Draft articles are not public</p></div>
+   290→            <select value={form.status} onChange={e => u("status", e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
+   291→          </div>
+   292→          <div className="flex gap-3 pt-2">
+   293→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Article"}</button>
+   294→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   295→          </div>
+   296→        </form>
+   297→      </div>
+   298→    </div>
+   299→  );
+   300→}
+   301→
+   302→/* ─── BIDS LIST ─── */
+   303→function BidsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   304→  const [bids, setBids] = useState<BidItem[]>([]);
+   305→  const [search, setSearch] = useState("");
+   306→  const [loading, setLoading] = useState(true);
+   307→  const load = () => { fetch("/admin/api/bids").then(r => r.json()).then(setBids).finally(() => setLoading(false)); };
+   308→  useEffect(() => { load(); }, []);
+   309→  const handleDelete = async (id: string) => { if (!confirm("Delete this bid?")) return; await fetch(`/admin/api/bids?id=${id}`, { method: "DELETE" }); load(); };
+   310→  const filtered = bids.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+   311→  const statusColor = (s: string) => s === "Open" ? "bg-green-50 text-green-600" : s === "Closed" ? "bg-gray-100 text-gray-500" : "bg-amber-50 text-amber-600";
+   312→  if (loading) return <Spinner />;
+   313→  return (
+   314→    <div className="space-y-6">
+   315→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   316→        <div><h1 className="text-2xl font-bold text-gray-900">Bids & Tenders</h1><p className="text-sm text-gray-500 mt-1">{bids.length} total bids</p></div>
+   317→        <button onClick={() => nav("bids-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Bid</button>
+   318→      </div>
+   319→      <div className="relative max-w-sm">
+   320→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   321→        <input placeholder="Search bids..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   322→      </div>
+   323→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   324→        <div className="overflow-x-auto">
+   325→          <table className="w-full text-sm">
+   326→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   327→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   328→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Budget</th>
+   329→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   330→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   331→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   332→            </tr></thead>
+   333→            <tbody className="divide-y divide-gray-50">
+   334→              {filtered.map(item => (
+   335→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   336→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   337→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell font-medium">{item.budget}</td>
+   338→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   339→                  <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded ${statusColor(item.status)}`}>{item.status}</span></td>
+   340→                  <td className="py-3 px-4">
+   341→                    <div className="flex items-center justify-end gap-1">
+   342→                      <button onClick={() => { nav("bids-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   343→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   344→                    </div>
+   345→                  </td>
+   346→                </tr>
+   347→              ))}
+   348→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No bids found.</td></tr>}
+   349→            </tbody>
+   350→          </table>
+   351→        </div>
+   352→      </div>
+   353→    </div>
+   354→  );
+   355→}
+   356→
+   357→/* ─── BID FORM (new + edit) ─── */
+   358→function BidForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   359→  const [loading, setLoading] = useState(!!editId);
+   360→  const [saving, setSaving] = useState(false);
+   361→  const [form, setForm] = useState({ title: "", description: "", budget: "", budgetAmount: 0, deadline: "", status: "Open" as "Open" | "Closed" | "Awarded" });
+   362→
+   363→  useEffect(() => {
+   364→    if (!editId) return;
+   365→    fetch("/admin/api/bids").then(r => r.json()).then((items: BidItem[]) => {
+   366→      const item = items.find(b => b.id === editId);
+   367→      if (item) setForm({ title: item.title || "", description: item.description || "", budget: item.budget || "", budgetAmount: item.budgetAmount || 0, deadline: item.deadline || "", status: item.status || "Open" });
+   368→    }).finally(() => setLoading(false));
+   369→  }, [editId]);
+   370→
+   371→  const handleSubmit = async (e: React.FormEvent) => {
+   372→    e.preventDefault();
+   373→    if (!form.title.trim()) return;
+   374→    setSaving(true);
+   375→    try {
+   376→      await fetch("/admin/api/bids", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   377→      onBack();
+   378→    } catch { alert("Failed to save bid"); } finally { setSaving(false); }
+   379→  };
+   380→  const u = (k: string, v: string | number) => setForm({ ...form, [k]: v });
+   381→  if (loading) return <Spinner />;
+   382→
+   383→  return (
+   384→    <div className="max-w-3xl mx-auto space-y-6">
+   385→      <div className="flex items-center gap-3">
+   386→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   387→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Bid / Tender</h1>
+   388→      </div>
+   389→      <div className="bg-white rounded-xl shadow-sm p-6">
+   390→        <h3 className="text-base font-semibold text-gray-900 mb-4">Bid Details</h3>
+   391→        <form onSubmit={handleSubmit} className="space-y-5">
+   392→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter bid title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   393→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Describe the bid..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   394→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   395→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Label</label><input value={form.budget} onChange={e => u("budget", e.target.value)} placeholder="e.g. ETB 5 Million" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   396→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Amount (ETB)</label><input type="number" value={form.budgetAmount || ""} onChange={e => u("budgetAmount", Number(e.target.value))} placeholder="e.g. 5000000" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   397→          </div>
+   398→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   399→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   400→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Status</label><select value={form.status} onChange={e => u("status", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Open">Open</option><option value="Closed">Closed</option><option value="Awarded">Awarded</option></select></div>
+
+[showing lines 1-400 of 663; use offset=401 with limit to continue reading]

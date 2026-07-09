@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "query": "Ethiopian highland mountains green landscape scenic view",
+  "count": 3,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/d57be5c1e89d.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "956px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+      "caption": "",
+      "source": "Africa Geographic",
+      "original_width": "1920px",
+      "original_height": "835px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg",
+      "caption": "",
+      "source": "Tripadvisor",
+      "original_width": "1200px",
+      "original_height": "1200px"
+    }
+  ]
+}

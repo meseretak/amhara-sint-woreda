@@ -1,0 +1,91 @@
+{
+  "heroSlides": [
+    { "image": "https://sfile.chatglm.cn/images-ppt/5d712c5b8f44.jpg", "title": "Welcome to Amhara Sint Woreda", "subtitle": "A land of beauty, culture, and progress in South Wollo Zone, Amhara Region" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/e2eed6eb06d5.jpg", "title": "Majestic Highland Landscapes", "subtitle": "Rolling highlands and fertile valleys stretching from the Blue Nile to Mount Tabor at 4,247m" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/c9ebd2951a03.jpg", "title": "Rich Natural Heritage", "subtitle": "Diverse ecosystems and breathtaking scenery in the heart of the Amhara highlands" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/b37b6e89b27a.jpg", "title": "Vibrant Cultural Traditions", "subtitle": "Ancient Orthodox heritage, Meskel celebrations, and time-honored customs define our community" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/2c0bd22da89e.jpg", "title": "The Blue Nile Canyon", "subtitle": "The western boundary of the woreda features one of the most dramatic river canyons in all of Ethiopia" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg", "title": "Agricultural Heartland", "subtitle": "Supporting farmers with modern techniques across 1,437 km² of fertile highland terrain" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/15e928c7ad4d.jpg", "title": "Building the Future", "subtitle": "Roads, schools, and health facilities connecting communities to opportunities" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/395da4df6bb6.jpg", "title": "Trade & Commerce", "subtitle": "Local markets, cooperatives, and enterprises driving economic growth" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/a842501dc00b.jpg", "title": "Education & Youth Empowerment", "subtitle": "Amhara Sint TVET College and preparatory schools preparing the next generation" },
+    { "image": "https://sfile.chatglm.cn/images-ppt/5d19c0f98d58.jpg", "title": "Our Vision", "subtitle": "A prosperous, equitable, and self-reliant Amhara Sint — rooted in tradition, reaching for the future" }
+  ],
+  "culturalPlaces": [
+    {
+      "title": "Tadbaba Maryam Monastery",
+      "img": "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg",
+      "location": "28 km from Ajibar",
+      "tag": "Religious Heritage",
+      "tagColor": "bg-amber-100 text-amber-800",
+      "description": "One of the most historically significant monasteries in Ethiopia, founded during the reign of Emperor Menelik I. It houses sacred relics, ancient manuscripts, and royal crowns.",
+      "highlights": ["Founded during Emperor Menelik I's reign", "Houses sacred relics & royal crowns", "Key site in the Battle of Wayna Daga (1543)", "Ancient manuscripts & religious artifacts"]
+    },
+    {
+      "title": "Borena Sayint National Park",
+      "img": "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg",
+      "location": "Blue Nile (Abay) Canyon",
+      "tag": "Nature & Culture",
+      "tagColor": "bg-emerald-100 text-emerald-800",
+      "description": "A stunning park offering a perfect mix of culture and nature with diverse wildlife, dramatic cliffs, and traditional apiculture communities.",
+      "highlights": ["Dramatic cliffs plunging to the Abay canyon", "Traditional apiculture (beekeeping) communities", "Diverse wildlife unique to the region", "Ancient agricultural lifestyle preserved"]
+    },
+    {
+      "title": "Mount Tabor (Tabor Terara)",
+      "img": "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg",
+      "location": "Border with Legambo, ~170 km East of Dessie",
+      "tag": "Natural Landmark",
+      "tagColor": "bg-blue-100 text-blue-800",
+      "description": "The highest point in the entire South Wollo Zone at 4,247 meters, hosting unique wildlife and profound spiritual significance.",
+      "highlights": ["Highest peak in South Wollo Zone (4,247m)", "Unique wildlife endemic to the area", "Profound historical & spiritual significance", "~170 km east of Dessie town"]
+    },
+    {
+      "title": "The Abay (Blue Nile) Canyon",
+      "img": "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+      "location": "Western Boundary of the Woreda",
+      "tag": "Natural Wonder",
+      "tagColor": "bg-violet-100 text-violet-800",
+      "description": "The western boundary defined by the spectacular canyon of the Abay River with dramatic elevation gradients from 3,000m to 500m.",
+      "highlights": ["Spectacular river canyon views", "Elevation drop from 3,000m to 500m", "Historic Daga ford crossing point", "Connects to Gojjam region since antiquity"]
+    }
+  ],
+  "heroStats": [
+    { "value": 144972, "suffix": "", "display": "144,972", "label": "Population", "icon": "Users", "color": "#10B981", "light": "#ECFDF5" },
+    { "value": 37, "suffix": "", "display": null, "label": "Kebeles", "icon": "MapPin", "color": "#6366F1", "light": "#EEF2FF" },
+    { "value": 100, "suffix": "+", "display": null, "label": "Schools", "icon": "School", "color": "#F59E0B", "light": "#FFFBEB" },
+    { "value": 16, "suffix": "", "display": "16", "label": "Health Facilities", "icon": "HeartPulse", "color": "#F43F5E", "light": "#FFF1F2" },
+    { "value": 1437, "suffix": "", "display": "1,437", "label": "Area (km²)", "icon": "Map", "color": "#8B5CF6", "light": "#F5F3FF" },
+    { "value": 200, "suffix": " M ETB", "display": "200M ETB", "label": "Annual Budget", "icon": "Banknote", "color": "#06B6D4", "light": "#ECFEFF" }
+  ],
+  "tvetPrograms": [
+    { "sector": "Manufacturing", "icon": "Wrench", "color": "#F59E0B", "bg": "#FFFBEB", "programs": ["Wood Work Technology", "Garment Production"] },
+    { "sector": "Construction", "icon": "HardHat", "color": "#F97316", "bg": "#FFF7ED", "programs": ["Structural Construction", "Building Technology"] },
+    { "sector": "ICT", "icon": "Monitor", "color": "#6366F1", "bg": "#EEF2FF", "programs": ["Web Development", "Computer Networking"] },
+    { "sector": "Agriculture", "icon": "Sprout", "color": "#16A34A", "bg": "#F0FDF4", "programs": ["Animal Production", "Crop Production"] }
+  ],
+  "serviceCards": [
+    { "title": "Education", "desc": "100 schools, 3 preparatory schools, and a TVET college providing quality education.", "icon": "GraduationCap", "href": "svc-education", "color": "from-blue-500 to-indigo-600", "img": "https://sfile.chatglm.cn/images-ppt/b60b21cb0921.jpg" },
+    { "title": "Health", "desc": "1 hospital and 15 clinics delivering comprehensive primary healthcare.", "icon": "HeartPulse", "href": "svc-health", "color": "from-rose-500 to-pink-600", "img": "https://sfile.chatglm.cn/images-ppt/40afb43a5118.jpg" },
+    { "title": "Agriculture", "desc": "Supporting farming households with modern techniques across 1,437 km².", "icon": "Tractor", "href": "svc-agriculture", "color": "from-green-500 to-emerald-600", "img": "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg" },
+    { "title": "Trade", "desc": "Promoting enterprises, market linkages, and cooperative development.", "icon": "Store", "href": "svc-trade", "color": "from-purple-500 to-violet-600", "img": "https://sfile.chatglm.cn/images-ppt/b4f869ff3165.jpg" },
+    { "title": "Technology", "desc": "Digital transformation, ICT training, and e-government services.", "icon": "Monitor", "href": "svc-technology", "color": "from-cyan-500 to-teal-600", "img": "https://sfile.chatglm.cn/images-ppt/31a73cdbeed8.jpg" },
+    { "title": "Construction", "desc": "Roads, public buildings, and community facilities development.", "icon": "HardHat", "href": "svc-construction", "color": "from-orange-500 to-amber-600", "img": "https://sfile.chatglm.cn/images-ppt/ebc225438557.png" },
+    { "title": "Transport", "desc": "Road networks and connectivity linking all 37 kebeles together.", "icon": "Truck", "href": "svc-transport", "color": "from-sky-500 to-blue-600", "img": "https://sfile.chatglm.cn/images-ppt/dd28c7e11c64.jpg" },
+    { "title": "Water", "desc": "Clean water points and sanitation programs for communities.", "icon": "Droplets", "href": "svc-water", "color": "from-blue-400 to-cyan-500", "img": "https://sfile.chatglm.cn/images-ppt/279feef8509d.jpg" },
+    { "title": "Justice", "desc": "Community policing, courts, and dispute resolution services.", "icon": "Scale", "href": "svc-justice", "color": "from-slate-600 to-gray-700", "img": "https://sfile.chatglm.cn/images-ppt/7f3715eb8025.jpg" },
+    { "title": "Finance", "desc": "Revenue collection, budget management, and financial administration.", "icon": "Banknote", "href": "svc-finance", "color": "from-emerald-500 to-green-600", "img": "https://sfile.chatglm.cn/images-ppt/9c67be723339.jpg" }
+  ],
+  "siteSettings": {
+    "siteName": "Amhara Sint",
+    "tagline": "Woreda Administration",
+    "developerName": "Meseret Akalu",
+    "developerPhone": "+251 912 465 247",
+    "socialLinks": {
+      "facebook": "https://facebook.com/100066823706013",
+      "youtube": "https://youtube.com/@AmharaSint",
+      "telegram": "https://t.me/AmharaSint",
+      "instagram": "https://instagram.com/AmharaSint",
+      "linkedin": "https://linkedin.com/company/amhara-sint-woreda"
+    }
+  }
+}

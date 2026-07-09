@@ -1,0 +1,218 @@
+[
+  {
+    "label": "Home",
+    "href": "home",
+    "icon": "Home",
+    "parentId": null,
+    "order": 0,
+    "visible": true,
+    "id": "menu-1782896524417-s622j"
+  },
+  {
+    "label": "About",
+    "href": "about-overview",
+    "icon": "Globe",
+    "parentId": null,
+    "order": 1,
+    "visible": true,
+    "id": "menu-1782896524417-0p5sf"
+  },
+  {
+    "label": "History & Background",
+    "href": "about-history",
+    "icon": "BookOpen",
+    "parentId": "menu-1",
+    "order": 0,
+    "visible": true,
+    "id": "menu-1782896524417-uuytr"
+  },
+  {
+    "label": "Overview",
+    "href": "about-overview",
+    "icon": "Globe",
+    "parentId": "menu-1",
+    "order": 1,
+    "visible": true,
+    "id": "menu-1782896524418-gr5hr"
+  },
+  {
+    "label": "Location & Geography",
+    "href": "about-location",
+    "icon": "MapPin",
+    "parentId": "menu-1",
+    "order": 2,
+    "visible": true,
+    "id": "menu-1782896524418-qwtqk"
+  },
+  {
+    "label": "Government",
+    "href": "gov-leadership",
+    "icon": "UserCheck",
+    "parentId": null,
+    "order": 2,
+    "visible": true,
+    "id": "menu-1782896524418-3ol8d"
+  },
+  {
+    "label": "Leadership",
+    "href": "gov-leadership",
+    "icon": "UserCheck",
+    "parentId": "menu-5",
+    "order": 0,
+    "visible": true,
+    "id": "menu-1782896524418-07o7x"
+  },
+  {
+    "label": "Administrative Structure",
+    "href": "gov-structure",
+    "icon": "Building",
+    "parentId": "menu-5",
+    "order": 1,
+    "visible": true,
+    "id": "menu-1782896524418-qusix"
+  },
+  {
+    "label": "Offices & Departments",
+    "href": "gov-offices",
+    "icon": "Shield",
+    "parentId": "menu-5",
+    "order": 2,
+    "visible": true,
+    "id": "menu-1782896524419-t8591"
+  },
+  {
+    "label": "Services",
+    "href": "svc-education",
+    "icon": "GraduationCap",
+    "parentId": null,
+    "order": 3,
+    "visible": true,
+    "id": "menu-1782896524419-d541z"
+  },
+  {
+    "label": "Education",
+    "href": "svc-education",
+    "icon": "GraduationCap",
+    "parentId": "menu-9",
+    "order": 0,
+    "visible": true,
+    "id": "menu-1782896524419-mivz4"
+  },
+  {
+    "label": "Health",
+    "href": "svc-health",
+    "icon": "HeartPulse",
+    "parentId": "menu-9",
+    "order": 1,
+    "visible": true,
+    "id": "menu-1782896524419-ckxoz"
+  },
+  {
+    "label": "Agriculture",
+    "href": "svc-agriculture",
+    "icon": "Tractor",
+    "parentId": "menu-9",
+    "order": 2,
+    "visible": true,
+    "id": "menu-1782896524420-h3fop"
+  },
+  {
+    "label": "Transport",
+    "href": "svc-transport",
+    "icon": "Truck",
+    "parentId": "menu-9",
+    "order": 3,
+    "visible": true,
+    "id": "menu-1782896524420-bj308"
+  },
+  {
+    "label": "Water & Sanitation",
+    "href": "svc-water",
+    "icon": "Droplets",
+    "parentId": "menu-9",
+    "order": 4,
+    "visible": true,
+    "id": "menu-1782896524420-qritq"
+  },
+  {
+    "label": "Justice & Security",
+    "href": "svc-justice",
+    "icon": "Scale",
+    "parentId": "menu-9",
+    "order": 5,
+    "visible": true,
+    "id": "menu-1782896524420-e44fg"
+  },
+  {
+    "label": "Finance & Revenue",
+    "href": "svc-finance",
+    "icon": "Banknote",
+    "parentId": "menu-9",
+    "order": 6,
+    "visible": true,
+    "id": "menu-1782896524420-c80ua"
+  },
+  {
+    "label": "Vacancy",
+    "href": "vacancy",
+    "icon": "Briefcase",
+    "parentId": null,
+    "order": 4,
+    "visible": true,
+    "id": "menu-1782896524421-rpuqz"
+  },
+  {
+    "label": "Announcements",
+    "href": "news-announcements",
+    "icon": "Award",
+    "parentId": null,
+    "order": 5,
+    "visible": true,
+    "id": "menu-1782896524421-iiqq7"
+  },
+  {
+    "label": "News",
+    "href": "news-news",
+    "icon": "Newspaper",
+    "parentId": "menu-18",
+    "order": 0,
+    "visible": true,
+    "id": "menu-1782896524421-xmsod"
+  },
+  {
+    "label": "Bids & Tenders",
+    "href": "bids",
+    "icon": "Briefcase",
+    "parentId": "menu-18",
+    "order": 1,
+    "visible": true,
+    "id": "menu-1782896524421-06vjq"
+  },
+  {
+    "label": "Events",
+    "href": "news-announcements",
+    "icon": "Calendar",
+    "parentId": "menu-18",
+    "order": 2,
+    "visible": true,
+    "id": "menu-1782896524422-6yeqe"
+  },
+  {
+    "label": "Announcements",
+    "href": "news-announcements",
+    "icon": "Award",
+    "parentId": "menu-18",
+    "order": 3,
+    "visible": true,
+    "id": "menu-1782896524422-poq4e"
+  },
+  {
+    "label": "Gallery",
+    "href": "gallery",
+    "icon": "Camera",
+    "parentId": null,
+    "order": 6,
+    "visible": true,
+    "id": "menu-1782896524422-d03k7"
+  }
+]

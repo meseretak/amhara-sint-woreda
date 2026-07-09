@@ -1,0 +1,663 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState, useCallback } from "react";
+     4→
+     5→/* ─── types ─── */
+     6→type AdminPage = "dashboard" | "news" | "news-new" | "news-edit" | "bids" | "bids-new" | "bids-edit" | "vacancy" | "vacancy-new" | "vacancy-edit" | "subscribers" | "settings";
+     7→
+     8→interface DashboardStats {
+     9→  totalNews: number;
+    10→  totalBids: number;
+    11→  totalVacancies: number;
+    12→  totalSubscribers: number;
+    13→  openBids: number;
+    14→  publishedNews: number;
+    15→  newsByMonth: Record<string, number>;
+    16→  recentActivity: { type: string; message: string; date: string }[];
+    17→}
+    18→
+    19→interface NewsItem { id: string; title: string; summary: string; category: string; author: string; status: string; featured: boolean; date: string; content?: string; imageUrl?: string; }
+    20→interface BidItem { id: string; title: string; description: string; budget: string; budgetAmount: number; deadline: string; status: string; }
+    21→interface VacancyItem { id: string; title: string; department: string; type: string; deadline: string; description?: string; requirements?: string; }
+    22→interface Subscriber { id: string; email: string; subscribedAt: string; }
+    23→
+    24→const CATEGORIES = ["Education", "Health", "Agriculture", "Infrastructure", "Governance", "Water", "Finance", "Transport", "Other"];
+    25→const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    26→
+    27→/* ─── spinner ─── */
+    28→function Spinner() {
+    29→  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-[3px] border-[#0B3D2E]/20 border-t-[#0B3D2E] rounded-full animate-spin" /></div>;
+    30→}
+    31→
+    32→/* ─── SIDEBAR ─── */
+    33→function Sidebar({ page, nav, onLogout }: { page: AdminPage; nav: (p: AdminPage) => void; onLogout: () => void }) {
+    34→  const items: { label: string; key: AdminPage; icon: string }[] = [
+    35→    { label: "Dashboard", key: "dashboard", icon: "📊" },
+    36→    { label: "News", key: "news", icon: "📰" },
+    37→    { label: "Bids & Tenders", key: "bids", icon: "💼" },
+    38→    { label: "Vacancies", key: "vacancy", icon: "📋" },
+    39→    { label: "Subscribers", key: "subscribers", icon: "✉️" },
+    40→    { label: "Settings", key: "settings", icon: "⚙️" },
+    41→  ];
+    42→
+    43→  const active = (key: AdminPage) => {
+    44→    if (key === "dashboard") return page === "dashboard";
+    45→    return page === key || page === (key + "-new" as AdminPage) || page === (key + "-edit" as AdminPage);
+    46→  };
+    47→
+    48→  return (
+    49→    <>
+    50→      <div id="sidebar-overlay" className="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} />
+    51→      <aside id="admin-sidebar" className="fixed top-0 left-0 z-50 w-64 h-screen bg-[#0B3D2E] flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    52→        <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+    53→          <button onClick={() => nav("dashboard")} className="flex items-center gap-3">
+    54→            <div className="w-9 h-9 rounded-lg bg-[#EAB308] flex items-center justify-center shadow-md text-sm">🏛️</div>
+    55→            <div>
+    56→              <div className="text-white font-bold text-sm leading-tight">Admin Panel</div>
+    57→              <div className="text-[#86EFAC] text-[10px] font-medium">Amhara Sint</div>
+    58→            </div>
+    59→          </button>
+    60→          <button onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} className="lg:hidden text-white/60 hover:text-white p-1">✕</button>
+    61→        </div>
+    62→        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    63→          {items.map((item) => (
+    64→            <button key={item.key} onClick={() => nav(item.key)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active(item.key) ? "bg-[#EAB308]/15 text-[#EAB308]" : "text-white/60 hover:text-white hover:bg-white/8"}`}>
+    65→              <span className="w-[18px] text-center shrink-0">{item.icon}</span>
+    66→              {item.label}
+    67→            </button>
+    68→          ))}
+    69→        </nav>
+    70→        <div className="px-3 pb-4 space-y-1 border-t border-white/10 pt-3">
+    71→          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all duration-200">
+    72→            <span className="w-[18px] text-center">↗</span> Back to Website
+    73→          </a>
+    74→          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200">
+    75→            <span className="w-[18px] text-center">↩</span> Logout
+    76→          </button>
+    77→        </div>
+    78→      </aside>
+    79→    </>
+    80→  );
+    81→}
+    82→
+    83→/* ─── DASHBOARD ─── */
+    84→function DashboardPage({ nav }: { nav: (p: AdminPage) => void }) {
+    85→  const [stats, setStats] = useState<DashboardStats | null>(null);
+    86→  useEffect(() => { fetch("/admin/api/stats").then(r => r.json()).then(setStats); }, []);
+    87→  if (!stats) return <Spinner />;
+    88→
+    89→  const maxCount = Math.max(...Object.values(stats.newsByMonth), 1);
+    90→  const barData = MONTHS.map((m, i) => { const key = `2026-${String(i + 1).padStart(2, "0")}`; return { month: m, count: stats.newsByMonth[key] || 0 }; });
+    91→
+    92→  const cards = [
+    93→    { label: "Total News", value: stats.totalNews, icon: "📰", bg: "bg-[#0B3D2E]", click: () => nav("news") },
+    94→    { label: "Total Bids", value: stats.totalBids, icon: "💼", bg: "bg-amber-50", click: () => nav("bids") },
+    95→    { label: "Vacancies", value: stats.totalVacancies, icon: "📋", bg: "bg-emerald-50", click: () => nav("vacancy") },
+    96→    { label: "Subscribers", value: stats.totalSubscribers, icon: "✉️", bg: "bg-rose-50", click: () => nav("subscribers") },
+    97→  ];
+    98→
+    99→  const actions = [
+   100→    { label: "Add News", desc: "Create a new news article", page: "news-new" as AdminPage },
+   101→    { label: "Add Bid", desc: "Post a new tender", page: "bids-new" as AdminPage },
+   102→    { label: "Add Vacancy", desc: "Post a job opening", page: "vacancy-new" as AdminPage },
+   103→    { label: "View Subscribers", desc: "Manage email list", page: "subscribers" as AdminPage },
+   104→  ];
+   105→
+   106→  return (
+   107→    <div className="space-y-6">
+   108→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   109→        <div>
+   110→          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+   111→          <p className="text-sm text-gray-500 mt-1">Overview of your woreda administration</p>
+   112→        </div>
+   113→        <div className="flex gap-2">
+   114→          <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ New Post</button>
+   115→          <button onClick={() => nav("bids-new")} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">＋ New Bid</button>
+   116→        </div>
+   117→      </div>
+   118→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   119→        {cards.map((c) => (
+   120→          <button key={c.label} onClick={c.click} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 text-left">
+   121→            <div className="flex items-center justify-between">
+   122→              <div>
+   123→                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{c.label}</p>
+   124→                <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
+   125→              </div>
+   126→              <div className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center text-lg`}>{c.icon}</div>
+   127→            </div>
+   128→          </button>
+   129→        ))}
+   130→      </div>
+   131→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   132→        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+   133→          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">📈 Posts Over Time</h3>
+   134→          <div className="flex items-end gap-2 h-48 mt-4">
+   135→            {barData.map((d) => (
+   136→              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+   137→                <span className="text-[10px] text-gray-400 font-medium">{d.count > 0 ? d.count : ""}</span>
+   138→                <div className="w-full rounded-t-md transition-all duration-500 min-h-[4px]" style={{ height: `${Math.max((d.count / maxCount) * 100, 4)}%`, backgroundColor: d.count > 0 ? "#0B3D2E" : "#f3f4f6" }} />
+   139→                <span className="text-[10px] text-gray-400">{d.month}</span>
+   140→              </div>
+   141→            ))}
+   142→          </div>
+   143→        </div>
+   144→        <div className="bg-white rounded-xl shadow-sm p-6">
+   145→          <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
+   146→          <div className="space-y-2">
+   147→            {actions.map((a) => (
+   148→              <button key={a.page} onClick={() => nav(a.page)} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group text-left">
+   149→                <div>
+   150→                  <p className="text-sm font-medium text-gray-900">{a.label}</p>
+   151→                  <p className="text-xs text-gray-400">{a.desc}</p>
+   152→                </div>
+   153→                <span className="text-gray-300 group-hover:text-[#0B3D2E] transition-colors">→</span>
+   154→              </button>
+   155→            ))}
+   156→          </div>
+   157→        </div>
+   158→      </div>
+   159→      <div className="bg-white rounded-xl shadow-sm p-6">
+   160→        <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h3>
+   161→        <div className="space-y-3">
+   162→          {stats.recentActivity.length === 0 && <p className="text-sm text-gray-400 text-center py-6">No recent activity</p>}
+   163→          {stats.recentActivity.map((a, i) => (
+   164→            <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+   165→              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${a.type === "news" ? "bg-blue-50 text-blue-600" : a.type === "bid" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>{a.type}</span>
+   166→              <p className="text-sm text-gray-600 flex-1 truncate">{a.message}</p>
+   167→              <span className="text-xs text-gray-400 shrink-0">{new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+   168→            </div>
+   169→          ))}
+   170→        </div>
+   171→      </div>
+   172→    </div>
+   173→  );
+   174→}
+   175→
+   176→/* ─── NEWS LIST ─── */
+   177→function NewsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   178→  const [news, setNews] = useState<NewsItem[]>([]);
+   179→  const [search, setSearch] = useState("");
+   180→  const [loading, setLoading] = useState(true);
+   181→  const load = () => { fetch("/admin/api/news").then(r => r.json()).then(setNews).finally(() => setLoading(false)); };
+   182→  useEffect(() => { load(); }, []);
+   183→  const handleDelete = async (id: string) => { if (!confirm("Delete this article?")) return; await fetch(`/admin/api/news?id=${id}`, { method: "DELETE" }); load(); };
+   184→  const filtered = news.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+   185→  if (loading) return <Spinner />;
+   186→  return (
+   187→    <div className="space-y-6">
+   188→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   189→        <div><h1 className="text-2xl font-bold text-gray-900">News Management</h1><p className="text-sm text-gray-500 mt-1">{news.length} articles total</p></div>
+   190→        <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add News</button>
+   191→      </div>
+   192→      <div className="relative max-w-sm">
+   193→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   194→        <input placeholder="Search news..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   195→      </div>
+   196→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   197→        <div className="overflow-x-auto">
+   198→          <table className="w-full text-sm">
+   199→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   200→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   201→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Category</th>
+   202→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Date</th>
+   203→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   204→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   205→            </tr></thead>
+   206→            <tbody className="divide-y divide-gray-50">
+   207→              {filtered.map(item => (
+   208→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   209→                  <td className="py-3 px-4">
+   210→                    <div className="flex items-center gap-2">
+   211→                      {item.featured && <span className="bg-[#EAB308]/10 text-[#A16207] text-[10px] px-1.5 py-0.5 rounded font-medium">Featured</span>}
+   212→                      <span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span>
+   213→                    </div>
+   214→                  </td>
+   215→                  <td className="py-3 px-4 hidden md:table-cell"><span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{item.category}</span></td>
+   216→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.date}</td>
+   217→                  <td className="py-3 px-4">
+   218→                    <span className={`text-xs px-2 py-0.5 rounded ${item.status === "published" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>{item.status === "published" ? "👁 Published" : "🚫 Draft"}</span>
+   219→                  </td>
+   220→                  <td className="py-3 px-4">
+   221→                    <div className="flex items-center justify-end gap-1">
+   222→                      <button onClick={() => { nav("news-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   223→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   224→                    </div>
+   225→                  </td>
+   226→                </tr>
+   227→              ))}
+   228→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No news articles found.</td></tr>}
+   229→            </tbody>
+   230→          </table>
+   231→        </div>
+   232→      </div>
+   233→    </div>
+   234→  );
+   235→}
+   236→
+   237→/* ─── NEWS FORM (new + edit) ─── */
+   238→function NewsForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   239→  const [loading, setLoading] = useState(!!editId);
+   240→  const [saving, setSaving] = useState(false);
+   241→  const [form, setForm] = useState({ title: "", summary: "", content: "", category: "Education", author: "", imageUrl: "", featured: false, status: "draft" as "published" | "draft", date: new Date().toISOString().split("T")[0] });
+   242→
+   243→  useEffect(() => {
+   244→    if (!editId) return;
+   245→    fetch("/admin/api/news").then(r => r.json()).then((items: NewsItem[]) => {
+   246→      const item = items.find(n => n.id === editId);
+   247→      if (item) setForm({ title: item.title || "", summary: item.summary || "", content: item.content || "", category: item.category || "Education", author: item.author || "", imageUrl: item.imageUrl || "", featured: item.featured || false, status: item.status || "draft", date: item.date || "" });
+   248→    }).finally(() => setLoading(false));
+   249→  }, [editId]);
+   250→
+   251→  const handleSubmit = async (e: React.FormEvent) => {
+   252→    e.preventDefault();
+   253→    if (!form.title.trim()) return;
+   254→    setSaving(true);
+   255→    try {
+   256→      await fetch("/admin/api/news", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   257→      onBack();
+   258→    } catch { alert("Failed to save article"); } finally { setSaving(false); }
+   259→  };
+   260→
+   261→  if (loading) return <Spinner />;
+   262→  const u = (k: string, v: string | boolean) => setForm({ ...form, [k]: v });
+   263→
+   264→  return (
+   265→    <div className="max-w-3xl mx-auto space-y-6">
+   266→      <div className="flex items-center gap-3">
+   267→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   268→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} News Article</h1>
+   269→      </div>
+   270→      <div className="bg-white rounded-xl shadow-sm p-6">
+   271→        <h3 className="text-base font-semibold text-gray-900 mb-4">Article Details</h3>
+   272→        <form onSubmit={handleSubmit} className="space-y-5">
+   273→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter article title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   274→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   275→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Category</label><select value={form.category} onChange={e => u("category", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+   276→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Author</label><input value={form.author} onChange={e => u("author", e.target.value)} placeholder="e.g. Communication Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   277→          </div>
+   278→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   279→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Publish Date</label><input type="date" value={form.date} onChange={e => u("date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   280→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Image URL</label><input value={form.imageUrl} onChange={e => u("imageUrl", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   281→          </div>
+   282→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Summary</label><textarea value={form.summary} onChange={e => u("summary", e.target.value)} placeholder="Brief summary" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   283→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Full Content</label><textarea value={form.content} onChange={e => u("content", e.target.value)} placeholder="Full article content..." rows={8} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-y" /></div>
+   284→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   285→            <div><p className="text-sm font-medium text-gray-700">Featured Article</p><p className="text-xs text-gray-400">Featured articles appear on the homepage</p></div>
+   286→            <button type="button" onClick={() => u("featured", !form.featured)} className={`relative w-11 h-6 rounded-full transition-colors ${form.featured ? "bg-[#0B3D2E]" : "bg-gray-300"}`}><span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${form.featured ? "translate-x-5" : ""}`} /></button>
+   287→          </div>
+   288→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   289→            <div><p className="text-sm font-medium text-gray-700">Status</p><p className="text-xs text-gray-400">Draft articles are not public</p></div>
+   290→            <select value={form.status} onChange={e => u("status", e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
+   291→          </div>
+   292→          <div className="flex gap-3 pt-2">
+   293→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Article"}</button>
+   294→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   295→          </div>
+   296→        </form>
+   297→      </div>
+   298→    </div>
+   299→  );
+   300→}
+   301→
+   302→/* ─── BIDS LIST ─── */
+   303→function BidsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   304→  const [bids, setBids] = useState<BidItem[]>([]);
+   305→  const [search, setSearch] = useState("");
+   306→  const [loading, setLoading] = useState(true);
+   307→  const load = () => { fetch("/admin/api/bids").then(r => r.json()).then(setBids).finally(() => setLoading(false)); };
+   308→  useEffect(() => { load(); }, []);
+   309→  const handleDelete = async (id: string) => { if (!confirm("Delete this bid?")) return; await fetch(`/admin/api/bids?id=${id}`, { method: "DELETE" }); load(); };
+   310→  const filtered = bids.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+   311→  const statusColor = (s: string) => s === "Open" ? "bg-green-50 text-green-600" : s === "Closed" ? "bg-gray-100 text-gray-500" : "bg-amber-50 text-amber-600";
+   312→  if (loading) return <Spinner />;
+   313→  return (
+   314→    <div className="space-y-6">
+   315→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   316→        <div><h1 className="text-2xl font-bold text-gray-900">Bids & Tenders</h1><p className="text-sm text-gray-500 mt-1">{bids.length} total bids</p></div>
+   317→        <button onClick={() => nav("bids-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Bid</button>
+   318→      </div>
+   319→      <div className="relative max-w-sm">
+   320→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   321→        <input placeholder="Search bids..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   322→      </div>
+   323→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   324→        <div className="overflow-x-auto">
+   325→          <table className="w-full text-sm">
+   326→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   327→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   328→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Budget</th>
+   329→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   330→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   331→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   332→            </tr></thead>
+   333→            <tbody className="divide-y divide-gray-50">
+   334→              {filtered.map(item => (
+   335→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   336→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   337→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell font-medium">{item.budget}</td>
+   338→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   339→                  <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded ${statusColor(item.status)}`}>{item.status}</span></td>
+   340→                  <td className="py-3 px-4">
+   341→                    <div className="flex items-center justify-end gap-1">
+   342→                      <button onClick={() => { nav("bids-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   343→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   344→                    </div>
+   345→                  </td>
+   346→                </tr>
+   347→              ))}
+   348→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No bids found.</td></tr>}
+   349→            </tbody>
+   350→          </table>
+   351→        </div>
+   352→      </div>
+   353→    </div>
+   354→  );
+   355→}
+   356→
+   357→/* ─── BID FORM (new + edit) ─── */
+   358→function BidForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   359→  const [loading, setLoading] = useState(!!editId);
+   360→  const [saving, setSaving] = useState(false);
+   361→  const [form, setForm] = useState({ title: "", description: "", budget: "", budgetAmount: 0, deadline: "", status: "Open" as "Open" | "Closed" | "Awarded" });
+   362→
+   363→  useEffect(() => {
+   364→    if (!editId) return;
+   365→    fetch("/admin/api/bids").then(r => r.json()).then((items: BidItem[]) => {
+   366→      const item = items.find(b => b.id === editId);
+   367→      if (item) setForm({ title: item.title || "", description: item.description || "", budget: item.budget || "", budgetAmount: item.budgetAmount || 0, deadline: item.deadline || "", status: item.status || "Open" });
+   368→    }).finally(() => setLoading(false));
+   369→  }, [editId]);
+   370→
+   371→  const handleSubmit = async (e: React.FormEvent) => {
+   372→    e.preventDefault();
+   373→    if (!form.title.trim()) return;
+   374→    setSaving(true);
+   375→    try {
+   376→      await fetch("/admin/api/bids", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   377→      onBack();
+   378→    } catch { alert("Failed to save bid"); } finally { setSaving(false); }
+   379→  };
+   380→  const u = (k: string, v: string | number) => setForm({ ...form, [k]: v });
+   381→  if (loading) return <Spinner />;
+   382→
+   383→  return (
+   384→    <div className="max-w-3xl mx-auto space-y-6">
+   385→      <div className="flex items-center gap-3">
+   386→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   387→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Bid / Tender</h1>
+   388→      </div>
+   389→      <div className="bg-white rounded-xl shadow-sm p-6">
+   390→        <h3 className="text-base font-semibold text-gray-900 mb-4">Bid Details</h3>
+   391→        <form onSubmit={handleSubmit} className="space-y-5">
+   392→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter bid title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   393→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Describe the bid..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   394→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   395→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Label</label><input value={form.budget} onChange={e => u("budget", e.target.value)} placeholder="e.g. ETB 5 Million" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   396→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Amount (ETB)</label><input type="number" value={form.budgetAmount || ""} onChange={e => u("budgetAmount", Number(e.target.value))} placeholder="e.g. 5000000" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   397→          </div>
+   398→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   399→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   400→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Status</label><select value={form.status} onChange={e => u("status", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Open">Open</option><option value="Closed">Closed</option><option value="Awarded">Awarded</option></select></div>
+   401→          </div>
+   402→          <div className="flex gap-3 pt-2">
+   403→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Bid"}</button>
+   404→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   405→          </div>
+   406→        </form>
+   407→      </div>
+   408→    </div>
+   409→  );
+   410→}
+   411→
+   412→/* ─── VACANCY LIST ─── */
+   413→function VacancyListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   414→  const [vacancies, setVacancies] = useState<VacancyItem[]>([]);
+   415→  const [search, setSearch] = useState("");
+   416→  const [loading, setLoading] = useState(true);
+   417→  const load = () => { fetch("/admin/api/vacancies").then(r => r.json()).then(setVacancies).finally(() => setLoading(false)); };
+   418→  useEffect(() => { load(); }, []);
+   419→  const handleDelete = async (id: string) => { if (!confirm("Delete this vacancy?")) return; await fetch(`/admin/api/vacancies?id=${id}`, { method: "DELETE" }); load(); };
+   420→  const filtered = vacancies.filter(v => v.title.toLowerCase().includes(search.toLowerCase()) || v.department.toLowerCase().includes(search.toLowerCase()));
+   421→  if (loading) return <Spinner />;
+   422→  return (
+   423→    <div className="space-y-6">
+   424→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   425→        <div><h1 className="text-2xl font-bold text-gray-900">Vacancies</h1><p className="text-sm text-gray-500 mt-1">{vacancies.length} total vacancies</p></div>
+   426→        <button onClick={() => nav("vacancy-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Vacancy</button>
+   427→      </div>
+   428→      <div className="relative max-w-sm">
+   429→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   430→        <input placeholder="Search vacancies..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   431→      </div>
+   432→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   433→        <div className="overflow-x-auto">
+   434→          <table className="w-full text-sm">
+   435→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   436→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   437→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Department</th>
+   438→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Type</th>
+   439→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   440→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   441→            </tr></thead>
+   442→            <tbody className="divide-y divide-gray-50">
+   443→              {filtered.map(item => (
+   444→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   445→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   446→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{item.department}</td>
+   447→                  <td className="py-3 px-4 hidden sm:table-cell"><span className="bg-[#0B3D2E] text-white text-xs px-2 py-0.5 rounded">{item.type}</span></td>
+   448→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   449→                  <td className="py-3 px-4">
+   450→                    <div className="flex items-center justify-end gap-1">
+   451→                      <button onClick={() => { nav("vacancy-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   452→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   453→                    </div>
+   454→                  </td>
+   455→                </tr>
+   456→              ))}
+   457→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No vacancies found.</td></tr>}
+   458→            </tbody>
+   459→          </table>
+   460→        </div>
+   461→      </div>
+   462→    </div>
+   463→  );
+   464→}
+   465→
+   466→/* ─── VACANCY FORM (new + edit) ─── */
+   467→function VacancyForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   468→  const [loading, setLoading] = useState(!!editId);
+   469→  const [saving, setSaving] = useState(false);
+   470→  const [form, setForm] = useState({ title: "", department: "", type: "Full-Time" as "Full-Time" | "Part-Time" | "Contract", deadline: "", description: "", requirements: "" });
+   471→
+   472→  useEffect(() => {
+   473→    if (!editId) return;
+   474→    fetch("/admin/api/vacancies").then(r => r.json()).then((items: VacancyItem[]) => {
+   475→      const item = items.find(v => v.id === editId);
+   476→      if (item) setForm({ title: item.title || "", department: item.department || "", type: item.type || "Full-Time", deadline: item.deadline || "", description: item.description || "", requirements: item.requirements || "" });
+   477→    }).finally(() => setLoading(false));
+   478→  }, [editId]);
+   479→
+   480→  const handleSubmit = async (e: React.FormEvent) => {
+   481→    e.preventDefault();
+   482→    if (!form.title.trim()) return;
+   483→    setSaving(true);
+   484→    try {
+   485→      await fetch("/admin/api/vacancies", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   486→      onBack();
+   487→    } catch { alert("Failed to save vacancy"); } finally { setSaving(false); }
+   488→  };
+   489→  const u = (k: string, v: string) => setForm({ ...form, [k]: v });
+   490→  if (loading) return <Spinner />;
+   491→
+   492→  return (
+   493→    <div className="max-w-3xl mx-auto space-y-6">
+   494→      <div className="flex items-center gap-3">
+   495→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   496→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Vacancy</h1>
+   497→      </div>
+   498→      <div className="bg-white rounded-xl shadow-sm p-6">
+   499→        <h3 className="text-base font-semibold text-gray-900 mb-4">Vacancy Details</h3>
+   500→        <form onSubmit={handleSubmit} className="space-y-5">
+   501→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="e.g. Health Extension Workers" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   502→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   503→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Department</label><input value={form.department} onChange={e => u("department", e.target.value)} placeholder="e.g. Health Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   504→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Type</label><select value={form.type} onChange={e => u("type", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Full-Time">Full-Time</option><option value="Part-Time">Part-Time</option><option value="Contract">Contract</option></select></div>
+   505→          </div>
+   506→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Application Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   507→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Job description..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   508→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Requirements</label><textarea value={form.requirements} onChange={e => u("requirements", e.target.value)} placeholder="Required qualifications..." rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   509→          <div className="flex gap-3 pt-2">
+   510→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Vacancy"}</button>
+   511→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   512→          </div>
+   513→        </form>
+   514→      </div>
+   515→    </div>
+   516→  );
+   517→}
+   518→
+   519→/* ─── SUBSCRIBERS ─── */
+   520→function SubscribersPage() {
+   521→  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+   522→  const [search, setSearch] = useState("");
+   523→  const [loading, setLoading] = useState(true);
+   524→  const load = () => { fetch("/admin/api/subscribers").then(r => r.json()).then(setSubscribers).finally(() => setLoading(false)); };
+   525→  useEffect(() => { load(); }, []);
+   526→  const handleDelete = async (id: string) => { if (!confirm("Delete this subscriber?")) return; await fetch(`/admin/api/subscribers?id=${id}`, { method: "DELETE" }); load(); };
+   527→  const handleExport = () => {
+   528→    const csv = ["Email,Subscribed At", ...subscribers.map(s => `${s.email},${s.subscribedAt}`)].join("\n");
+   529→    const blob = new Blob([csv], { type: "text/csv" });
+   530→    const url = URL.createObjectURL(blob);
+   531→    const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
+   532→    URL.revokeObjectURL(url);
+   533→  };
+   534→  const filtered = subscribers.filter(s => s.email.toLowerCase().includes(search.toLowerCase()));
+   535→  if (loading) return <Spinner />;
+   536→  return (
+   537→    <div className="space-y-6">
+   538→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   539→        <div><h1 className="text-2xl font-bold text-gray-900">Subscribers</h1><p className="text-sm text-gray-500 mt-1">{subscribers.length} email subscribers</p></div>
+   540→        <button onClick={handleExport} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">📥 Export CSV</button>
+   541→      </div>
+   542→      <div className="relative max-w-sm">
+   543→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   544→        <input placeholder="Search subscribers..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   545→      </div>
+   546→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   547→        <div className="overflow-x-auto">
+   548→          <table className="w-full text-sm">
+   549→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   550→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Email</th>
+   551→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Subscribed At</th>
+   552→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   553→            </tr></thead>
+   554→            <tbody className="divide-y divide-gray-50">
+   555→              {filtered.map(sub => (
+   556→                <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+   557→                  <td className="py-3 px-4">
+   558→                    <div className="flex items-center gap-2">
+   559→                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-xs">✉️</div>
+   560→                      <span className="font-medium text-gray-900">{sub.email}</span>
+   561→                    </div>
+   562→                  </td>
+   563→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(sub.subscribedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+   564→                  <td className="py-3 px-4"><div className="flex items-center justify-end"><button onClick={() => handleDelete(sub.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></div></td>
+   565→                </tr>
+   566→              ))}
+   567→              {filtered.length === 0 && <tr><td colSpan={3} className="py-12 text-center text-gray-400">No subscribers found.</td></tr>}
+   568→            </tbody>
+   569→          </table>
+   570→        </div>
+   571→      </div>
+   572→    </div>
+   573→  );
+   574→}
+   575→
+   576→/* ─── SETTINGS ─── */
+   577→function SettingsPage() {
+   578→  return (
+   579→    <div className="space-y-6 max-w-2xl">
+   580→      <div><h1 className="text-2xl font-bold text-gray-900">Settings</h1><p className="text-sm text-gray-500 mt-1">Admin panel configuration</p></div>
+   581→      <div className="bg-white rounded-xl shadow-sm p-6">
+   582→        <h3 className="text-base font-semibold text-gray-900 mb-4">System Information</h3>
+   583→        <div className="space-y-4">
+   584→          {[["Application", "Amhara Sint Woreda Portal"], ["Version", "1.0.0"], ["Framework", "Next.js 16"], ["Storage", "JSON File Storage"]].map(([k, v]) => (
+   585→            <div key={k} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+   586→              <span className="text-sm text-gray-600">{k}</span>
+   587→              <span className="text-sm font-medium text-gray-900">{v}</span>
+   588→            </div>
+   589→          ))}
+   590→        </div>
+   591→      </div>
+   592→      <div className="bg-white rounded-xl shadow-sm p-6">
+   593→        <h3 className="text-base font-semibold text-gray-900 mb-2">Admin Access</h3>
+   594→        <p className="text-sm text-gray-500">Admin authentication is password-based. The password is configured via the <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-xs mx-1">ADMIN_PASSWORD</code> environment variable.</p>
+   595→      </div>
+   596→    </div>
+   597→  );
+   598→}
+   599→
+   600→/* ─── MAIN ─── */
+   601→export default function AdminPage() {
+   602→  const [page, setPage] = useState<AdminPage>("dashboard");
+   603→  const [editId, setEditId] = useState<string | null>(null);
+   604→
+   605→  const nav = useCallback((p: AdminPage) => {
+   606→    if (p === "news-edit" || p === "bids-edit" || p === "vacancy-edit") {
+   607→      setEditId((window as unknown as { __adminEditId: string }).__adminEditId || null);
+   608→    } else {
+   609→      setEditId(null);
+   610→    }
+   611→    setPage(p);
+   612→    // close mobile sidebar
+   613→    const s = document.getElementById("admin-sidebar");
+   614→    const o = document.getElementById("sidebar-overlay");
+   615→    if (s) s.classList.add("-translate-x-full");
+   616→    if (o) o.classList.add("hidden");
+   617→  }, []);
+   618→
+   619→  const handleLogout = async () => {
+   620→    await fetch("/admin/api/logout", { method: "POST" });
+   621→    window.location.href = "/admin/login";
+   622→  };
+   623→
+   624→  return (
+   625→    <div className="min-h-screen flex bg-gray-50">
+   626→      <Sidebar page={page} nav={nav} onLogout={handleLogout} />
+   627→      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
+   628→        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+   629→          <div className="flex items-center gap-3">
+   630→            <button onClick={() => { const s = document.getElementById("admin-sidebar"); if (s) s.classList.toggle("-translate-x-full"); const o = document.getElementById("sidebar-overlay"); if (o) o.classList.toggle("hidden"); }} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600" aria-label="Toggle menu">
+   631→              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+   632→            </button>
+   633→            <div>
+   634→              <h2 className="text-sm font-semibold text-gray-900">Amhara Sint Woreda</h2>
+   635→              <p className="text-xs text-gray-400">Administration Panel</p>
+   636→            </div>
+   637→          </div>
+   638→          <div className="flex items-center gap-3">
+   639→            <form action="/admin/api/logout" method="POST"><button type="submit" className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
+   640→              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+   641→              Logout
+   642→            </button></form>
+   643→            <a href="/" target="_blank" className="text-xs text-gray-500 hover:text-[#0B3D2E] flex items-center gap-1 transition-colors">View Website <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>
+   644→          </div>
+   645→        </header>
+   646→        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+   647→          {page === "dashboard" && <DashboardPage nav={nav} />}
+   648→          {page === "news" && <NewsListPage nav={nav} />}
+   649→          {page === "news-new" && <NewsForm editId={null} onBack={() => nav("news")} />}
+   650→          {page === "news-edit" && <NewsForm editId={editId} onBack={() => nav("news")} />}
+   651→          {page === "bids" && <BidsListPage nav={nav} />}
+   652→          {page === "bids-new" && <BidForm editId={null} onBack={() => nav("bids")} />}
+   653→          {page === "bids-edit" && <BidForm editId={editId} onBack={() => nav("bids")} />}
+   654→          {page === "vacancy" && <VacancyListPage nav={nav} />}
+   655→          {page === "vacancy-new" && <VacancyForm editId={null} onBack={() => nav("vacancy")} />}
+   656→          {page === "vacancy-edit" && <VacancyForm editId={editId} onBack={() => nav("vacancy")} />}
+   657→          {page === "subscribers" && <SubscribersPage />}
+   658→          {page === "settings" && <SettingsPage />}
+   659→        </main>
+   660→      </div>
+   661→    </div>
+   662→  );
+   663→}

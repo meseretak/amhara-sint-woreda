@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian clean water project community tap"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian clean water project community tap",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/35f5cc0fa1a7.jpg",
+      "caption": "",
+      "source": "WaterAid America",
+      "original_width": "1200px",
+      "original_height": "800px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/e7d712a53285.jpeg",
+      "caption": "",
+      "source": "Newsroom - Amref Health Africa",
+      "original_width": "1024px",
+      "original_height": "1024px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/9ec9a6e1348f.jpeg",
+      "caption": "",
+      "source": "Niras",
+      "original_width": "4032px",
+      "original_height": "3024px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/474e8f9fde11.jpg",
+      "caption": "",
+      "source": "Fundación We Are Water",
+      "original_width": "2560px",
+      "original_height": "853px"
+    }
+  ]
+}

@@ -1,0 +1,1984 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from "react";
+     4→import {
+     5→  Users,
+     6→  School,
+     7→  Heart,
+     8→  Building2,
+     9→  MapPin,
+    10→  TreePine,
+    11→  Droplets,
+    12→  Home as HomeIcon,
+    13→  ChevronRight,
+    14→  ChevronDown,
+    15→  BarChart3,
+    16→  TrendingUp,
+    17→  Landmark,
+    18→  Stethoscope,
+    19→  Menu,
+    20→  X,
+    21→  Phone,
+    22→  Mail,
+    23→  MapPinned,
+    24→  ArrowUp,
+    25→  ArrowLeft,
+    26→  ArrowRight,
+    27→  Tractor,
+    28→  GraduationCap,
+    29→  Truck,
+    30→  Wheat,
+    31→  Briefcase,
+    32→  Newspaper,
+    33→  Award,
+    34→  UserCheck,
+    35→  FileText,
+    36→  Building,
+    37→  Shield,
+    38→  Scale,
+    39→  Flag,
+    40→  UsersRound,
+    41→  Siren,
+    42→  Banknote,
+    43→  PieChart,
+    44→  ClipboardList,
+    45→  HeartPulse,
+    46→  Baby,
+    47→  Eye,
+    48→  BookOpen,
+    49→  Globe,
+    50→  ThumbsUp,
+    51→  Clock,
+    52→  Image as ImageIcon,
+    53→  Camera,
+    54→  Facebook,
+    55→  Youtube,
+    56→  Linkedin,
+    57→  Github,
+    58→  Instagram,
+    59→  Twitter,
+    60→  ExternalLink,
+    61→  Calendar,
+    62→} from "lucide-react";
+    63→import { Card, CardContent } from "@/components/ui/card";
+    64→import { Progress } from "@/components/ui/progress";
+    65→import { Badge } from "@/components/ui/badge";
+    66→
+    67→/* ─── Types ────────────────────────────────────────────────── */
+    68→type PageId =
+    69→  | "home"
+    70→  | "about-history"
+    71→  | "about-overview"
+    72→  | "about-location"
+    73→  | "gov-leadership"
+    74→  | "gov-structure"
+    75→  | "gov-offices"
+    76→  | "svc-education"
+    77→  | "svc-health"
+    78→  | "svc-agriculture"
+    79→  | "svc-transport"
+    80→  | "svc-water"
+    81→  | "svc-justice"
+    82→  | "svc-finance"
+    83→  | "news-news"
+    84→  | "news-bids"
+    85→  | "news-vacancy"
+    86→  | "news-announcements"
+    87→  | "gallery"
+    88→  | "vacancy"
+    89→  | "bids"
+    90→  | "contact";
+    91→
+    92→/* ─── Animated Counter ─────────────────────────────────────── */
+    93→function AnimatedCounter({
+    94→  target,
+    95→  suffix = "",
+    96→  duration = 2000,
+    97→}: {
+    98→  target: number;
+    99→  suffix?: string;
+   100→  duration?: number;
+   101→}) {
+   102→  const [count, setCount] = useState(0);
+   103→  const ref = useRef<HTMLSpanElement>(null);
+   104→  const hasAnimated = useRef(false);
+   105→  useEffect(() => {
+   106→    const observer = new IntersectionObserver(
+   107→      ([entry]) => {
+   108→        if (entry.isIntersecting && !hasAnimated.current) {
+   109→          hasAnimated.current = true;
+   110→          const start = performance.now();
+   111→          const step = (now: number) => {
+   112→            const elapsed = now - start;
+   113→            const progress = Math.min(elapsed / duration, 1);
+   114→            const eased = 1 - Math.pow(1 - progress, 3);
+   115→            setCount(Math.floor(eased * target));
+   116→            if (progress < 1) requestAnimationFrame(step);
+   117→          };
+   118→          requestAnimationFrame(step);
+   119→        }
+   120→      },
+   121→      { threshold: 0.3 }
+   122→    );
+   123→    if (ref.current) observer.observe(ref.current);
+   124→    return () => observer.disconnect();
+   125→  }, [target, duration]);
+   126→  return (
+   127→    <span ref={ref}>
+   128→      {count.toLocaleString()}
+   129→      {suffix}
+   130→    </span>
+   131→  );
+   132→}
+   133→
+   134→/* ─── Animated Section ──────────────────────────────────────── */
+   135→function AnimatedSection({
+   136→  children,
+   137→  className = "",
+   138→  delay = 0,
+   139→}: {
+   140→  children: React.ReactNode;
+   141→  className?: string;
+   142→  delay?: number;
+   143→}) {
+   144→  const ref = useRef<HTMLDivElement>(null);
+   145→  const [visible, setVisible] = useState(false);
+   146→  useEffect(() => {
+   147→    const observer = new IntersectionObserver(
+   148→      ([entry]) => {
+   149→        if (entry.isIntersecting) setVisible(true);
+   150→      },
+   151→      { threshold: 0.1 }
+   152→    );
+   153→    if (ref.current) observer.observe(ref.current);
+   154→    return () => observer.disconnect();
+   155→  }, []);
+   156→  return (
+   157→    <div
+   158→      ref={ref}
+   159→      className={`transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
+   160→      style={{ transitionDelay: `${delay}ms` }}
+   161→    >
+   162→      {children}
+   163→    </div>
+   164→  );
+   165→}
+   166→
+   167→/* ─── Hero Slider Images ────────────────────────────────────── */
+   168→const SLIDES = [
+   169→  {
+   170→    image: "https://sfile.chatglm.cn/images-ppt/d57be5c1e89d.jpg",
+   171→    title: "Welcome to Mehal Sayint Woreda",
+   172→    subtitle: "A land of beauty, culture, and progress in South Wollo Zone, Amhara Region",
+   173→  },
+   174→  {
+   175→    image: "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+   176→    title: "Rich Natural Heritage",
+   177→    subtitle: "Highland landscapes, fertile valleys, and diverse ecosystems",
+   178→  },
+   179→  {
+   180→    image: "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg",
+   181→    title: "Vibrant Community Life",
+   182→    subtitle: "Strong traditions, unity, and communal spirit define our people",
+   183→  },
+   184→  {
+   185→    image: "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg",
+   186→    title: "Growing Together",
+   187→    subtitle: "Investing in education, health, and infrastructure for all citizens",
+   188→  },
+   189→  {
+   190→    image: "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg",
+   191→    title: "Agricultural Heartland",
+   192→    subtitle: "Supporting farmers and sustainable development across the woreda",
+   193→  },
+   194→  {
+   195→    image: "https://sfile.chatglm.cn/images-ppt/56336ff1a645.jpg",
+   196→    title: "Building the Future",
+   197→    subtitle: "Modern infrastructure connecting communities to opportunities",
+   198→  },
+   199→  {
+   200→    image: "https://sfile.chatglm.cn/images-ppt/4db62da31bf6.png",
+   201→    title: "Our Vision",
+   202→    subtitle: "A prosperous, equitable, and self-reliant Mehal Sayint",
+   203→  },
+   204→  {
+   205→    image: "https://sfile.chatglm.cn/images-ppt/ba8313230e3e.jpg",
+   206→    title: "Transparent Governance",
+   207→    subtitle: "Committed to accountability and service excellence",
+   208→  },
+   209→];
+   210→
+   211→/* ─── Dropdown Navigation Data ──────────────────────────────── */
+   212→interface NavItem {
+   213→  label: string;
+   214→  href: PageId;
+   215→  children?: { label: string; href: PageId; icon: React.ElementType }[];
+   216→}
+   217→
+   218→const NAV_LINKS: NavItem[] = [
+   219→  { label: "Home", href: "home" },
+   220→  {
+   221→    label: "About",
+   222→    href: "about-overview",
+   223→    children: [
+   224→      { label: "History & Background", href: "about-history", icon: BookOpen },
+   225→      { label: "Overview", href: "about-overview", icon: Globe },
+   226→      { label: "Location & Geography", href: "about-location", icon: MapPin },
+   227→    ],
+   228→  },
+   229→  {
+   230→    label: "Government",
+   231→    href: "gov-leadership",
+   232→    children: [
+   233→      { label: "Leadership", href: "gov-leadership", icon: UserCheck },
+   234→      { label: "Administrative Structure", href: "gov-structure", icon: Building },
+   235→      { label: "Offices & Departments", href: "gov-offices", icon: Shield },
+   236→    ],
+   237→  },
+   238→  {
+   239→    label: "Services",
+   240→    href: "svc-education",
+   241→    children: [
+   242→      { label: "Education", href: "svc-education", icon: GraduationCap },
+   243→      { label: "Health", href: "svc-health", icon: HeartPulse },
+   244→      { label: "Agriculture", href: "svc-agriculture", icon: Tractor },
+   245→      { label: "Transport", href: "svc-transport", icon: Truck },
+   246→      { label: "Water & Sanitation", href: "svc-water", icon: Droplets },
+   247→      { label: "Justice & Security", href: "svc-justice", icon: Scale },
+   248→      { label: "Finance & Revenue", href: "svc-finance", icon: Banknote },
+   249→    ],
+   250→  },
+   251→  { label: "Vacancy", href: "vacancy" },
+   252→  {
+   253→    label: "Announcements",
+   254→    href: "news-announcements",
+   255→    children: [
+   256→      { label: "News", href: "news-news", icon: Newspaper },
+   257→      { label: "Bids & Tenders", href: "bids", icon: Briefcase },
+   258→      { label: "Events", href: "news-announcements", icon: Calendar },
+   259→      { label: "Announcements", href: "news-announcements", icon: Award },
+   260→    ],
+   261→  },
+   262→  { label: "Gallery", href: "gallery" },
+   263→];
+   264→
+   265→/* ─── HEADER WITH DROPDOWN NAV ──────────────────────────────── */
+   266→function Header({
+   267→  currentPage,
+   268→  onNavigate,
+   269→}: {
+   270→  currentPage: PageId;
+   271→  onNavigate: (p: PageId) => void;
+   272→}) {
+   273→  const [scrolled, setScrolled] = useState(false);
+   274→  const [mobileOpen, setMobileOpen] = useState(false);
+   275→  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+   276→  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+   277→
+   278→  useEffect(() => {
+   279→    const handleScroll = () => setScrolled(window.scrollY > 20);
+   280→    window.addEventListener("scroll", handleScroll);
+   281→    return () => window.removeEventListener("scroll", handleScroll);
+   282→  }, []);
+   283→
+   284→  const handleMouseEnter = (label: string) => {
+   285→    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+   286→    setOpenDropdown(label);
+   287→  };
+   288→  const handleMouseLeave = () => {
+   289→    timeoutRef.current = setTimeout(() => setOpenDropdown(null), 200);
+   290→  };
+   291→
+   292→  const handleNav = (p: PageId) => {
+   293→    onNavigate(p);
+   294→    setMobileOpen(false);
+   295→    setOpenDropdown(null);
+   296→    window.scrollTo({ top: 0, behavior: "smooth" });
+   297→  };
+   298→
+   299→  return (
+   300→    <header
+   301→      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+   302→        scrolled
+   303→          ? "bg-[#0B3D2E] shadow-lg shadow-black/20"
+   304→          : "bg-gradient-to-r from-[#062B1F] via-[#0B3D2E] to-[#145A44]"
+   305→      }`}
+   306→    >
+   307→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   308→        <div className="flex items-center justify-between h-16 md:h-[72px]">
+   309→          {/* Logo */}
+   310→          <button
+   311→            onClick={() => handleNav("home")}
+   312→            className="flex items-center gap-3 group shrink-0"
+   313→          >
+   314→            <div className="w-10 h-10 rounded-lg bg-[#EAB308] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+   315→              <Landmark className="w-5 h-5 text-[#0B3D2E]" />
+   316→            </div>
+   317→            <div className="hidden sm:block">
+   318→              <h1 className="text-white font-bold text-sm md:text-base leading-tight">
+   319→                Mehal Sayint
+   320→              </h1>
+   321→              <p className="text-[#86EFAC] text-[10px] md:text-xs font-medium -mt-0.5">
+   322→                Woreda Administration
+   323→              </p>
+   324→            </div>
+   325→          </button>
+   326→
+   327→          {/* Desktop Nav with Dropdowns */}
+   328→          <nav className="hidden lg:flex items-center gap-1">
+   329→            {NAV_LINKS.map((item) => (
+   330→              <div
+   331→                key={item.label}
+   332→                className="relative"
+   333→                onMouseEnter={() => item.children && handleMouseEnter(item.label)}
+   334→                onMouseLeave={handleMouseLeave}
+   335→              >
+   336→                <button
+   337→                  onClick={() => {
+   338→                    if (item.children) {
+   339→                      setOpenDropdown(
+   340→                        openDropdown === item.label ? null : item.label
+   341→                      );
+   342→                    } else {
+   343→                      handleNav(item.href);
+   344→                    }
+   345→                  }}
+   346→                  className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+   347→                    currentPage === item.href
+   348→                      ? "text-[#EAB308] bg-white/10"
+   349→                      : "text-white/80 hover:text-white hover:bg-white/10"
+   350→                  }`}
+   351→                >
+   352→                  {item.label}
+   353→                  {item.children && (
+   354→                    <ChevronDown
+   355→                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+   356→                        openDropdown === item.label ? "rotate-180" : ""
+   357→                      }`}
+   358→                    />
+   359→                  )}
+   360→                </button>
+   361→
+   362→                {/* Dropdown */}
+   363→                {item.children && openDropdown === item.label && (
+   364→                  <div className="absolute top-full left-0 mt-1 w-56 bg-[#0B3D2E] border border-white/15 rounded-xl shadow-2xl py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-[100]">
+   365→                    {item.children.map((child) => (
+   366→                      <button
+   367→                        key={child.href}
+   368→                        onClick={() => handleNav(child.href)}
+   369→                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-all duration-150 ${
+   370→                          currentPage === child.href
+   371→                            ? "text-[#EAB308] bg-white/10"
+   372→                            : "text-white/70 hover:text-white hover:bg-white/10"
+   373→                        }`}
+   374→                      >
+   375→                        <child.icon className="w-4 h-4 shrink-0" />
+   376→                        {child.label}
+   377→                      </button>
+   378→                    ))}
+   379→                  </div>
+   380→                )}
+   381→              </div>
+   382→            ))}
+   383→          </nav>
+   384→
+   385→          {/* CTA + Mobile Toggle */}
+   386→          <div className="flex items-center gap-3">
+   387→            <button
+   388→              onClick={() => handleNav("contact")}
+   389→              className="hidden md:inline-flex items-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+   390→            >
+   391→              <Phone className="w-4 h-4" />
+   392→              Contact Us
+   393→            </button>
+   394→            <button
+   395→              onClick={() => setMobileOpen(!mobileOpen)}
+   396→              className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+   397→              aria-label="Toggle menu"
+   398→            >
+   399→              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+   400→            </button>
+   401→          </div>
+   402→        </div>
+   403→      </div>
+   404→
+   405→      {/* Mobile Nav with Accordion Sub-menus */}
+   406→      {mobileOpen && (
+   407→        <div className="lg:hidden bg-[#0B3D2E] border-t border-white/10 shadow-xl max-h-[80vh] overflow-y-auto">
+   408→          <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
+   409→            {NAV_LINKS.map((item) => (
+   410→              <div key={item.label}>
+   411→                <button
+   412→                  onClick={() => {
+   413→                    if (item.children) {
+   414→                      setOpenDropdown(
+   415→                        openDropdown === item.label ? null : item.label
+   416→                      );
+   417→                    } else {
+   418→                      handleNav(item.href);
+   419→                    }
+   420→                  }}
+   421→                  className="w-full flex items-center justify-between text-white/80 hover:text-white hover:bg-white/10 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
+   422→                >
+   423→                  {item.label}
+   424→                  {item.children && (
+   425→                    <ChevronDown
+   426→                      className={`w-4 h-4 transition-transform duration-200 ${
+   427→                        openDropdown === item.label ? "rotate-180" : ""
+   428→                      }`}
+   429→                    />
+   430→                  )}
+   431→                </button>
+   432→                {item.children && openDropdown === item.label && (
+   433→                  <div className="ml-4 mt-1 flex flex-col gap-1">
+   434→                    {item.children.map((child) => (
+   435→                      <button
+   436→                        key={child.href}
+   437→                        onClick={() => handleNav(child.href)}
+   438→                        className={`flex items-center gap-2.5 text-sm px-4 py-2 rounded-lg transition-all ${
+   439→                          currentPage === child.href
+   440→                            ? "text-[#EAB308] bg-white/10"
+   441→                            : "text-white/60 hover:text-white hover:bg-white/5"
+   442→                        }`}
+   443→                      >
+   444→                        <child.icon className="w-4 h-4" />
+   445→                        {child.label}
+   446→                      </button>
+   447→                    ))}
+   448→                  </div>
+   449→                )}
+   450→              </div>
+   451→            ))}
+   452→            <button
+   453→              onClick={() => handleNav("contact")}
+   454→              className="flex items-center justify-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-semibold text-sm px-4 py-2.5 rounded-lg mt-2 transition-all"
+   455→            >
+   456→              <Phone className="w-4 h-4" />
+   457→              Contact Us
+   458→            </button>
+   459→          </nav>
+   460→        </div>
+   461→      )}
+   462→    </header>
+   463→  );
+   464→}
+   465→
+   466→/* ─── HERO SLIDER ──────────────────────────────────────────── */
+   467→function HeroSlider() {
+   468→  const [current, setCurrent] = useState(0);
+   469→  const timerRef = useRef<NodeJS.Timeout | null>(null);
+   470→
+   471→  const startTimer = useCallback(() => {
+   472→    if (timerRef.current) clearInterval(timerRef.current);
+   473→    timerRef.current = setInterval(() => {
+   474→      setCurrent((p) => (p + 1) % SLIDES.length);
+   475→    }, 5000);
+   476→  }, []);
+   477→
+   478→  useEffect(() => {
+   479→    startTimer();
+   480→    return () => {
+   481→      if (timerRef.current) clearInterval(timerRef.current);
+   482→    };
+   483→  }, [startTimer]);
+   484→
+   485→  const goTo = (idx: number) => {
+   486→    setCurrent(idx);
+   487→    startTimer();
+   488→  };
+   489→  const prev = () => goTo((current - 1 + SLIDES.length) % SLIDES.length);
+   490→  const next = () => goTo((current + 1) % SLIDES.length);
+   491→
+   492→  return (
+   493→    <section className="relative h-[100vh] min-h-[600px] max-h-[900px] overflow-hidden">
+   494→      {SLIDES.map((slide, i) => (
+   495→        <div
+   496→          key={i}
+   497→          className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+   498→          style={{ opacity: i === current ? 1 : 0 }}
+   499→        >
+   500→          <img
+   501→            src={slide.image}
+   502→            alt={slide.title}
+   503→            className="w-full h-full object-cover"
+   504→          />
+   505→          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+   506→          <div className="absolute inset-0 flex items-center justify-center px-4">
+   507→            <div className="text-center max-w-3xl">
+   508→              <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white mb-4 leading-tight drop-shadow-lg animate-fade-in-up">
+   509→                {slide.title}
+   510→              </h2>
+   511→              <p className="text-base sm:text-lg md:text-xl text-white/80 mb-8 drop-shadow-md">
+   512→                {slide.subtitle}
+   513→              </p>
+   514→              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+   515→                <button
+   516→                  onClick={() =>
+   517→                    document
+   518→                      .getElementById("statistics-section")
+   519→                      ?.scrollIntoView({ behavior: "smooth" })
+   520→                  }
+   521→                  className="inline-flex items-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all"
+   522→                >
+   523→                  Explore Statistics
+   524→                  <ChevronRight className="w-5 h-5" />
+   525→                </button>
+   526→                <button
+   527→                  onClick={() =>
+   528→                    document
+   529→                      .getElementById("services-section")
+   530→                      ?.scrollIntoView({ behavior: "smooth" })
+   531→                  }
+   532→                  className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white font-semibold px-8 py-3.5 rounded-xl border border-white/20 transition-all backdrop-blur-sm"
+   533→                >
+   534→                  Our Services
+   535→                </button>
+   536→              </div>
+   537→            </div>
+   538→          </div>
+   539→        </div>
+   540→      ))}
+   541→
+   542→      {/* Arrows */}
+   543→      <button
+   544→        onClick={prev}
+   545→        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-all border border-white/20"
+   546→        aria-label="Previous slide"
+   547→      >
+   548→        <ArrowLeft className="w-5 h-5" />
+   549→      </button>
+   550→      <button
+   551→        onClick={next}
+   552→        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-all border border-white/20"
+   553→        aria-label="Next slide"
+   554→      >
+   555→        <ArrowRight className="w-5 h-5" />
+   556→      </button>
+   557→
+   558→      {/* Dots */}
+   559→      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+   560→        {SLIDES.map((_, i) => (
+   561→          <button
+   562→            key={i}
+   563→            onClick={() => goTo(i)}
+   564→            className={`h-2.5 rounded-full transition-all duration-300 ${
+   565→              i === current
+   566→                ? "bg-[#EAB308] w-8"
+   567→                : "bg-white/40 hover:bg-white/60 w-2.5"
+   568→            }`}
+   569→            aria-label={`Go to slide ${i + 1}`}
+   570→          />
+   571→        ))}
+   572→      </div>
+   573→    </section>
+   574→  );
+   575→}
+   576→
+   577→/* ─── KEY STATISTICS (Home) ─────────────────────────────────── */
+   578→const KEY_STATS = [
+   579→  { icon: School, label: "Primary Schools", value: 47, color: "from-[#059669] to-[#10B981]", bg: "bg-emerald-50" },
+   580→  { icon: School, label: "Secondary Schools", value: 8, color: "from-[#0891B2] to-[#06B6D4]", bg: "bg-cyan-50" },
+   581→  { icon: Stethoscope, label: "Health Centers", value: 5, color: "from-[#DC2626] to-[#EF4444]", bg: "bg-red-50" },
+   582→  { icon: Stethoscope, label: "Health Posts", value: 18, color: "from-[#E11D48] to-[#F43F5E]", bg: "bg-rose-50" },
+   583→  { icon: Droplets, label: "Clean Water Points", value: 64, color: "from-[#0284C7] to-[#0EA5E9]", bg: "bg-sky-50" },
+   584→  { icon: Building2, label: "Kebeles", value: 22, color: "from-[#7C3AED] to-[#8B5CF6]", bg: "bg-violet-50" },
+   585→  { icon: TreePine, label: "Forest Coverage", value: 18, suffix: "%", color: "from-[#16A34A] to-[#22C55E]", bg: "bg-green-50" },
+   586→  { icon: Users, label: "Households", value: 28470, color: "from-[#D97706] to-[#F59E0B]", bg: "bg-amber-50" },
+   587→];
+   588→
+   589→function StatisticsSection() {
+   590→  return (
+   591→    <section id="statistics-section" className="py-20 md:py-28 bg-[#F0FDF4]">
+   592→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   593→        <AnimatedSection className="text-center mb-14">
+   594→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#0B3D2E]/10 text-[#0B3D2E]">
+   595→            <BarChart3 className="w-4 h-4 mr-1.5" />
+   596→            Key Statistics
+   597→          </Badge>
+   598→          <h2 className="text-3xl md:text-5xl font-extrabold text-[#0B3D2E] mb-4">
+   599→            Woreda by the <span className="text-[#EAB308]">Numbers</span>
+   600→          </h2>
+   601→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-base md:text-lg">
+   602→            A comprehensive overview of Mehal Sayint Woreda&apos;s key development indicators
+   603→          </p>
+   604→        </AnimatedSection>
+   605→        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+   606→          {KEY_STATS.map((stat, i) => (
+   607→            <AnimatedSection key={stat.label} delay={i * 80}>
+   608→              <Card className={`${stat.bg} border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full`}>
+   609→                <CardContent className="p-5 md:p-6 text-center">
+   610→                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+   611→                    <stat.icon className="w-6 h-6 md:w-7 md:h-7 text-white" />
+   612→                  </div>
+   613→                  <div className="text-3xl md:text-4xl font-extrabold text-[#0B3D2E] mb-1">
+   614→                    <AnimatedCounter target={stat.value} suffix={stat.suffix || ""} duration={2200} />
+   615→                  </div>
+   616→                  <p className="text-[#0B3D2E]/60 text-xs md:text-sm font-medium">{stat.label}</p>
+   617→                </CardContent>
+   618→              </Card>
+   619→            </AnimatedSection>
+   620→          ))}
+   621→        </div>
+   622→      </div>
+   623→    </section>
+   624→  );
+   625→}
+   626→
+   627→/* ─── SERVICES OVERVIEW (Home) ──────────────────────────────── */
+   628→const SERVICE_CARDS = [
+   629→  { icon: GraduationCap, title: "Education", desc: "55 schools serving the community", color: "from-emerald-500 to-green-500", href: "svc-education" as PageId },
+   630→  { icon: HeartPulse, title: "Health", desc: "23 health facilities across the woreda", color: "from-red-500 to-rose-500", href: "svc-health" as PageId },
+   631→  { icon: Tractor, title: "Agriculture", desc: "Supporting 75% of the population", color: "from-amber-500 to-yellow-500", href: "svc-agriculture" as PageId },
+   632→  { icon: Truck, title: "Transport", desc: "Expanding road infrastructure", color: "from-violet-500 to-purple-500", href: "svc-transport" as PageId },
+   633→  { icon: Droplets, title: "Water & Sanitation", desc: "64 clean water access points", color: "from-sky-500 to-cyan-500", href: "svc-water" as PageId },
+   634→  { icon: Scale, title: "Justice & Security", desc: "Ensuring safety and rule of law", color: "from-orange-500 to-red-500", href: "svc-justice" as PageId },
+   635→];
+   636→
+   637→function ServicesOverview({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   638→  return (
+   639→    <section id="services-section" className="py-20 md:py-28 bg-white">
+   640→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   641→        <AnimatedSection className="text-center mb-14">
+   642→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#EAB308]/10 text-[#A16207]">
+   643→            <Building2 className="w-4 h-4 mr-1.5" />
+   644→            Our Services
+   645→          </Badge>
+   646→          <h2 className="text-3xl md:text-5xl font-extrabold text-[#0B3D2E] mb-4">
+   647→            What We <span className="text-[#EAB308]">Deliver</span>
+   648→          </h2>
+   649→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-base md:text-lg">
+   650→            Key services and development programs driving progress in Mehal Sayint Woreda
+   651→          </p>
+   652→        </AnimatedSection>
+   653→        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+   654→          {SERVICE_CARDS.map((svc, i) => (
+   655→            <AnimatedSection key={svc.title} delay={i * 100}>
+   656→              <Card
+   657→                className="border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full group cursor-pointer"
+   658→                onClick={() => {
+   659→                  onNavigate(svc.href);
+   660→                  window.scrollTo({ top: 0, behavior: "smooth" });
+   661→                }}
+   662→              >
+   663→                <CardContent className="p-6 md:p-7">
+   664→                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${svc.color} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+   665→                    <svc.icon className="w-7 h-7 text-white" />
+   666→                  </div>
+   667→                  <h3 className="text-lg font-bold text-[#0B3D2E] mb-2">{svc.title}</h3>
+   668→                  <p className="text-[#0B3D2E]/55 text-sm leading-relaxed">{svc.desc}</p>
+   669→                  <div className="mt-4 flex items-center gap-1 text-[#EAB308] text-sm font-semibold group-hover:gap-2 transition-all">
+   670→                    Learn More <ChevronRight className="w-4 h-4" />
+   671→                  </div>
+   672→                </CardContent>
+   673→              </Card>
+   674→            </AnimatedSection>
+   675→          ))}
+   676→        </div>
+   677→      </div>
+   678→    </section>
+   679→  );
+   680→}
+   681→
+   682→/* ─── DEMOGRAPHICS (Home) ────────────────────────────────────── */
+   683→function DemographicsSection() {
+   684→  const demographics = [
+   685→    { label: "Male Population", value: 71, total: "71,230" },
+   686→    { label: "Female Population", value: 71, total: "71,120" },
+   687→    { label: "Urban Population", value: 12, total: "17,082" },
+   688→    { label: "Rural Population", value: 88, total: "125,268" },
+   689→    { label: "Youth (15-29)", value: 34, total: "48,399" },
+   690→    { label: "Literacy Rate", value: 72, total: "" },
+   691→  ];
+   692→  return (
+   693→    <section className="py-20 md:py-28 bg-[#F0FDF4]">
+   694→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   695→        <AnimatedSection className="text-center mb-14">
+   696→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#EAB308]/10 text-[#A16207]">
+   697→            <Users className="w-4 h-4 mr-1.5" />
+   698→            Demographics
+   699→          </Badge>
+   700→          <h2 className="text-3xl md:text-5xl font-extrabold text-[#0B3D2E] mb-4">
+   701→            Population <span className="text-[#EAB308]">Breakdown</span>
+   702→          </h2>
+   703→        </AnimatedSection>
+   704→        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+   705→          {demographics.map((item, i) => (
+   706→            <AnimatedSection key={item.label} delay={i * 100}>
+   707→              <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all">
+   708→                <CardContent className="p-5 md:p-6">
+   709→                  <div className="flex items-center justify-between mb-3">
+   710→                    <h3 className="font-semibold text-[#0B3D2E] text-sm md:text-base">{item.label}</h3>
+   711→                    <span className="text-[#0B3D2E] font-bold text-lg md:text-xl">{item.value}%</span>
+   712→                  </div>
+   713→                  <Progress value={item.value} className="h-3 bg-[#0B3D2E]/10" />
+   714→                  {item.total && <p className="text-[#0B3D2E]/50 text-xs mt-2">Approximately {item.total} people</p>}
+   715→                </CardContent>
+   716→              </Card>
+   717→            </AnimatedSection>
+   718→          ))}
+   719→        </div>
+   720→      </div>
+   721→    </section>
+   722→  );
+   723→}
+   724→
+   725→/* ─── QUICK STATS (Home) ─────────────────────────────────────── */
+   726→function QuickStats() {
+   727→  return (
+   728→    <section className="py-16 bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] relative">
+   729→      <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+   730→        {[
+   731→          { label: "Population", value: 142350, suffix: "" },
+   732→          { label: "Area", value: 1245, suffix: " km2" },
+   733→          { label: "Growth Rate", value: 2.8, suffix: "%" },
+   734→          { label: "Kebeles", value: 22, suffix: "" },
+   735→        ].map((s, i) => (
+   736→          <div key={s.label} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
+   737→            <div className="text-3xl md:text-4xl font-extrabold text-[#EAB308] mb-1">
+   738→              <AnimatedCounter target={s.value} suffix={s.suffix} duration={2000} />
+   739→            </div>
+   740→            <p className="text-white/60 text-sm">{s.label}</p>
+   741→          </div>
+   742→        ))}
+   743→      </div>
+   744→    </section>
+   745→  );
+   746→}
+   747→
+   748→/* ═══════════════════════════════════════════════════════════════
+   749→   SUB-PAGES
+   750→   ═══════════════════════════════════════════════════════════════ */
+   751→
+   752→/* ─── Page Wrapper ──────────────────────────────────────────── */
+   753→function Sidebar({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   754→  const goPage = (p: PageId) => {
+   755→    onNavigate(p);
+   756→    window.scrollTo({ top: 0, behavior: "smooth" });
+   757→  };
+   758→  const socialLinks = [
+   759→    { label: "Facebook", icon: Facebook, url: "https://facebook.com/MehalSayint", color: "hover:bg-[#1877F2] hover:text-white" },
+   760→    { label: "YouTube", icon: Youtube, url: "https://youtube.com/@MehalSayint", color: "hover:bg-[#FF0000] hover:text-white" },
+   761→    { label: "LinkedIn", icon: Linkedin, url: "https://linkedin.com/company/MehalSayint", color: "hover:bg-[#0A66C2] hover:text-white" },
+   762→    { label: "GitHub", icon: Github, url: "https://github.com/MehalSayint", color: "hover:bg-[#333] hover:text-white" },
+   763→    { label: "Instagram", icon: Instagram, url: "https://instagram.com/MehalSayint", color: "hover:bg-[#E4405F] hover:text-white" },
+   764→    { label: "Twitter / X", icon: Twitter, url: "https://twitter.com/MehalSayint", color: "hover:bg-[#1DA1F2] hover:text-white" },
+   765→    { label: "Telegram", icon: ExternalLink, url: "https://t.me/MehalSayint", color: "hover:bg-[#0088CC] hover:text-white" },
+   766→  ];
+   767→  return (
+   768→    <aside className="space-y-6">
+   769→      {/* Quick Links */}
+   770→      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+   771→        <div className="bg-gradient-to-r from-[#0B3D2E] to-[#145A44] px-5 py-3.5">
+   772→          <h4 className="text-white font-bold text-sm uppercase tracking-wider">Quick Links</h4>
+   773→        </div>
+   774→        <div className="p-4 space-y-1.5">
+   775→          <button onClick={() => goPage("bids")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   776→            <Briefcase className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   777→            Bids & Tenders
+   778→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   779→          </button>
+   780→          <button onClick={() => goPage("vacancy")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   781→            <ClipboardList className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   782→            Vacancy
+   783→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   784→          </button>
+   785→          <button onClick={() => goPage("news-news")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   786→            <Newspaper className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   787→            Latest News
+   788→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   789→          </button>
+   790→          <button onClick={() => goPage("gallery")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   791→            <ImageIcon className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   792→            Photo Gallery
+   793→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   794→          </button>
+   795→        </div>
+   796→      </div>
+   797→      {/* Social Media */}
+   798→      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+   799→        <div className="bg-gradient-to-r from-[#EAB308] to-[#CA8A04] px-5 py-3.5">
+   800→          <h4 className="text-[#0B3D2E] font-bold text-sm uppercase tracking-wider">Follow Us</h4>
+   801→        </div>
+   802→        <div className="p-4 grid grid-cols-2 gap-2.5">
+   803→          {socialLinks.map((social) => (
+   804→            <a
+   805→              key={social.label}
+   806→              href={social.url}
+   807→              target="_blank"
+   808→              rel="noopener noreferrer"
+   809→              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 text-[#0B3D2E]/60 text-xs font-medium transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${social.color}`}
+   810→            >
+   811→              <social.icon className="w-4 h-4 shrink-0" />
+   812→              <span className="truncate">{social.label}</span>
+   813→            </a>
+   814→          ))}
+   815→        </div>
+   816→      </div>
+   817→    </aside>
+   818→  );
+   819→}
+   820→
+   821→function SubPage({
+   822→  title,
+   823→  breadcrumb,
+   824→  badge,
+   825→  badgeColor,
+   826→  onNavigate,
+   827→  children,
+   828→}: {
+   829→  title: string;
+   830→  breadcrumb: string;
+   831→  badge: string;
+   832→  badgeColor?: string;
+   833→  onNavigate: (p: PageId) => void;
+   834→  children: React.ReactNode;
+   835→}) {
+   836→  return (
+   837→    <div className="pt-24 pb-16">
+   838→      {/* Page Header */}
+   839→      <div className="bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] py-12 md:py-16">
+   840→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   841→          <p className="text-white/50 text-sm mb-2">Home / {breadcrumb}</p>
+   842→          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">{title}</h1>
+   843→          <Badge className={`${badgeColor || "bg-[#EAB308]/20 text-[#EAB308] border-[#EAB308]/30"} text-sm font-medium`}>{badge}</Badge>
+   844→        </div>
+   845→      </div>
+   846→      {/* Content with Sidebar */}
+   847→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col lg:flex-row gap-8">
+   848→        <div className="flex-1 min-w-0">{children}</div>
+   849→        <div className="w-full lg:w-72 shrink-0">
+   850→          <Sidebar onNavigate={onNavigate} />
+   851→        </div>
+   852→      </div>
+   853→    </div>
+   854→  );
+   855→}
+   856→
+   857→/* ─── Content Card ──────────────────────────────────────────── */
+   858→function ContentCard({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+   859→  return (
+   860→    <AnimatedSection delay={delay}>
+   861→      <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all duration-300">
+   862→        <CardContent className="p-6 md:p-8">{children}</CardContent>
+   863→      </Card>
+   864→    </AnimatedSection>
+   865→  );
+   866→}
+   867→
+   868→/* ─── ABOUT: History & Background ───────────────────────────── */
+   869→function AboutHistoryPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   870→  return (
+   871→    <SubPage onNavigate={onNavigate} title="History & Background" breadcrumb="About / History" badge="About the Woreda">
+   872→      <div className="space-y-8 max-w-4xl mx-auto">
+   873→        <ContentCard>
+   874→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   875→            <BookOpen className="w-6 h-6 text-[#EAB308]" /> Origins of Mehal Sayint
+   876→          </h2>
+   877→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   878→            Mehal Sayint is one of the historic woredas in the South Wollo Zone of the Amhara Region, Ethiopia. The name &ldquo;Sayint&rdquo; carries deep historical significance in the local Amharic context, referring to a place of gathering and administration. The woreda was formally established during the imperial era and has since evolved through various administrative reorganizations under the Derg regime and the current federal system.
+   879→          </p>
+   880→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   881→            Throughout its history, Mehal Sayint has been known for its strategic location along trade routes connecting the highlands to the lowlands. The area has witnessed significant historical events, including resistance movements and community-led development initiatives that have shaped the character of the woreda.
+   882→          </p>
+   883→        </ContentCard>
+   884→        <ContentCard delay={100}>
+   885→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   886→            <Landmark className="w-6 h-6 text-[#EAB308]" /> Cultural Heritage
+   887→          </h2>
+   888→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   889→            The woreda is home to a rich cultural heritage that includes traditional Ethiopian Orthodox Christian practices, unique musical traditions, and vibrant festival celebrations. The community maintains strong ties to customary dispute resolution mechanisms and communal labor traditions such as &ldquo;Debo&rdquo; and &ldquo;Idir.&rdquo;
+   890→          </p>
+   891→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   892→            Local crafts, including pottery, weaving, and blacksmithing, continue to be practiced and passed down through generations. The woreda&apos;s cultural identity is further enriched by its connection to the broader Amhara cultural sphere while maintaining its own unique local traditions and practices.
+   893→          </p>
+   894→        </ContentCard>
+   895→      </div>
+   896→    </SubPage>
+   897→  );
+   898→}
+   899→
+   900→/* ─── ABOUT: Overview ──────────────────────────────────────── */
+   901→function AboutOverviewPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   902→  return (
+   903→    <SubPage onNavigate={onNavigate} title="Overview" breadcrumb="About / Overview" badge="General Information">
+   904→      <div className="space-y-8 max-w-4xl mx-auto">
+   905→        <ContentCard>
+   906→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   907→            <Globe className="w-6 h-6 text-[#EAB308]" /> About Mehal Sayint Woreda
+   908→          </h2>
+   909→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   910→            Mehal Sayint Woreda is an administrative district located in the South Wollo Zone of the Amhara Regional State, Ethiopia. Covering an area of approximately 1,245 square kilometers, the woreda is home to an estimated population of 142,350 people spread across 22 kebeles (local administrative units). The woreda administration is headquartered in the town of Mehal Sayint.
+   911→          </p>
+   912→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   913→            The woreda operates under the federal governance structure of Ethiopia, with administrative layers including the woreda council, executive committee, and kebele-level administrations. The local government is responsible for delivering public services, managing development programs, and maintaining law and order within its jurisdiction.
+   914→          </p>
+   915→        </ContentCard>
+   916→        <div className="grid md:grid-cols-2 gap-6">
+   917→          <ContentCard delay={100}>
+   918→            <h3 className="font-bold text-[#0B3D2E] mb-3">Key Facts</h3>
+   919→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   920→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Zone: South Wollo</li>
+   921→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Region: Amhara Regional State</li>
+   922→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Population: ~142,350</li>
+   923→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Area: ~1,245 km&sup2;</li>
+   924→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Kebeles: 22</li>
+   925→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Elevation: 1,500 - 3,200m</li>
+   926→            </ul>
+   927→          </ContentCard>
+   928→          <ContentCard delay={150}>
+   929→            <h3 className="font-bold text-[#0B3D2E] mb-3">Economy</h3>
+   930→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   931→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Primary: Agriculture (75%+)</li>
+   932→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Crops: Teff, Barley, Wheat, Sorghum</li>
+   933→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Livestock: Cattle, Sheep, Goats</li>
+   934→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Growing: Small enterprises & trade</li>
+   935→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Cooperatives: 120+ registered</li>
+   936→            </ul>
+   937→          </ContentCard>
+   938→        </div>
+   939→      </div>
+   940→    </SubPage>
+   941→  );
+   942→}
+   943→
+   944→/* ─── ABOUT: Location ─────────────────────────────────────── */
+   945→function AboutLocationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   946→  return (
+   947→    <SubPage onNavigate={onNavigate} title="Location & Geography" breadcrumb="About / Location" badge="Geographic Profile">
+   948→      <div className="space-y-8 max-w-4xl mx-auto">
+   949→        <ContentCard>
+   950→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   951→            <MapPin className="w-6 h-6 text-[#EAB308]" /> Geographic Location
+   952→          </h2>
+   953→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   954→            Mehal Sayint Woreda is situated in the South Wollo Zone of the Amhara Regional State, in the northern highlands of Ethiopia. The woreda is characterized by its diverse topography, featuring deep river gorges, rolling highland plateaus, and fertile agricultural valleys that drain into the Blue Nile basin.
+   955→          </p>
+   956→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   957→            The landscape ranges from 1,500 meters in the lowland river valleys to over 3,200 meters in the highland peaks, creating distinct agro-ecological zones that support diverse agricultural activities. The area is fed by several seasonal rivers and streams, making it a critical watershed for the larger region.
+   958→          </p>
+   959→        </ContentCard>
+   960→        <ContentCard delay={100}>
+   961→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   962→            <TreePine className="w-6 h-6 text-[#EAB308]" /> Climate & Environment
+   963→          </h2>
+   964→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   965→            The woreda experiences a tropical highland climate with two main rainy seasons. The &ldquo;Kiremt&rdquo; (main rainy season) runs from June to September, while the &ldquo;Belg&rdquo; (short rains) occur from February to April. Average annual rainfall ranges from 800 to 1,200 mm, supporting both rain-fed and irrigated agriculture.
+   966→          </p>
+   967→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   968→            Forest coverage stands at approximately 18%, with ongoing reforestation and soil conservation efforts aimed at reversing historical deforestation. The woreda is home to several endemic plant species and serves as a habitat for diverse wildlife, including birds and small mammals unique to the Ethiopian highland ecosystem.
+   969→          </p>
+   970→        </ContentCard>
+   971→      </div>
+   972→    </SubPage>
+   973→  );
+   974→}
+   975→
+   976→/* ─── GOVERNMENT: Leadership ───────────────────────────────── */
+   977→function GovLeadershipPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   978→  return (
+   979→    <SubPage onNavigate={onNavigate} title="Leadership" breadcrumb="Government / Leadership" badge="Woreda Leadership">
+   980→      <div className="space-y-8 max-w-4xl mx-auto">
+   981→        <ContentCard>
+   982→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   983→            <UserCheck className="w-6 h-6 text-[#EAB308]" /> Woreda Administration
+   984→          </h2>
+   985→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   986→            Mehal Sayint Woreda is led by an elected Woreda Council and an Executive Committee headed by the Woreda Administrator (Chief Executive). The leadership team is responsible for implementing development plans, delivering public services, and ensuring good governance at the local level.
+   987→          </p>
+   988→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   989→            The administration operates under the principles of democratic governance, transparency, and accountability. Regular council meetings are held to discuss development priorities, budget allocations, and policy decisions that affect the community.
+   990→          </p>
+   991→        </ContentCard>
+   992→        <div className="grid md:grid-cols-2 gap-6">
+   993→          {[
+   994→            { title: "Woreda Administrator", desc: "Chief executive officer responsible for overall administration and policy implementation.", icon: Shield },
+   995→            { title: "Deputy Administrator", desc: "Supports the administrator and oversees specific departments and programs.", icon: UsersRound },
+   996→            { title: "Woreda Council", desc: "Elected legislative body that approves budgets, plans, and policies for the woreda.", icon: Landmark },
+   997→            { title: "Kebele Administrations", desc: "22 local councils responsible for community-level governance and service delivery.", icon: Building },
+   998→          ].map((role, i) => (
+   999→            <ContentCard key={role.title} delay={i * 100}>
+  1000→              <div className="flex items-start gap-4">
+  1001→                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow-md">
+  1002→                  <role.icon className="w-6 h-6 text-white" />
+  1003→                </div>
+  1004→                <div>
+  1005→                  <h3 className="font-bold text-[#0B3D2E] mb-1">{role.title}</h3>
+  1006→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{role.desc}</p>
+  1007→                </div>
+  1008→              </div>
+  1009→            </ContentCard>
+  1010→          ))}
+  1011→        </div>
+  1012→      </div>
+  1013→    </SubPage>
+  1014→  );
+  1015→}
+  1016→
+  1017→/* ─── GOVERNMENT: Structure ─────────────────────────────────── */
+  1018→function GovStructurePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1019→  return (
+  1020→    <SubPage onNavigate={onNavigate} title="Administrative Structure" breadcrumb="Government / Structure" badge="Governance">
+  1021→      <div className="space-y-8 max-w-4xl mx-auto">
+  1022→        <ContentCard>
+  1023→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1024→            <Building className="w-6 h-6 text-[#EAB308]" /> Organizational Hierarchy
+  1025→          </h2>
+  1026→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1027→            The administrative structure of Mehal Sayint Woreda follows the three-tier governance system of Ethiopia: the Woreda Council at the top, followed by sectoral offices and departments, and finally the Kebele administrations at the community level.
+  1028→          </p>
+  1029→          <div className="space-y-4">
+  1030→            {[
+  1031→              { level: "Tier 1: Woreda Council", desc: "Supreme decision-making body with elected representatives from all kebeles. Meets regularly to approve plans, budgets, and policies." },
+  1032→              { level: "Tier 2: Executive Committee", desc: "Implements council decisions. Chaired by the Woreda Administrator with heads of major departments." },
+  1033→              { level: "Tier 3: Sectoral Offices", desc: "Specialized departments including Education, Health, Agriculture, Finance, and Infrastructure offices." },
+  1034→              { level: "Tier 4: Kebele Administration", desc: "22 local government units that deliver services directly to communities and collect local data." },
+  1035→            ].map((tier, i) => (
+  1036→              <div key={tier.level} className="flex items-start gap-4 p-4 rounded-xl bg-[#F0FDF4]">
+  1037→                <div className="w-10 h-10 rounded-lg bg-[#0B3D2E] text-white flex items-center justify-center text-sm font-bold shrink-0">{i + 1}</div>
+  1038→                <div>
+  1039→                  <h4 className="font-bold text-[#0B3D2E] mb-1">{tier.level}</h4>
+  1040→                  <p className="text-[#0B3D2E]/60 text-sm">{tier.desc}</p>
+  1041→                </div>
+  1042→              </div>
+  1043→            ))}
+  1044→          </div>
+  1045→        </ContentCard>
+  1046→      </div>
+  1047→    </SubPage>
+  1048→  );
+  1049→}
+  1050→
+  1051→/* ─── GOVERNMENT: Offices ──────────────────────────────────── */
+  1052→function GovOfficesPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1053→  const offices = [
+  1054→    { name: "Woreda Administrator&apos;s Office", head: "Chief Administrator", icon: Shield },
+  1055→    { name: "Finance & Economic Development Office", head: "Head of Finance", icon: Banknote },
+  1056→    { name: "Education Office", head: "Head of Education", icon: GraduationCap },
+  1057→    { name: "Health Office", head: "Head of Health", icon: HeartPulse },
+  1058→    { name: "Agriculture & Natural Resources Office", head: "Head of Agriculture", icon: Tractor },
+  1059→    { name: "Road & Transport Office", head: "Head of Transport", icon: Truck },
+  1060→    { name: "Water, Mines & Energy Office", head: "Head of Water", icon: Droplets },
+  1061→    { name: "Justice & Security Office", head: "Head of Justice", icon: Scale },
+  1062→    { name: "Women & Children Affairs Office", head: "Head of Women Affairs", icon: Users },
+  1063→    { name: "Youth & Sports Office", head: "Head of Youth Affairs", icon: Award },
+  1064→    { name: "Trade & Industry Office", head: "Head of Trade", icon: Briefcase },
+  1065→    { name: "Information & Communication Office", head: "Head of Information", icon: Newspaper },
+  1066→  ];
+  1067→  return (
+  1068→    <SubPage onNavigate={onNavigate} title="Offices & Departments" breadcrumb="Government / Offices" badge="Government Offices">
+  1069→      <div className="max-w-4xl mx-auto">
+  1070→        <div className="grid md:grid-cols-2 gap-4">
+  1071→          {offices.map((office, i) => (
+  1072→            <ContentCard key={office.name} delay={i * 60}>
+  1073→              <div className="flex items-center gap-4">
+  1074→                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+  1075→                  <office.icon className="w-5 h-5 text-white" />
+  1076→                </div>
+  1077→                <div className="min-w-0">
+  1078→                  <h3 className="font-bold text-[#0B3D2E] text-sm truncate">{office.name}</h3>
+  1079→                  <p className="text-[#0B3D2E]/50 text-xs">{office.head}</p>
+  1080→                </div>
+  1081→              </div>
+  1082→            </ContentCard>
+  1083→          ))}
+  1084→        </div>
+  1085→      </div>
+  1086→    </SubPage>
+  1087→  );
+  1088→}
+  1089→
+  1090→/* ─── SERVICE: Education ────────────────────────────────────── */
+  1091→function ServiceEducationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1092→  return (
+  1093→    <SubPage onNavigate={onNavigate} title="Education Services" breadcrumb="Services / Education" badge="Education Sector">
+  1094→      <div className="space-y-8 max-w-4xl mx-auto">
+  1095→        <ContentCard>
+  1096→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1097→            <GraduationCap className="w-6 h-6 text-[#EAB308]" /> Education in Mehal Sayint
+  1098→          </h2>
+  1099→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1100→            The Mehal Sayint Woreda Education Office oversees 55 educational institutions serving the community, including 47 primary schools (grades 1-8) and 8 secondary schools (grades 9-12). The education sector is one of the largest employers in the woreda, with over 600 teachers and administrative staff.
+  1101→          </p>
+  1102→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1103→            The woreda is committed to achieving universal primary education and improving transition rates to secondary education. Current initiatives include school construction programs, teacher training, curriculum improvement, and community awareness campaigns to increase enrollment, particularly for girls and children in remote areas.
+  1104→          </p>
+  1105→        </ContentCard>
+  1106→        <div className="grid md:grid-cols-3 gap-6">
+  1107→          {[
+  1108→            { stat: "47", label: "Primary Schools" },
+  1109→            { stat: "8", label: "Secondary Schools" },
+  1110→            { stat: "600+", label: "Teachers" },
+  1111→            { stat: "38,000+", label: "Students Enrolled" },
+  1112→            { stat: "85%", label: "Primary Enrollment" },
+  1113→            { stat: "62%", label: "Secondary Enrollment" },
+  1114→          ].map((s, i) => (
+  1115→            <ContentCard key={s.label} delay={i * 80}>
+  1116→              <div className="text-center">
+  1117→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1118→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1119→              </div>
+  1120→            </ContentCard>
+  1121→          ))}
+  1122→        </div>
+  1123→        <ContentCard delay={200}>
+  1124→          <h3 className="font-bold text-[#0B3D2E] mb-3">Current Programs</h3>
+  1125→          <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1126→            {["School feeding program for rural schools", "Girls&apos; education acceleration initiative", "Alternative basic education (ABE) centers", "Community-based school management committees", "Digital literacy and ICT integration program"].map((item) => (
+  1127→              <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+  1128→            ))}
+  1129→          </ul>
+  1130→        </ContentCard>
+  1131→      </div>
+  1132→    </SubPage>
+  1133→  );
+  1134→}
+  1135→
+  1136→/* ─── SERVICE: Health ───────────────────────────────────────── */
+  1137→function ServiceHealthPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1138→  return (
+  1139→    <SubPage onNavigate={onNavigate} title="Health Services" breadcrumb="Services / Health" badge="Health Sector">
+  1140→      <div className="space-y-8 max-w-4xl mx-auto">
+  1141→        <ContentCard>
+  1142→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1143→            <HeartPulse className="w-6 h-6 text-[#EAB308]" /> Healthcare in Mehal Sayint
+  1144→          </h2>
+  1145→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1146→            The woreda&apos;s health system consists of 1 primary hospital, 4 health centers, and 18 health posts strategically distributed across all 22 kebeles. The Health Extension Program (HEP) forms the backbone of community health delivery, with over 40 health extension workers providing preventive and basic curative services at the kebele level.
+  1147→          </p>
+  1148→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1149→            Key health indicators have shown improvement in recent years, including reductions in maternal and child mortality, increased immunization coverage, and expanded access to antenatal care. The woreda is working towards universal health coverage through community-based health insurance schemes.
+  1150→          </p>
+  1151→        </ContentCard>
+  1152→        <div className="grid md:grid-cols-3 gap-6">
+  1153→          {[
+  1154→            { stat: "1", label: "Primary Hospital" },
+  1155→            { stat: "4", label: "Health Centers" },
+  1156→            { stat: "18", label: "Health Posts" },
+  1157→            { stat: "40+", label: "Health Workers" },
+  1158→            { stat: "92%", label: "Immunization Rate" },
+  1159→            { stat: "78%", label: "ANC Coverage" },
+  1160→          ].map((s, i) => (
+  1161→            <ContentCard key={s.label} delay={i * 80}>
+  1162→              <div className="text-center">
+  1163→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1164→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1165→              </div>
+  1166→            </ContentCard>
+  1167→          ))}
+  1168→        </div>
+  1169→        <ContentCard delay={200}>
+  1170→          <h3 className="font-bold text-[#0B3D2E] mb-3">Health Programs</h3>
+  1171→          <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1172→            {["Health Extension Program (HEP)", "Maternal & child health services", "Immunization & vaccination campaigns", "Malaria prevention & control", "HIV/AIDS awareness & testing", "Community-based health insurance (CBHI)", "Nutrition screening & supplementation"].map((item) => (
+  1173→              <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+  1174→            ))}
+  1175→          </ul>
+  1176→        </ContentCard>
+  1177→      </div>
+  1178→    </SubPage>
+  1179→  );
+  1180→}
+  1181→
+  1182→/* ─── SERVICE: Agriculture ─────────────────────────────────── */
+  1183→function ServiceAgriculturePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1184→  return (
+  1185→    <SubPage onNavigate={onNavigate} title="Agriculture Services" breadcrumb="Services / Agriculture" badge="Agriculture Sector">
+  1186→      <div className="space-y-8 max-w-4xl mx-auto">
+  1187→        <ContentCard>
+  1188→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1189→            <Tractor className="w-6 h-6 text-[#EAB308]" /> Agriculture in Mehal Sayint
+  1190→          </h2>
+  1191→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1192→            Agriculture is the backbone of Mehal Sayint&apos;s economy, employing over 75% of the population. The woreda supports a diverse farming system that includes cereal crop production, livestock rearing, horticulture, and increasingly, apiculture (beekeeping) and spice cultivation.
+  1193→          </p>
+  1194→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1195→            The Agriculture and Natural Resources Office provides extension services, improved seed distribution, fertilizer access, soil conservation training, and veterinary services to farmers across all kebeles. Climate-smart agriculture practices are being promoted to build resilience against increasing weather variability.
+  1196→          </p>
+  1197→        </ContentCard>
+  1198→        <div className="grid md:grid-cols-2 gap-6">
+  1199→          <ContentCard delay={100}>
+  1200→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Wheat className="w-5 h-5 text-[#EAB308]" /> Major Crops</h3>
+  1201→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1202→              {["Teff (staple crop)", "Barley & Wheat", "Sorghum & Maize", "Fava Beans & Peas", "Chickpeas & Lentils", "Potatoes & Vegetables"].map((item) => (
+  1203→                <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+  1204→              ))}
+  1205→            </ul>
+  1206→          </ContentCard>
+  1207→          <ContentCard delay={150}>
+  1208→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Baby className="w-5 h-5 text-[#EAB308]" /> Livestock</h3>
+  1209→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1210→              {["Cattle (oxen, cows)", "Sheep & Goats", "Poultry", "Donkeys & Mules (transport)", "Beekeeping (apiculture)", "Modern dairy farming initiatives"].map((item) => (
+  1211→                <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+  1212→              ))}
+  1213→            </ul>
+  1214→          </ContentCard>
+  1215→        </div>
+  1216→      </div>
+  1217→    </SubPage>
+  1218→  );
+  1219→}
+  1220→
+  1221→/* ─── SERVICE: Transport ──────────────────────────────────── */
+  1222→function ServiceTransportPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1223→  return (
+  1224→    <SubPage onNavigate={onNavigate} title="Transport Services" breadcrumb="Services / Transport" badge="Infrastructure">
+  1225→      <div className="space-y-8 max-w-4xl mx-auto">
+  1226→        <ContentCard>
+  1227→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1228→            <Truck className="w-6 h-6 text-[#EAB308]" /> Transport & Roads
+  1229→          </h2>
+  1230→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1231→            Mehal Sayint Woreda has made significant progress in expanding its road network to connect remote kebeles to the woreda capital and zonal centers. The road infrastructure development is a top priority, with both all-weather gravel roads and dry-weather roads being constructed and maintained.
+  1232→          </p>
+  1233→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1234→            The woreda currently has approximately 85 km of all-weather roads, with an ambitious target of reaching 150 km within the next five years. Rural accessibility remains a challenge, and the administration is working with regional and federal authorities to secure funding for road construction projects.
+  1235→          </p>
+  1236→        </ContentCard>
+  1237→        <div className="grid md:grid-cols-2 gap-6">
+  1238→          {[
+  1239→            { stat: "85 km", label: "All-Weather Roads (current)", pct: 57 },
+  1240→            { stat: "150 km", label: "All-Weather Roads (target)", pct: 100 },
+  1241→            { stat: "12", label: "Bridges Constructed", pct: 60 },
+  1242→            { stat: "14 / 22", label: "Kebeles Road Connected", pct: 64 },
+  1243→          ].map((s, i) => (
+  1244→            <ContentCard key={s.label} delay={i * 100}>
+  1245→              <div className="flex justify-between mb-2">
+  1246→                <span className="text-sm font-semibold text-[#0B3D2E]">{s.label}</span>
+  1247→                <span className="text-sm font-bold text-[#EAB308]">{s.stat}</span>
+  1248→              </div>
+  1249→              <div className="h-3 bg-[#0B3D2E]/10 rounded-full overflow-hidden">
+  1250→                <div className="h-full rounded-full bg-gradient-to-r from-[#0B3D2E] to-[#10B981]" style={{ width: `${s.pct}%` }} />
+  1251→              </div>
+  1252→            </ContentCard>
+  1253→          ))}
+  1254→        </div>
+  1255→      </div>
+  1256→    </SubPage>
+  1257→  );
+  1258→}
+  1259→
+  1260→/* ─── SERVICE: Water ───────────────────────────────────────── */
+  1261→function ServiceWaterPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1262→  return (
+  1263→    <SubPage onNavigate={onNavigate} title="Water & Sanitation" breadcrumb="Services / Water" badge="Water Sector">
+  1264→      <div className="space-y-8 max-w-4xl mx-auto">
+  1265→        <ContentCard>
+  1266→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1267→            <Droplets className="w-6 h-6 text-[#EAB308]" /> Water Supply & Sanitation
+  1268→          </h2>
+  1269→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1270→            Access to clean water remains one of the most critical challenges in Mehal Sayint Woreda. The Water, Mines & Energy Office manages 64 clean water access points, including hand-dug wells, protected springs, and boreholes equipped with hand pumps. Despite this progress, many rural communities still rely on unprotected water sources.
+  1271→          </p>
+  1272→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1273→            The woreda is implementing an ambitious water supply expansion program with support from regional and international partners. The goal is to achieve 85% clean water coverage within the next five years, combined with comprehensive sanitation and hygiene promotion activities.
+  1274→          </p>
+  1275→        </ContentCard>
+  1276→        <div className="grid md:grid-cols-3 gap-6">
+  1277→          {[
+  1278→            { stat: "64", label: "Water Points" },
+  1279→            { stat: "52%", label: "Clean Water Coverage" },
+  1280→            { stat: "85%", label: "Target Coverage (5yr)" },
+  1281→            { stat: "35%", label: "Sanitation Coverage" },
+  1282→            { stat: "18", label: "New Projects Planned" },
+  1283→            { stat: "22", label: "Kebeles Served" },
+  1284→          ].map((s, i) => (
+  1285→            <ContentCard key={s.label} delay={i * 80}>
+  1286→              <div className="text-center">
+  1287→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1288→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1289→              </div>
+  1290→            </ContentCard>
+  1291→          ))}
+  1292→        </div>
+  1293→      </div>
+  1294→    </SubPage>
+  1295→  );
+  1296→}
+  1297→
+  1298→/* ─── SERVICE: Justice ─────────────────────────────────────── */
+  1299→function ServiceJusticePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1300→  return (
+  1301→    <SubPage onNavigate={onNavigate} title="Justice & Security" breadcrumb="Services / Justice" badge="Justice Sector">
+  1302→      <div className="space-y-8 max-w-4xl mx-auto">
+  1303→        <ContentCard>
+  1304→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1305→            <Scale className="w-6 h-6 text-[#EAB308]" /> Justice & Security Services
+  1306→          </h2>
+  1307→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1308→            Mehal Sayint Woreda maintains a justice system that includes a woreda court, social courts, and alternative dispute resolution mechanisms. The Justice Office works to ensure the rule of law, protect citizens&apos; rights, and provide accessible justice services to all community members.
+  1309→          </p>
+  1310→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1311→            Community-based dispute resolution through elders and local mediators remains an important part of the justice landscape, particularly for civil and family matters. The woreda also maintains law enforcement through the local police department, which works to maintain peace and security across all kebeles.
+  1312→          </p>
+  1313→        </ContentCard>
+  1314→        <div className="grid md:grid-cols-2 gap-6">
+  1315→          {[
+  1316→            { title: "Woreda Court", desc: "Handles major civil and criminal cases within the woreda jurisdiction.", icon: Scale },
+  1317→            { title: "Social Courts", desc: "Community-level courts for minor disputes, family law, and local matters.", icon: Building },
+  1318→            { title: "Police Department", desc: "Maintains public safety, prevents crime, and enforces laws.", icon: Siren },
+  1319→            { title: "Legal Aid", desc: "Free legal consultation and support for vulnerable community members.", icon: Shield },
+  1320→          ].map((s, i) => (
+  1321→            <ContentCard key={s.title} delay={i * 100}>
+  1322→              <div className="flex items-start gap-4">
+  1323→                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+  1324→                  <s.icon className="w-5 h-5 text-white" />
+  1325→                </div>
+  1326→                <div>
+  1327→                  <h3 className="font-bold text-[#0B3D2E] mb-1">{s.title}</h3>
+  1328→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{s.desc}</p>
+  1329→                </div>
+  1330→              </div>
+  1331→            </ContentCard>
+  1332→          ))}
+  1333→        </div>
+  1334→      </div>
+  1335→    </SubPage>
+  1336→  );
+  1337→}
+  1338→
+  1339→/* ─── SERVICE: Finance ───────────────────────────────────── */
+  1340→function ServiceFinancePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1341→  return (
+  1342→    <SubPage onNavigate={onNavigate} title="Finance & Revenue" breadcrumb="Services / Finance" badge="Finance Sector">
+  1343→      <div className="space-y-8 max-w-4xl mx-auto">
+  1344→        <ContentCard>
+  1345→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1346→            <Banknote className="w-6 h-6 text-[#EAB308]" /> Finance & Revenue
+  1347→          </h2>
+  1348→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1349→            The Finance and Economic Development Office manages the woreda&apos;s budget, revenue collection, and financial planning. The office is responsible for collecting local taxes, fees, and duties, as well as managing the disbursement of funds to various departments and development programs.
+  1350→          </p>
+  1351→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1352→            The woreda budget is funded through a combination of federal and regional government transfers, local revenue collection, and donor support for specific development projects. Transparency and accountability in financial management are key priorities, with regular audits and public financial reporting.
+  1353→          </p>
+  1354→        </ContentCard>
+  1355→        <div className="grid md:grid-cols-3 gap-6">
+  1356→          {[
+  1357→            { stat: "120+", label: "Registered Cooperatives" },
+  1358→            { stat: "5,000+", label: "Tax-Paying Households" },
+  1359→            { stat: "85%", label: "Budget Utilization Rate" },
+  1360→            { stat: "22", label: "Revenue Collection Points" },
+  1361→            { stat: "150+", label: "Micro Enterprises Supported" },
+  1362→            { stat: "3", label: "Financial Audits Per Year" },
+  1363→          ].map((s, i) => (
+  1364→            <ContentCard key={s.label} delay={i * 80}>
+  1365→              <div className="text-center">
+  1366→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1367→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1368→              </div>
+  1369→            </ContentCard>
+  1370→          ))}
+  1371→        </div>
+  1372→      </div>
+  1373→    </SubPage>
+  1374→  );
+  1375→}
+  1376→
+  1377→/* ─── NEWS: Latest News ───────────────────────────────────── */
+  1378→function NewsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1379→  const newsItems = [
+  1380→    { date: "June 28, 2026", title: "New Primary School Construction Completed in Gonder Ber Kebele", summary: "A new 8-classroom primary school has been completed and handed over to the community, serving over 400 students.", icon: School },
+  1381→    { date: "June 15, 2026", title: "Health Center Expansion Project Launched", summary: "Construction has begun on expanding the main health center to include maternity and pediatric wards.", icon: HeartPulse },
+  1382→    { date: "June 5, 2026", title: "Road Construction Connecting 3 Remote Kebeles Approved", summary: "The regional government has approved funding for 25 km of new all-weather roads.", icon: Truck },
+  1383→    { date: "May 22, 2026", title: "Annual Agricultural Input Distribution Campaign", summary: "Over 10,000 households received improved seeds and fertilizer for the planting season.", icon: Tractor },
+  1384→    { date: "May 10, 2026", title: "Woreda Council Approves Annual Budget", summary: "The council approved a budget of ETB 85 million for the fiscal year 2026/27.", icon: PieChart },
+  1385→    { date: "April 28, 2026", title: "Clean Water Project Benefits 5,000 Residents", summary: "Five new deep boreholes with solar-powered pumps now provide clean water access.", icon: Droplets },
+  1386→  ];
+  1387→  return (
+  1388→    <SubPage onNavigate={onNavigate} title="Latest News" breadcrumb="News / Latest News" badge="News & Updates">
+  1389→      <div className="max-w-4xl mx-auto space-y-4">
+  1390→        {newsItems.map((item, i) => (
+  1391→          <ContentCard key={item.title} delay={i * 60}>
+  1392→            <div className="flex items-start gap-4">
+  1393→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+  1394→                <item.icon className="w-5 h-5 text-white" />
+  1395→              </div>
+  1396→              <div className="min-w-0 flex-1">
+  1397→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+  1398→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1399→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+  1400→              </div>
+  1401→            </div>
+  1402→          </ContentCard>
+  1403→        ))}
+  1404→      </div>
+  1405→    </SubPage>
+  1406→  );
+  1407→}
+  1408→
+  1409→/* ─── NEWS: Bids ──────────────────────────────────────────── */
+  1410→function BidsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1411→  return (
+  1412→    <SubPage onNavigate={onNavigate} title="Bid Announcements" breadcrumb="News / Bids" badge="Procurement">
+  1413→      <div className="max-w-4xl mx-auto space-y-4">
+  1414→        {[
+  1415→          { deadline: "July 30, 2026", title: "Construction of All-Weather Road (Kebele A to Kebele B)", budget: "ETB 15 Million", status: "Open" },
+  1416→          { deadline: "July 20, 2026", title: "Supply of Medical Equipment for Health Center Expansion", budget: "ETB 3.2 Million", status: "Open" },
+  1417→          { deadline: "July 15, 2026", title: "Office Furniture Procurement for Woreda Administration", budget: "ETB 850,000", status: "Open" },
+  1418→          { deadline: "June 30, 2026", title: "Borehole Drilling in 5 Kebeles (Water Supply Project)", budget: "ETB 8 Million", status: "Closed" },
+  1419→          { deadline: "June 15, 2026", title: "School Construction (4 Classroom Blocks)", budget: "ETB 12 Million", status: "Awarded" },
+  1420→        ].map((item, i) => (
+  1421→          <ContentCard key={item.title} delay={i * 60}>
+  1422→            <div className="flex items-start justify-between gap-4">
+  1423→              <div className="min-w-0">
+  1424→                <div className="flex items-center gap-2 mb-2">
+  1425→                  <Badge className={item.status === "Open" ? "bg-green-100 text-green-700 border-green-200" : item.status === "Closed" ? "bg-gray-100 text-gray-600" : "bg-amber-100 text-amber-700 border-amber-200"}>{item.status}</Badge>
+  1426→                  <span className="text-xs text-[#0B3D2E]/50">Deadline: {item.deadline}</span>
+  1427→                </div>
+  1428→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1429→                <p className="text-[#EAB308] text-sm font-semibold">{item.budget}</p>
+  1430→              </div>
+  1431→            </div>
+  1432→          </ContentCard>
+  1433→        ))}
+  1434→      </div>
+  1435→    </SubPage>
+  1436→  );
+  1437→}
+  1438→
+  1439→/* ─── NEWS: Vacancy ────────────────────────────────────────── */
+  1440→function VacancyPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1441→  return (
+  1442→    <SubPage onNavigate={onNavigate} title="Job Vacancies" breadcrumb="News / Vacancy" badge="Careers">
+  1443→      <div className="max-w-4xl mx-auto space-y-4">
+  1444→        {[
+  1445→          { deadline: "July 25, 2026", title: "Health Extension Workers (10 Positions)", type: "Full-Time", dept: "Health Office" },
+  1446→          { deadline: "July 20, 2026", title: "Primary School Teachers (15 Positions)", type: "Full-Time", dept: "Education Office" },
+  1447→          { deadline: "July 15, 2026", title: "Agricultural Extension Experts (5 Positions)", type: "Full-Time", dept: "Agriculture Office" },
+  1448→          { deadline: "July 10, 2026", title: "Accountant (2 Positions)", type: "Full-Time", dept: "Finance Office" },
+  1449→          { deadline: "July 5, 2026", title: "ICT Support Officer (1 Position)", type: "Full-Time", dept: "Administration" },
+  1450→          { deadline: "July 1, 2026", title: "Road Construction Engineers (3 Positions)", type: "Contract", dept: "Road Office" },
+  1451→        ].map((item, i) => (
+  1452→          <ContentCard key={item.title} delay={i * 60}>
+  1453→            <div className="flex items-start justify-between gap-4 flex-wrap">
+  1454→              <div className="min-w-0">
+  1455→                <div className="flex items-center gap-2 mb-2 flex-wrap">
+  1456→                  <Badge className="bg-[#0B3D2E] text-white">{item.type}</Badge>
+  1457→                  <Badge variant="secondary">{item.dept}</Badge>
+  1458→                </div>
+  1459→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1460→                <p className="text-[#0B3D2E]/50 text-xs">Application Deadline: {item.deadline}</p>
+  1461→              </div>
+  1462→            </div>
+  1463→          </ContentCard>
+  1464→        ))}
+  1465→        <ContentCard delay={400}>
+  1466→          <div className="bg-[#F0FDF4] rounded-xl p-6 text-center">
+  1467→            <h3 className="font-bold text-[#0B3D2E] mb-2">How to Apply</h3>
+  1468→            <p className="text-[#0B3D2E]/60 text-sm">Submit your application with CV, cover letter, and supporting documents to the Woreda Administration Office, Mehal Sayint Town, or email: info@mahalsayint.gov.et</p>
+  1469→          </div>
+  1470→        </ContentCard>
+  1471→      </div>
+  1472→    </SubPage>
+  1473→  );
+  1474→}
+  1475→
+  1476→/* ─── NEWS: Announcements ──────────────────────────────────── */
+  1477→function AnnouncementsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1478→  return (
+  1479→    <SubPage onNavigate={onNavigate} title="Announcements" breadcrumb="News / Announcements" badge="Public Notices">
+  1480→      <div className="max-w-4xl mx-auto space-y-4">
+  1481→        {[
+  1482→          { date: "June 25, 2026", title: "Public Holiday Notice - Eid al-Adha", summary: "All woreda offices will be closed for the Eid al-Adha public holiday.", icon: Flag },
+  1483→          { date: "June 20, 2026", title: "Community Meeting on New Development Plan", summary: "All residents are invited to attend the public consultation on the 5-year development plan.", icon: UsersRound },
+  1484→          { date: "June 12, 2026", title: "Tax Payment Deadline Extended", summary: "The deadline for annual property and income tax payments has been extended to August 30.", icon: Banknote },
+  1485→          { date: "June 1, 2026", title: "New Kebele Boundaries Announced", summary: "Following the recent census, adjustments to kebele administrative boundaries take effect.", icon: MapPin },
+  1486→          { date: "May 28, 2026", title: "Vaccination Campaign for Livestock", summary: "Free livestock vaccination campaign across all kebeles. All farmers encouraged to participate.", icon: Baby },
+  1487→        ].map((item, i) => (
+  1488→          <ContentCard key={item.title} delay={i * 60}>
+  1489→            <div className="flex items-start gap-4">
+  1490→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#EAB308] to-[#F59E0B] flex items-center justify-center shrink-0 shadow">
+  1491→                <item.icon className="w-5 h-5 text-white" />
+  1492→              </div>
+  1493→              <div className="min-w-0">
+  1494→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+  1495→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1496→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+  1497→              </div>
+  1498→            </div>
+  1499→          </ContentCard>
+  1500→        ))}
+  1501→      </div>
+  1502→    </SubPage>
+  1503→  );
+  1504→}
+  1505→
+  1506→/* ─── CONTACT PAGE ─────────────────────────────────────────── */
+  1507→function ContactPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1508→  return (
+  1509→    <SubPage onNavigate={onNavigate} title="Contact Us" breadcrumb="Contact" badge="Get In Touch">
+  1510→      <div className="max-w-4xl mx-auto">
+  1511→        <div className="grid md:grid-cols-3 gap-6 mb-10">
+  1512→          {[
+  1513→            { title: "Office Location", detail: "Mehal Sayint Town\nSouth Wollo Zone\nAmhara Region, Ethiopia", icon: MapPinned, color: "from-[#0B3D2E] to-[#10B981]" },
+  1514→            { title: "Phone", detail: "+251 33 XXX XXXX\n\nOffice Hours:\nMon-Fri, 8:00 AM - 5:00 PM", icon: Phone, color: "from-[#EAB308] to-[#F59E0B]" },
+  1515→            { title: "Email", detail: "info@mahalsayint.gov.et\n\nFor general inquiries\nand service requests", icon: Mail, color: "from-[#DC2626] to-[#EF4444]" },
+  1516→          ].map((c, i) => (
+  1517→            <ContentCard key={c.title} delay={i * 100}>
+  1518→              <div className="text-center">
+  1519→                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+  1520→                  <c.icon className="w-7 h-7 text-white" />
+  1521→                </div>
+  1522→                <h3 className="font-bold text-[#0B3D2E] mb-2">{c.title}</h3>
+  1523→                <p className="text-[#0B3D2E]/55 text-sm whitespace-pre-line">{c.detail}</p>
+  1524→              </div>
+  1525→            </ContentCard>
+  1526→          ))}
+  1527→        </div>
+  1528→        <ContentCard delay={300}>
+  1529→          <h2 className="text-xl font-bold text-[#0B3D2E] mb-4">Key Office Contacts</h2>
+  1530→          <div className="overflow-x-auto">
+  1531→            <table className="w-full text-sm">
+  1532→              <thead>
+  1533→                <tr className="border-b border-[#0B3D2E]/10">
+  1534→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Office</th>
+  1535→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Contact Person</th>
+  1536→                  <th className="text-left py-3 px-4 font-bold text-[#0B3D2E]">Phone</th>
+  1537→                </tr>
+  1538→              </thead>
+  1539→              <tbody className="divide-y divide-[#0B3D2E]/5">
+  1540→                {[
+  1541→                  { office: "Woreda Administrator", person: "Chief Administrator", phone: "+251 33 XXX XXXX" },
+  1542→                  { office: "Education Office", person: "Head of Education", phone: "+251 33 XXX XXXX" },
+  1543→                  { office: "Health Office", person: "Head of Health", phone: "+251 33 XXX XXXX" },
+  1544→                  { office: "Agriculture Office", person: "Head of Agriculture", phone: "+251 33 XXX XXXX" },
+  1545→                  { office: "Finance Office", person: "Head of Finance", phone: "+251 33 XXX XXXX" },
+  1546→                ].map((row) => (
+  1547→                  <tr key={row.office} className="hover:bg-[#F0FDF4] transition-colors">
+  1548→                    <td className="py-3 px-4 text-[#0B3D2E] font-medium">{row.office}</td>
+  1549→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.person}</td>
+  1550→                    <td className="py-3 px-4 text-[#0B3D2E]/60">{row.phone}</td>
+  1551→                  </tr>
+  1552→                ))}
+  1553→              </tbody>
+  1554→            </table>
+  1555→          </div>
+  1556→        </ContentCard>
+  1557→      </div>
+  1558→    </SubPage>
+  1559→  );
+  1560→}
+  1561→
+  1562→/* ─── FOOTER ───────────────────────────────────────────────── */
+  1563→function Footer({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1564→  const goPage = (p: PageId) => {
+  1565→    onNavigate(p);
+  1566→    window.scrollTo({ top: 0, behavior: "smooth" });
+  1567→  };
+  1568→  return (
+  1569→    <footer className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #062B1F 0%, #0B3D2E 30%, #0D4A35 50%, #0B3D2E 70%, #062B1F 100%)" }}>
+  1570→      <div className="h-1 bg-gradient-to-r from-[#EAB308] via-[#FACC15] to-[#EAB308]" />
+  1571→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+  1572→        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-10">
+  1573→          <div>
+  1574→            <div className="flex items-center gap-3 mb-5">
+  1575→              <div className="w-11 h-11 rounded-lg bg-[#EAB308] flex items-center justify-center shadow-md"><Landmark className="w-5 h-5 text-[#0B3D2E]" /></div>
+  1576→              <div>
+  1577→                <h3 className="text-white font-bold text-base leading-tight">Mehal Sayint</h3>
+  1578→                <p className="text-[#86EFAC] text-xs font-medium">Woreda Administration</p>
+  1579→              </div>
+  1580→            </div>
+  1581→            <p className="text-white/50 text-sm leading-relaxed">Committed to transparency, development, and the well-being of every citizen.</p>
+  1582→          </div>
+  1583→          <div>
+  1584→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">About</h4>
+  1585→            <ul className="space-y-2.5">
+  1586→              {[
+  1587→                { label: "History & Background", href: "about-history" as PageId },
+  1588→                { label: "Overview", href: "about-overview" as PageId },
+  1589→                { label: "Location", href: "about-location" as PageId },
+  1590→              ].map((l) => (
+  1591→                <li key={l.href}><button onClick={() => goPage(l.href)} className="text-white/50 hover:text-[#EAB308] text-sm transition-colors flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" />{l.label}</button></li>
+  1592→              ))}
+  1593→            </ul>
+  1594→          </div>
+  1595→          <div>
+  1596→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Services</h4>
+  1597→            <ul className="space-y-2.5">
+  1598→              {[
+  1599→                { label: "Education", href: "svc-education" as PageId },
+  1600→                { label: "Health", href: "svc-health" as PageId },
+  1601→                { label: "Agriculture", href: "svc-agriculture" as PageId },
+  1602→                { label: "Transport", href: "svc-transport" as PageId },
+  1603→              ].map((l) => (
+  1604→                <li key={l.href}><button onClick={() => goPage(l.href)} className="text-white/50 hover:text-[#EAB308] text-sm transition-colors flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" />{l.label}</button></li>
+  1605→              ))}
+  1606→            </ul>
+  1607→          </div>
+  1608→          <div>
+  1609→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Contact</h4>
+  1610→            <div className="space-y-3">
+  1611→              <div className="flex items-start gap-2.5"><MapPinned className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" /><p className="text-white/50 text-sm">Mehal Sayint Town, South Wollo Zone, Amhara, Ethiopia</p></div>
+  1612→              <div className="flex items-center gap-2.5"><Phone className="w-4 h-4 text-[#EAB308] shrink-0" /><p className="text-white/50 text-sm">+251 33 XXX XXXX</p></div>
+  1613→              <div className="flex items-center gap-2.5"><Mail className="w-4 h-4 text-[#EAB308] shrink-0" /><p className="text-white/50 text-sm">info@mahalsayint.gov.et</p></div>
+  1614→            </div>
+  1615→          </div>
+  1616→          <div>
+  1617→            <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Follow Us</h4>
+  1618→            <div className="flex flex-wrap gap-2.5">
+  1619→              {[
+  1620→                { icon: Facebook, url: "https://facebook.com/MehalSayint", color: "bg-[#1877F2] hover:bg-[#1565C0]" },
+  1621→                { icon: Youtube, url: "https://youtube.com/@MehalSayint", color: "bg-[#FF0000] hover:bg-[#CC0000]" },
+  1622→                { icon: Linkedin, url: "https://linkedin.com/company/MehalSayint", color: "bg-[#0A66C2] hover:bg-[#084F97]" },
+  1623→                { icon: Github, url: "https://github.com/MehalSayint", color: "bg-[#333] hover:bg-[#24292F]" },
+  1624→                { icon: Instagram, url: "https://instagram.com/MehalSayint", color: "bg-[#E4405F] hover:bg-[#C13584]" },
+  1625→                { icon: Twitter, url: "https://twitter.com/MehalSayint", color: "bg-[#1DA1F2] hover:bg-[#0D8BD9]" },
+  1626→              ].map((s) => (
+  1627→                <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200`}>
+  1628→                  <s.icon className="w-4.5 h-4.5" />
+  1629→                </a>
+  1630→              ))}
+  1631→            </div>
+  1632→          </div>
+  1633→        </div>
+  1634→      </div>
+  1635→      <div className="border-t border-white/10">
+  1636→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col items-center gap-3">
+  1637→          <p className="text-white/40 text-xs">&copy; {new Date().getFullYear()} Mehal Sayint Woreda Administration. All rights reserved.</p>
+  1638→          <div className="flex items-center gap-3 bg-[#EAB308]/15 border border-[#EAB308]/25 rounded-full px-5 py-2.5 hover:bg-[#EAB308]/25 transition-all duration-300 group">
+  1639→            <div className="w-8 h-8 rounded-full bg-[#EAB308] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+  1640→              <span className="text-[#0B3D2E] font-extrabold text-xs">MA</span>
+  1641→            </div>
+  1642→            <div className="flex flex-col">
+  1643→              <span className="text-white font-bold text-sm leading-tight">Developed by Meseret Akalu</span>
+  1644→              <span className="text-[#EAB308] font-semibold text-xs leading-tight">+251 912 465 247</span>
+  1645→            </div>
+  1646→          </div>
+  1647→        </div>
+  1648→      </div>
+  1649→    </footer>
+  1650→  );
+  1651→}
+  1652→
+  1653→/* ─── NEWS FEED (Home Page) ─────────────────────────────────── */
+  1654→const NEWS_FEED = [
+  1655→  {
+  1656→    image: "https://sfile.chatglm.cn/images-ppt/634822b7ff39.jpg",
+  1657→    title: "New Primary School Construction Completed in Gonder Ber Kebele",
+  1658→    summary: "A new 8-classroom primary school has been completed and handed over to the community, serving over 400 students from the surrounding areas. The school includes a library and administrative offices.",
+  1659→    author: "Communication Office",
+  1660→    date: "June 28, 2026",
+  1661→    likes: 142,
+  1662→    category: "Education",
+  1663→  },
+  1664→  {
+  1665→    image: "https://sfile.chatglm.cn/images-ppt/93701603d414.png",
+  1666→    title: "Health Center Expansion Project Launched in Mehal Sayint Town",
+  1667→    summary: "Construction has begun on expanding the main health center to include maternity and pediatric wards. The project is expected to be completed within 8 months.",
+  1668→    author: "Health Office",
+  1669→    date: "June 25, 2026",
+  1670→    likes: 98,
+  1671→    category: "Health",
+  1672→  },
+  1673→  {
+  1674→    image: "https://sfile.chatglm.cn/images-ppt/e31dc4b12d41.jpg",
+  1675→    title: "Annual Agricultural Input Distribution Campaign Reaches 10,000 Households",
+  1676→    summary: "Over 10,000 farming households across all 22 kebeles have received improved seeds and fertilizer for the main planting season, boosting food security prospects.",
+  1677→    author: "Agriculture Office",
+  1678→    date: "June 22, 2026",
+  1679→    likes: 215,
+  1680→    category: "Agriculture",
+  1681→  },
+  1682→  {
+  1683→    image: "https://sfile.chatglm.cn/images-ppt/6710c8032383.jpeg",
+  1684→    title: "Road Construction Connecting 3 Remote Kebeles Approved",
+  1685→    summary: "The regional government has approved funding for 25 km of new all-weather roads connecting remote kebeles to the woreda capital, improving access to services.",
+  1686→    author: "Road & Transport Office",
+  1687→    date: "June 18, 2026",
+  1688→    likes: 176,
+  1689→    category: "Infrastructure",
+  1690→  },
+  1691→  {
+  1692→    image: "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg",
+  1693→    title: "Woreda Council Approves Record Annual Budget of ETB 85 Million",
+  1694→    summary: "The council approved a budget of ETB 85 million for the fiscal year 2026/27, with major allocations for education, health, and road infrastructure.",
+  1695→    author: "Finance Office",
+  1696→    date: "June 15, 2026",
+  1697→    likes: 134,
+  1698→    category: "Governance",
+  1699→  },
+  1700→  {
+  1701→    image: "https://sfile.chatglm.cn/images-ppt/d57be5c1e89d.jpg",
+  1702→    title: "Clean Water Project Benefits 5,000 Residents in 5 Kebeles",
+  1703→    summary: "Five new deep boreholes with solar-powered pumps now provide clean, safe water access to approximately 5,000 residents in previously underserved communities.",
+  1704→    author: "Water Office",
+  1705→    date: "June 10, 2026",
+  1706→    likes: 203,
+  1707→    category: "Water",
+  1708→  },
+  1709→];
+  1710→
+  1711→function NewsFeedSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1712→  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  1713→  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(
+  1714→    Object.fromEntries(NEWS_FEED.map((n) => [n.title, n.likes]))
+  1715→  );
+  1716→
+  1717→  const toggleLike = (title: string) => {
+  1718→    setLiked((prev) => {
+  1719→      const isLiked = prev[title];
+  1720→      setLikeCounts((counts) => ({
+  1721→        ...counts,
+  1722→        [title]: (counts[title] || 0) + (isLiked ? -1 : 1),
+  1723→      }));
+  1724→      return { ...prev, [title]: !isLiked };
+  1725→    });
+  1726→  };
+  1727→
+  1728→  return (
+  1729→    <section className="py-16 md:py-20 bg-[#F0FDF4]">
+  1730→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1731→        <AnimatedSection className="text-center mb-10">
+  1732→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#EAB308]/10 text-[#A16207]">
+  1733→            <Newspaper className="w-4 h-4 mr-1.5" />
+  1734→            Latest News & Updates
+  1735→          </Badge>
+  1736→          <h2 className="text-3xl md:text-4xl font-extrabold text-[#0B3D2E] mb-3">
+  1737→            What&apos;s <span className="text-[#EAB308]">Happening</span>
+  1738→          </h2>
+  1739→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-base">
+  1740→            Stay informed with the latest developments from Mehal Sayint Woreda
+  1741→          </p>
+  1742→        </AnimatedSection>
+  1743→
+  1744→        {/* Featured (first 2 large) */}
+  1745→        <div className="grid md:grid-cols-2 gap-6 mb-6">
+  1746→          {NEWS_FEED.slice(0, 2).map((item, i) => (
+  1747→            <AnimatedSection key={item.title} delay={i * 100}>
+  1748→              <Card className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group h-full">
+  1749→                <div className="relative h-52 md:h-64 overflow-hidden">
+  1750→                  <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+  1751→                  <div className="absolute top-3 left-3">
+  1752→                    <Badge className="bg-[#0B3D2E] text-white text-xs">{item.category}</Badge>
+  1753→                  </div>
+  1754→                </div>
+  1755→                <CardContent className="p-5 md:p-6">
+  1756→                  <h3 className="font-bold text-[#0B3D2E] text-base md:text-lg mb-2 line-clamp-2 group-hover:text-[#145A44] transition-colors">{item.title}</h3>
+  1757→                  <p className="text-[#0B3D2E]/55 text-sm leading-relaxed mb-4 line-clamp-3">{item.summary}</p>
+  1758→                  <div className="flex items-center justify-between">
+  1759→                    <div className="flex items-center gap-3 text-xs text-[#0B3D2E]/50">
+  1760→                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{item.author}</span>
+  1761→                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{item.date}</span>
+  1762→                    </div>
+  1763→                    <button
+  1764→                      onClick={() => toggleLike(item.title)}
+  1765→                      className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full transition-all ${liked[item.title] ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-400"}`}
+  1766→                    >
+  1767→                      <ThumbsUp className={`w-4 h-4 ${liked[item.title] ? "fill-red-500" : ""}`} />
+  1768→                      {likeCounts[item.title]}
+  1769→                    </button>
+  1770→                  </div>
+  1771→                </CardContent>
+  1772→              </Card>
+  1773→            </AnimatedSection>
+  1774→          ))}
+  1775→        </div>
+  1776→
+  1777→        {/* Grid (remaining 4) */}
+  1778→        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+  1779→          {NEWS_FEED.slice(2, 6).map((item, i) => (
+  1780→            <AnimatedSection key={item.title} delay={i * 80}>
+  1781→              <Card className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group h-full">
+  1782→                <div className="relative h-36 overflow-hidden">
+  1783→                  <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+  1784→                  <div className="absolute top-2 left-2">
+  1785→                    <Badge className="bg-[#0B3D2E] text-white text-[10px]">{item.category}</Badge>
+  1786→                  </div>
+  1787→                </div>
+  1788→                <CardContent className="p-4">
+  1789→                  <h3 className="font-bold text-[#0B3D2E] text-sm mb-1.5 line-clamp-2 group-hover:text-[#145A44] transition-colors">{item.title}</h3>
+  1790→                  <p className="text-[#0B3D2E]/50 text-xs leading-relaxed mb-3 line-clamp-2">{item.summary}</p>
+  1791→                  <div className="flex items-center justify-between">
+  1792→                    <div className="flex items-center gap-2 text-[10px] text-[#0B3D2E]/45">
+  1793→                      <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />{item.author}</span>
+  1794→                      <span>{item.date}</span>
+  1795→                    </div>
+  1796→                    <button
+  1797→                      onClick={() => toggleLike(item.title)}
+  1798→                      className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full transition-all ${liked[item.title] ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:text-red-400"}`}
+  1799→                    >
+  1800→                      <ThumbsUp className={`w-3 h-3 ${liked[item.title] ? "fill-red-500" : ""}`} />
+  1801→                      {likeCounts[item.title]}
+  1802→                    </button>
+  1803→                  </div>
+  1804→                </CardContent>
+  1805→              </Card>
+  1806→            </AnimatedSection>
+  1807→          ))}
+  1808→        </div>
+  1809→
+  1810→        <div className="text-center mt-10">
+  1811→          <button
+  1812→            onClick={() => { onNavigate("news-news"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+  1813→            className="inline-flex items-center gap-2 bg-[#0B3D2E] hover:bg-[#145A44] text-white font-semibold text-sm px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-lg"
+  1814→          >
+  1815→            View All News
+  1816→            <ChevronRight className="w-4 h-4" />
+  1817→          </button>
+  1818→        </div>
+  1819→      </div>
+  1820→    </section>
+  1821→  );
+  1822→}
+  1823→
+  1824→/* ─── GALLERY PAGE ─────────────────────────────────────────── */
+  1825→const GALLERY_IMAGES = [
+  1826→  { src: "https://sfile.chatglm.cn/images-ppt/d57be5c1e89d.jpg", title: "Highland Landscape", category: "Nature" },
+  1827→  { src: "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg", title: "Mountain Scenery", category: "Nature" },
+  1828→  { src: "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg", title: "Community Life", category: "People" },
+  1829→  { src: "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg", title: "Development Progress", category: "Development" },
+  1830→  { src: "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg", title: "Agricultural Fields", category: "Agriculture" },
+  1831→  { src: "https://sfile.chatglm.cn/images-ppt/56336ff1a645.jpg", title: "Infrastructure", category: "Infrastructure" },
+  1832→  { src: "https://sfile.chatglm.cn/images-ppt/4db62da31bf6.png", title: "Woreda Vision", category: "Governance" },
+  1833→  { src: "https://sfile.chatglm.cn/images-ppt/ba8313230e3e.jpg", title: "Administration Building", category: "Governance" },
+  1834→  { src: "https://sfile.chatglm.cn/images-ppt/634822b7ff39.jpg", title: "Education Activities", category: "Education" },
+  1835→  { src: "https://sfile.chatglm.cn/images-ppt/5f0a9b467c16.png", title: "Students Learning", category: "Education" },
+  1836→  { src: "https://sfile.chatglm.cn/images-ppt/e31dc4b12d41.jpg", title: "Farmland", category: "Agriculture" },
+  1837→  { src: "https://sfile.chatglm.cn/images-ppt/8f5a14b48d88.jpg", title: "Harvest Season", category: "Agriculture" },
+  1838→  { src: "https://sfile.chatglm.cn/images-ppt/93701603d414.png", title: "Health Services", category: "Health" },
+  1839→  { src: "https://sfile.chatglm.cn/images-ppt/c452da5a0fb8.png", title: "Health Center", category: "Health" },
+  1840→  { src: "https://sfile.chatglm.cn/images-ppt/6710c8032383.jpeg", title: "Road Network", category: "Infrastructure" },
+  1841→  { src: "https://sfile.chatglm.cn/images-ppt/7f04de62e14f.jpg", title: "Town Development", category: "Infrastructure" },
+  1842→];
+  1843→
+  1844→function GalleryPage() {
+  1845→  const [selected, setSelected] = useState<string | null>(null);
+  1846→  const [filter, setFilter] = useState("All");
+  1847→  const categories = ["All", ...Array.from(new Set(GALLERY_IMAGES.map((i) => i.category)))];
+  1848→  const filtered = filter === "All" ? GALLERY_IMAGES : GALLERY_IMAGES.filter((i) => i.category === filter);
+  1849→
+  1850→  return (
+  1851→    <div className="pt-24 pb-16 min-h-screen">
+  1852→      {/* Header */}
+  1853→      <div className="bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] py-12 md:py-16">
+  1854→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1855→          <p className="text-white/50 text-sm mb-2">Home / Gallery</p>
+  1856→          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">Photo Gallery</h1>
+  1857→          <Badge className="bg-[#EAB308]/20 text-[#EAB308] border-[#EAB308]/30 text-sm font-medium">
+  1858→            <Camera className="w-4 h-4 mr-1.5" />
+  1859→            Explore Our Woreda
+  1860→          </Badge>
+  1861→        </div>
+  1862→      </div>
+  1863→
+  1864→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  1865→        {/* Filter Tabs */}
+  1866→        <div className="flex flex-wrap gap-2 mb-8">
+  1867→          {categories.map((cat) => (
+  1868→            <button
+  1869→              key={cat}
+  1870→              onClick={() => setFilter(cat)}
+  1871→              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === cat ? "bg-[#0B3D2E] text-white shadow-md" : "bg-white text-[#0B3D2E]/60 hover:bg-[#0B3D2E]/10 border border-gray-200"}`}
+  1872→            >
+  1873→              {cat}
+  1874→            </button>
+  1875→          ))}
+  1876→        </div>
+  1877→
+  1878→        {/* Grid */}
+  1879→        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  1880→          {filtered.map((img, i) => (
+  1881→            <AnimatedSection key={img.src} delay={i * 50}>
+  1882→              <div
+  1883→                onClick={() => setSelected(img.src)}
+  1884→                className="relative group cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 aspect-square"
+  1885→              >
+  1886→                <img src={img.src} alt={img.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+  1887→                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+  1888→                  <h3 className="text-white font-bold text-sm">{img.title}</h3>
+  1889→                  <Badge className="bg-white/20 text-white text-[10px] w-fit mt-1">{img.category}</Badge>
+  1890→                </div>
+  1891→              </div>
+  1892→            </AnimatedSection>
+  1893→          ))}
+  1894→        </div>
+  1895→      </div>
+  1896→
+  1897→      {/* Lightbox */}
+  1898→      {selected && (
+  1899→        <div
+  1900→          className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+  1901→          onClick={() => setSelected(null)}
+  1902→        >
+  1903→          <button className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors" onClick={() => setSelected(null)}>
+  1904→            <X className="w-8 h-8" />
+  1905→          </button>
+  1906→          <img
+  1907→            src={selected}
+  1908→            alt="Gallery"
+  1909→            className="max-w-full max-h-[85vh] rounded-xl shadow-2xl"
+  1910→            onClick={(e) => e.stopPropagation()}
+  1911→          />
+  1912→        </div>
+  1913→      )}
+  1914→    </div>
+  1915→  );
+  1916→}
+  1917→
+  1918→/* ─── SCROLL TO TOP ─────────────────────────────────────────── */
+  1919→function ScrollToTop() {
+  1920→  const [show, setShow] = useState(false);
+  1921→  useEffect(() => {
+  1922→    const onScroll = () => setShow(window.scrollY > 400);
+  1923→    window.addEventListener("scroll", onScroll);
+  1924→    return () => window.removeEventListener("scroll", onScroll);
+  1925→  }, []);
+  1926→  if (!show) return null;
+  1927→  return (
+  1928→    <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-[#0B3D2E] hover:bg-[#145A44] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/10" aria-label="Scroll to top">
+  1929→      <ArrowUp className="w-5 h-5" />
+  1930→    </button>
+  1931→  );
+  1932→}
+  1933→
+  1934→/* ─── Page Router ────────────────────────────────────────────── */
+  1935→function PageContent({ currentPage, onNavigate }: { currentPage: PageId; onNavigate: (p: PageId) => void }) {
+  1936→  switch (currentPage) {
+  1937→    case "about-history": return <AboutHistoryPage onNavigate={onNavigate} />;
+  1938→    case "about-overview": return <AboutOverviewPage onNavigate={onNavigate} />;
+  1939→    case "about-location": return <AboutLocationPage onNavigate={onNavigate} />;
+  1940→    case "gov-leadership": return <GovLeadershipPage onNavigate={onNavigate} />;
+  1941→    case "gov-structure": return <GovStructurePage onNavigate={onNavigate} />;
+  1942→    case "gov-offices": return <GovOfficesPage onNavigate={onNavigate} />;
+  1943→    case "svc-education": return <ServiceEducationPage onNavigate={onNavigate} />;
+  1944→    case "svc-health": return <ServiceHealthPage onNavigate={onNavigate} />;
+  1945→    case "svc-agriculture": return <ServiceAgriculturePage onNavigate={onNavigate} />;
+  1946→    case "svc-transport": return <ServiceTransportPage onNavigate={onNavigate} />;
+  1947→    case "svc-water": return <ServiceWaterPage onNavigate={onNavigate} />;
+  1948→    case "svc-justice": return <ServiceJusticePage onNavigate={onNavigate} />;
+  1949→    case "svc-finance": return <ServiceFinancePage onNavigate={onNavigate} />;
+  1950→    case "news-news": return <NewsPage onNavigate={onNavigate} />;
+  1951→    case "news-bids": return <BidsPage onNavigate={onNavigate} />;
+  1952→    case "news-vacancy": return <VacancyPage onNavigate={onNavigate} />;
+  1953→    case "news-announcements": return <AnnouncementsPage onNavigate={onNavigate} />;
+  1954→    case "gallery": return <GalleryPage />;
+  1955→    case "vacancy": return <VacancyPage onNavigate={onNavigate} />;
+  1956→    case "bids": return <BidsPage onNavigate={onNavigate} />;
+  1957→    case "contact": return <ContactPage onNavigate={onNavigate} />;
+  1958→    default:
+  1959→      return (
+  1960→        <>
+  1961→          <HeroSlider />
+  1962→          <NewsFeedSection onNavigate={onNavigate} />
+  1963→          <QuickStats />
+  1964→          <StatisticsSection />
+  1965→          <ServicesOverview onNavigate={onNavigate} />
+  1966→        </>
+  1967→      );
+  1968→  }
+  1969→}
+  1970→
+  1971→/* ─── MAIN PAGE ────────────────────────────────────────────── */
+  1972→export default function Home() {
+  1973→  const [currentPage, setCurrentPage] = useState<PageId>("home");
+  1974→  return (
+  1975→    <div className="min-h-screen flex flex-col bg-white">
+  1976→      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
+  1977→      <main className="flex-1">
+  1978→        <PageContent currentPage={currentPage} onNavigate={setCurrentPage} />
+  1979→      </main>
+  1980→      <Footer onNavigate={setCurrentPage} />
+  1981→      <ScrollToTop />
+  1982→    </div>
+  1983→  );
+  1984→}

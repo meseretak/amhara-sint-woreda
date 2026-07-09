@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian Meskel celebration bonfire religious festival"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian Meskel celebration bonfire religious festival",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/b37b6e89b27a.jpg",
+      "caption": "",
+      "source": "x.com",
+      "original_width": "1200px",
+      "original_height": "675px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/1286f3d5bb47.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "866px",
+      "original_height": "1390px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/586e1f2803e7.jpg",
+      "caption": "",
+      "source": "Tigrai Culture and Tourism Bureau",
+      "original_width": "6016px",
+      "original_height": "4016px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/ff958079d7ec.jpg",
+      "caption": "",
+      "source": "Shutterstock",
+      "original_width": "1500px",
+      "original_height": "1101px"
+    }
+  ]
+}

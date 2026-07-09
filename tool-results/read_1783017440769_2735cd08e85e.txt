@@ -1,0 +1,914 @@
+     1→     1→     1→"use client";
+     2→     2→     2→
+     3→     3→     3→import { useEffect, useState, useCallback } from "react";
+     4→     4→     4→
+     5→     5→     5→/* ─── types ─── */
+     6→     6→     6→type AdminPage = "dashboard" | "news" | "news-new" | "news-edit" | "bids" | "bids-new" | "bids-edit" | "vacancy" | "vacancy-new" | "vacancy-edit" | "menus" | "applications" | "subscribers" | "settings";
+     7→     7→     7→
+     8→     8→     8→interface DashboardStats {
+     9→     9→     9→  totalNews: number;
+    10→    10→    10→  totalBids: number;
+    11→    11→    11→  totalVacancies: number;
+    12→    12→    12→  totalSubscribers: number;
+    13→    13→    13→  openBids: number;
+    14→    14→    14→  publishedNews: number;
+    15→    15→    15→  newsByMonth: Record<string, number>;
+    16→    16→    16→  recentActivity: { type: string; message: string; date: string }[];
+    17→    17→    17→}
+    18→    18→    18→
+    19→    19→    19→interface NewsItem { id: string; title: string; summary: string; category: string; author: string; status: string; featured: boolean; date: string; content?: string; imageUrl?: string; }
+    20→    20→    20→interface BidItem { id: string; title: string; description: string; budget: string; budgetAmount: number; deadline: string; status: string; }
+    21→    21→    21→interface VacancyItem { id: string; title: string; department: string; type: string; deadline: string; description?: string; requirements?: string; }
+    22→    22→    22→interface Subscriber { id: string; email: string; subscribedAt: string; }
+    23→    23→    23→
+    24→    24→    24→const CATEGORIES = ["Education", "Health", "Agriculture", "Infrastructure", "Governance", "Water", "Finance", "Transport", "Other"];
+    25→    25→    25→const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    26→    26→    26→
+    27→    27→    27→/* ─── spinner ─── */
+    28→    28→    28→function Spinner() {
+    29→    29→    29→  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-[3px] border-[#0B3D2E]/20 border-t-[#0B3D2E] rounded-full animate-spin" /></div>;
+    30→    30→    30→}
+    31→    31→    31→
+    32→    32→    32→/* ─── SIDEBAR ─── */
+    33→    33→    33→function Sidebar({ page, nav, onLogout }: { page: AdminPage; nav: (p: AdminPage) => void; onLogout: () => void }) {
+    34→    34→    34→  const items: { label: string; key: AdminPage; icon: string }[] = [
+    35→    35→    35→    { label: "Dashboard", key: "dashboard", icon: "📊" },
+    36→    36→    36→    { label: "News", key: "news", icon: "📰" },
+    37→    37→    37→    { label: "Bids & Tenders", key: "bids", icon: "💼" },
+    38→    38→    38→    { label: "Vacancies", key: "vacancy", icon: "📋" },
+    39→    39→    39→    { label: "Menu Manager", key: "menus", icon: "📑" },
+    40→    40→    40→    { label: "Applications", key: "applications", icon: "📋" },
+    41→    41→    41→    { label: "Subscribers", key: "subscribers", icon: "✉️" },
+    42→    42→    42→    { label: "Settings", key: "settings", icon: "⚙️" },
+    43→    43→    43→  ];
+    44→    44→    44→
+    45→    45→    45→  const active = (key: AdminPage) => {
+    46→    46→    46→    if (key === "dashboard") return page === "dashboard";
+    47→    47→    47→    return page === key || page === (key + "-new" as AdminPage) || page === (key + "-edit" as AdminPage);
+    48→    48→    48→  };
+    49→    49→    49→
+    50→    50→    50→  return (
+    51→    51→    51→    <>
+    52→    52→    52→      <div id="sidebar-overlay" className="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} />
+    53→    53→    53→      <aside id="admin-sidebar" className="fixed top-0 left-0 z-50 w-64 h-screen bg-[#0B3D2E] flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    54→    54→    54→        <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+    55→    55→    55→          <button onClick={() => nav("dashboard")} className="flex items-center gap-3">
+    56→    56→    56→            <img src="/logo.png" alt="AS" className="w-9 h-9 rounded-lg shadow-md ring-1 ring-white/20 object-contain" />
+    57→    57→    57→            <div>
+    58→    58→    58→              <div className="text-white font-bold text-sm leading-tight">Admin Panel</div>
+    59→    59→    59→              <div className="text-[#86EFAC] text-[10px] font-medium">Amhara Sint</div>
+    60→    60→    60→            </div>
+    61→    61→    61→          </button>
+    62→    62→    62→          <button onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} className="lg:hidden text-white/60 hover:text-white p-1">✕</button>
+    63→    63→    63→        </div>
+    64→    64→    64→        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    65→    65→    65→          {items.map((item) => (
+    66→    66→    66→            <button key={item.key} onClick={() => nav(item.key)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active(item.key) ? "bg-[#EAB308]/15 text-[#EAB308]" : "text-white/60 hover:text-white hover:bg-white/8"}`}>
+    67→    67→    67→              <span className="w-[18px] text-center shrink-0">{item.icon}</span>
+    68→    68→    68→              {item.label}
+    69→    69→    69→            </button>
+    70→    70→    70→          ))}
+    71→    71→    71→        </nav>
+    72→    72→    72→        <div className="px-3 pb-4 space-y-1 border-t border-white/10 pt-3">
+    73→    73→    73→          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all duration-200">
+    74→    74→    74→            <span className="w-[18px] text-center">↗</span> Back to Website
+    75→    75→    75→          </a>
+    76→    76→    76→          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200">
+    77→    77→    77→            <span className="w-[18px] text-center">↩</span> Logout
+    78→    78→    78→          </button>
+    79→    79→    79→        </div>
+    80→    80→    80→      </aside>
+    81→    81→    81→    </>
+    82→    82→    82→  );
+    83→    83→    83→}
+    84→    84→    84→
+    85→    85→    85→/* ─── DASHBOARD ─── */
+    86→    86→    86→function DashboardPage({ nav }: { nav: (p: AdminPage) => void }) {
+    87→    87→    87→  const [stats, setStats] = useState<DashboardStats | null>(null);
+    88→    88→    88→  useEffect(() => { fetch("/admin/api/stats").then(r => r.json()).then(setStats); }, []);
+    89→    89→    89→  if (!stats) return <Spinner />;
+    90→    90→    90→
+    91→    91→    91→  const maxCount = Math.max(...Object.values(stats.newsByMonth), 1);
+    92→    92→    92→  const barData = MONTHS.map((m, i) => { const key = `2026-${String(i + 1).padStart(2, "0")}`; return { month: m, count: stats.newsByMonth[key] || 0 }; });
+    93→    93→    93→
+    94→    94→    94→  const cards = [
+    95→    95→    95→    { label: "Total News", value: stats.totalNews, icon: "📰", bg: "bg-[#0B3D2E]", click: () => nav("news") },
+    96→    96→    96→    { label: "Total Bids", value: stats.totalBids, icon: "💼", bg: "bg-amber-50", click: () => nav("bids") },
+    97→    97→    97→    { label: "Vacancies", value: stats.totalVacancies, icon: "📋", bg: "bg-emerald-50", click: () => nav("vacancy") },
+    98→    98→    98→    { label: "Subscribers", value: stats.totalSubscribers, icon: "✉️", bg: "bg-rose-50", click: () => nav("subscribers") },
+    99→    99→    99→  ];
+   100→   100→   100→
+   101→   101→   101→  const actions = [
+   102→   102→   102→    { label: "Add News", desc: "Create a new news article", page: "news-new" as AdminPage },
+   103→   103→   103→    { label: "Add Bid", desc: "Post a new tender", page: "bids-new" as AdminPage },
+   104→   104→   104→    { label: "Add Vacancy", desc: "Post a job opening", page: "vacancy-new" as AdminPage },
+   105→   105→   105→    { label: "View Subscribers", desc: "Manage email list", page: "subscribers" as AdminPage },
+   106→   106→   106→  ];
+   107→   107→   107→
+   108→   108→   108→  return (
+   109→   109→   109→    <div className="space-y-6">
+   110→   110→   110→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   111→   111→   111→        <div>
+   112→   112→   112→          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+   113→   113→   113→          <p className="text-sm text-gray-500 mt-1">Overview of your woreda administration</p>
+   114→   114→   114→        </div>
+   115→   115→   115→        <div className="flex gap-2">
+   116→   116→   116→          <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ New Post</button>
+   117→   117→   117→          <button onClick={() => nav("bids-new")} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">＋ New Bid</button>
+   118→   118→   118→        </div>
+   119→   119→   119→      </div>
+   120→   120→   120→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   121→   121→   121→        {cards.map((c) => (
+   122→   122→   122→          <button key={c.label} onClick={c.click} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 text-left">
+   123→   123→   123→            <div className="flex items-center justify-between">
+   124→   124→   124→              <div>
+   125→   125→   125→                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{c.label}</p>
+   126→   126→   126→                <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
+   127→   127→   127→              </div>
+   128→   128→   128→              <div className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center text-lg`}>{c.icon}</div>
+   129→   129→   129→            </div>
+   130→   130→   130→          </button>
+   131→   131→   131→        ))}
+   132→   132→   132→      </div>
+   133→   133→   133→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   134→   134→   134→        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+   135→   135→   135→          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">📈 Posts Over Time</h3>
+   136→   136→   136→          <div className="flex items-end gap-2 h-48 mt-4">
+   137→   137→   137→            {barData.map((d) => (
+   138→   138→   138→              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+   139→   139→   139→                <span className="text-[10px] text-gray-400 font-medium">{d.count > 0 ? d.count : ""}</span>
+   140→   140→   140→                <div className="w-full rounded-t-md transition-all duration-500 min-h-[4px]" style={{ height: `${Math.max((d.count / maxCount) * 100, 4)}%`, backgroundColor: d.count > 0 ? "#0B3D2E" : "#f3f4f6" }} />
+   141→   141→   141→                <span className="text-[10px] text-gray-400">{d.month}</span>
+   142→   142→   142→              </div>
+   143→   143→   143→            ))}
+   144→   144→   144→          </div>
+   145→   145→   145→        </div>
+   146→   146→   146→        <div className="bg-white rounded-xl shadow-sm p-6">
+   147→   147→   147→          <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
+   148→   148→   148→          <div className="space-y-2">
+   149→   149→   149→            {actions.map((a) => (
+   150→   150→   150→              <button key={a.page} onClick={() => nav(a.page)} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group text-left">
+   151→   151→   151→                <div>
+   152→   152→   152→                  <p className="text-sm font-medium text-gray-900">{a.label}</p>
+   153→   153→   153→                  <p className="text-xs text-gray-400">{a.desc}</p>
+   154→   154→   154→                </div>
+   155→   155→   155→                <span className="text-gray-300 group-hover:text-[#0B3D2E] transition-colors">→</span>
+   156→   156→   156→              </button>
+   157→   157→   157→            ))}
+   158→   158→   158→          </div>
+   159→   159→   159→        </div>
+   160→   160→   160→      </div>
+   161→   161→   161→      <div className="bg-white rounded-xl shadow-sm p-6">
+   162→   162→   162→        <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h3>
+   163→   163→   163→        <div className="space-y-3">
+   164→   164→   164→          {stats.recentActivity.length === 0 && <p className="text-sm text-gray-400 text-center py-6">No recent activity</p>}
+   165→   165→   165→          {stats.recentActivity.map((a, i) => (
+   166→   166→   166→            <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+   167→   167→   167→              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${a.type === "news" ? "bg-blue-50 text-blue-600" : a.type === "bid" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>{a.type}</span>
+   168→   168→   168→              <p className="text-sm text-gray-600 flex-1 truncate">{a.message}</p>
+   169→   169→   169→              <span className="text-xs text-gray-400 shrink-0">{new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+   170→   170→   170→            </div>
+   171→   171→   171→          ))}
+   172→   172→   172→        </div>
+   173→   173→   173→      </div>
+   174→   174→   174→    </div>
+   175→   175→   175→  );
+   176→   176→   176→}
+   177→   177→   177→
+   178→   178→   178→/* ─── NEWS LIST ─── */
+   179→   179→   179→function NewsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   180→   180→   180→  const [news, setNews] = useState<NewsItem[]>([]);
+   181→   181→   181→  const [search, setSearch] = useState("");
+   182→   182→   182→  const [loading, setLoading] = useState(true);
+   183→   183→   183→  const load = () => { fetch("/admin/api/news").then(r => r.json()).then(setNews).finally(() => setLoading(false)); };
+   184→   184→   184→  useEffect(() => { load(); }, []);
+   185→   185→   185→  const handleDelete = async (id: string) => { if (!confirm("Delete this article?")) return; await fetch(`/admin/api/news?id=${id}`, { method: "DELETE" }); load(); };
+   186→   186→   186→  const filtered = news.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+   187→   187→   187→  if (loading) return <Spinner />;
+   188→   188→   188→  return (
+   189→   189→   189→    <div className="space-y-6">
+   190→   190→   190→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   191→   191→   191→        <div><h1 className="text-2xl font-bold text-gray-900">News Management</h1><p className="text-sm text-gray-500 mt-1">{news.length} articles total</p></div>
+   192→   192→   192→        <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add News</button>
+   193→   193→   193→      </div>
+   194→   194→   194→      <div className="relative max-w-sm">
+   195→   195→   195→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   196→   196→   196→        <input placeholder="Search news..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   197→   197→   197→      </div>
+   198→   198→   198→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   199→   199→   199→        <div className="overflow-x-auto">
+   200→   200→   200→          <table className="w-full text-sm">
+   201→   201→   201→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   202→   202→   202→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   203→   203→   203→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Category</th>
+   204→   204→   204→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Date</th>
+   205→   205→   205→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   206→   206→   206→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   207→   207→   207→            </tr></thead>
+   208→   208→   208→            <tbody className="divide-y divide-gray-50">
+   209→   209→   209→              {filtered.map(item => (
+   210→   210→   210→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   211→   211→   211→                  <td className="py-3 px-4">
+   212→   212→   212→                    <div className="flex items-center gap-2">
+   213→   213→   213→                      {item.featured && <span className="bg-[#EAB308]/10 text-[#A16207] text-[10px] px-1.5 py-0.5 rounded font-medium">Featured</span>}
+   214→   214→   214→                      <span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span>
+   215→   215→   215→                    </div>
+   216→   216→   216→                  </td>
+   217→   217→   217→                  <td className="py-3 px-4 hidden md:table-cell"><span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{item.category}</span></td>
+   218→   218→   218→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.date}</td>
+   219→   219→   219→                  <td className="py-3 px-4">
+   220→   220→   220→                    <span className={`text-xs px-2 py-0.5 rounded ${item.status === "published" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>{item.status === "published" ? "👁 Published" : "🚫 Draft"}</span>
+   221→   221→   221→                  </td>
+   222→   222→   222→                  <td className="py-3 px-4">
+   223→   223→   223→                    <div className="flex items-center justify-end gap-1">
+   224→   224→   224→                      <button onClick={() => { nav("news-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   225→   225→   225→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   226→   226→   226→                    </div>
+   227→   227→   227→                  </td>
+   228→   228→   228→                </tr>
+   229→   229→   229→              ))}
+   230→   230→   230→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No news articles found.</td></tr>}
+   231→   231→   231→            </tbody>
+   232→   232→   232→          </table>
+   233→   233→   233→        </div>
+   234→   234→   234→      </div>
+   235→   235→   235→    </div>
+   236→   236→   236→  );
+   237→   237→   237→}
+   238→   238→   238→
+   239→   239→   239→/* ─── NEWS FORM (new + edit) ─── */
+   240→   240→   240→function NewsForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   241→   241→   241→  const [loading, setLoading] = useState(!!editId);
+   242→   242→   242→  const [saving, setSaving] = useState(false);
+   243→   243→   243→  const [form, setForm] = useState({ title: "", summary: "", content: "", category: "Education", author: "", imageUrl: "", featured: false, status: "draft" as "published" | "draft", date: new Date().toISOString().split("T")[0] });
+   244→   244→   244→
+   245→   245→   245→  useEffect(() => {
+   246→   246→   246→    if (!editId) return;
+   247→   247→   247→    fetch("/admin/api/news").then(r => r.json()).then((items: NewsItem[]) => {
+   248→   248→   248→      const item = items.find(n => n.id === editId);
+   249→   249→   249→      if (item) setForm({ title: item.title || "", summary: item.summary || "", content: item.content || "", category: item.category || "Education", author: item.author || "", imageUrl: item.imageUrl || "", featured: item.featured || false, status: item.status || "draft", date: item.date || "" });
+   250→   250→   250→    }).finally(() => setLoading(false));
+   251→   251→   251→  }, [editId]);
+   252→   252→   252→
+   253→   253→   253→  const handleSubmit = async (e: React.FormEvent) => {
+   254→   254→   254→    e.preventDefault();
+   255→   255→   255→    if (!form.title.trim()) return;
+   256→   256→   256→    setSaving(true);
+   257→   257→   257→    try {
+   258→   258→   258→      await fetch("/admin/api/news", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   259→   259→   259→      onBack();
+   260→   260→   260→    } catch { alert("Failed to save article"); } finally { setSaving(false); }
+   261→   261→   261→  };
+   262→   262→   262→
+   263→   263→   263→  if (loading) return <Spinner />;
+   264→   264→   264→  const u = (k: string, v: string | boolean) => setForm({ ...form, [k]: v });
+   265→   265→   265→
+   266→   266→   266→  return (
+   267→   267→   267→    <div className="max-w-3xl mx-auto space-y-6">
+   268→   268→   268→      <div className="flex items-center gap-3">
+   269→   269→   269→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   270→   270→   270→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} News Article</h1>
+   271→   271→   271→      </div>
+   272→   272→   272→      <div className="bg-white rounded-xl shadow-sm p-6">
+   273→   273→   273→        <h3 className="text-base font-semibold text-gray-900 mb-4">Article Details</h3>
+   274→   274→   274→        <form onSubmit={handleSubmit} className="space-y-5">
+   275→   275→   275→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter article title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   276→   276→   276→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   277→   277→   277→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Category</label><select value={form.category} onChange={e => u("category", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+   278→   278→   278→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Author</label><input value={form.author} onChange={e => u("author", e.target.value)} placeholder="e.g. Communication Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   279→   279→   279→          </div>
+   280→   280→   280→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   281→   281→   281→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Publish Date</label><input type="date" value={form.date} onChange={e => u("date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   282→   282→   282→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Image URL</label><input value={form.imageUrl} onChange={e => u("imageUrl", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   283→   283→   283→          </div>
+   284→   284→   284→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Summary</label><textarea value={form.summary} onChange={e => u("summary", e.target.value)} placeholder="Brief summary" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   285→   285→   285→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Full Content</label><textarea value={form.content} onChange={e => u("content", e.target.value)} placeholder="Full article content..." rows={8} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-y" /></div>
+   286→   286→   286→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   287→   287→   287→            <div><p className="text-sm font-medium text-gray-700">Featured Article</p><p className="text-xs text-gray-400">Featured articles appear on the homepage</p></div>
+   288→   288→   288→            <button type="button" onClick={() => u("featured", !form.featured)} className={`relative w-11 h-6 rounded-full transition-colors ${form.featured ? "bg-[#0B3D2E]" : "bg-gray-300"}`}><span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${form.featured ? "translate-x-5" : ""}`} /></button>
+   289→   289→   289→          </div>
+   290→   290→   290→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   291→   291→   291→            <div><p className="text-sm font-medium text-gray-700">Status</p><p className="text-xs text-gray-400">Draft articles are not public</p></div>
+   292→   292→   292→            <select value={form.status} onChange={e => u("status", e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
+   293→   293→   293→          </div>
+   294→   294→   294→          <div className="flex gap-3 pt-2">
+   295→   295→   295→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Article"}</button>
+   296→   296→   296→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   297→   297→   297→          </div>
+   298→   298→   298→        </form>
+   299→   299→   299→      </div>
+   300→   300→   300→    </div>
+   301→   301→   301→  );
+   302→   302→   302→}
+   303→   303→   303→
+   304→   304→   304→/* ─── BIDS LIST ─── */
+   305→   305→   305→function BidsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   306→   306→   306→  const [bids, setBids] = useState<BidItem[]>([]);
+   307→   307→   307→  const [search, setSearch] = useState("");
+   308→   308→   308→  const [loading, setLoading] = useState(true);
+   309→   309→   309→  const load = () => { fetch("/admin/api/bids").then(r => r.json()).then(setBids).finally(() => setLoading(false)); };
+   310→   310→   310→  useEffect(() => { load(); }, []);
+   311→   311→   311→  const handleDelete = async (id: string) => { if (!confirm("Delete this bid?")) return; await fetch(`/admin/api/bids?id=${id}`, { method: "DELETE" }); load(); };
+   312→   312→   312→  const filtered = bids.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+   313→   313→   313→  const statusColor = (s: string) => s === "Open" ? "bg-green-50 text-green-600" : s === "Closed" ? "bg-gray-100 text-gray-500" : "bg-amber-50 text-amber-600";
+   314→   314→   314→  if (loading) return <Spinner />;
+   315→   315→   315→  return (
+   316→   316→   316→    <div className="space-y-6">
+   317→   317→   317→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   318→   318→   318→        <div><h1 className="text-2xl font-bold text-gray-900">Bids & Tenders</h1><p className="text-sm text-gray-500 mt-1">{bids.length} total bids</p></div>
+   319→   319→   319→        <button onClick={() => nav("bids-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Bid</button>
+   320→   320→   320→      </div>
+   321→   321→   321→      <div className="relative max-w-sm">
+   322→   322→   322→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   323→   323→   323→        <input placeholder="Search bids..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   324→   324→   324→      </div>
+   325→   325→   325→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   326→   326→   326→        <div className="overflow-x-auto">
+   327→   327→   327→          <table className="w-full text-sm">
+   328→   328→   328→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   329→   329→   329→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   330→   330→   330→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Budget</th>
+   331→   331→   331→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   332→   332→   332→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   333→   333→   333→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   334→   334→   334→            </tr></thead>
+   335→   335→   335→            <tbody className="divide-y divide-gray-50">
+   336→   336→   336→              {filtered.map(item => (
+   337→   337→   337→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   338→   338→   338→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   339→   339→   339→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell font-medium">{item.budget}</td>
+   340→   340→   340→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   341→   341→   341→                  <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded ${statusColor(item.status)}`}>{item.status}</span></td>
+   342→   342→   342→                  <td className="py-3 px-4">
+   343→   343→   343→                    <div className="flex items-center justify-end gap-1">
+   344→   344→   344→                      <button onClick={() => { nav("bids-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   345→   345→   345→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   346→   346→   346→                    </div>
+   347→   347→   347→                  </td>
+   348→   348→   348→                </tr>
+   349→   349→   349→              ))}
+   350→   350→   350→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No bids found.</td></tr>}
+   351→   351→   351→            </tbody>
+   352→   352→   352→          </table>
+   353→   353→   353→        </div>
+   354→   354→   354→      </div>
+   355→   355→   355→    </div>
+   356→   356→   356→  );
+   357→   357→   357→}
+   358→   358→   358→
+   359→   359→   359→/* ─── BID FORM (new + edit) ─── */
+   360→   360→   360→function BidForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   361→   361→   361→  const [loading, setLoading] = useState(!!editId);
+   362→   362→   362→  const [saving, setSaving] = useState(false);
+   363→   363→   363→  const [form, setForm] = useState({ title: "", description: "", budget: "", budgetAmount: 0, deadline: "", status: "Open" as "Open" | "Closed" | "Awarded" });
+   364→   364→   364→
+   365→   365→   365→  useEffect(() => {
+   366→   366→   366→    if (!editId) return;
+   367→   367→   367→    fetch("/admin/api/bids").then(r => r.json()).then((items: BidItem[]) => {
+   368→   368→   368→      const item = items.find(b => b.id === editId);
+   369→   369→   369→      if (item) setForm({ title: item.title || "", description: item.description || "", budget: item.budget || "", budgetAmount: item.budgetAmount || 0, deadline: item.deadline || "", status: item.status || "Open" });
+   370→   370→   370→    }).finally(() => setLoading(false));
+   371→   371→   371→  }, [editId]);
+   372→   372→   372→
+   373→   373→   373→  const handleSubmit = async (e: React.FormEvent) => {
+   374→   374→   374→    e.preventDefault();
+   375→   375→   375→    if (!form.title.trim()) return;
+   376→   376→   376→    setSaving(true);
+   377→   377→   377→    try {
+   378→   378→   378→      await fetch("/admin/api/bids", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   379→   379→   379→      onBack();
+   380→   380→   380→    } catch { alert("Failed to save bid"); } finally { setSaving(false); }
+   381→   381→   381→  };
+   382→   382→   382→  const u = (k: string, v: string | number) => setForm({ ...form, [k]: v });
+   383→   383→   383→  if (loading) return <Spinner />;
+   384→   384→   384→
+   385→   385→   385→  return (
+   386→   386→   386→    <div className="max-w-3xl mx-auto space-y-6">
+   387→   387→   387→      <div className="flex items-center gap-3">
+   388→   388→   388→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   389→   389→   389→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Bid / Tender</h1>
+   390→   390→   390→      </div>
+   391→   391→   391→      <div className="bg-white rounded-xl shadow-sm p-6">
+   392→   392→   392→        <h3 className="text-base font-semibold text-gray-900 mb-4">Bid Details</h3>
+   393→   393→   393→        <form onSubmit={handleSubmit} className="space-y-5">
+   394→   394→   394→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter bid title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   395→   395→   395→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Describe the bid..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   396→   396→   396→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   397→   397→   397→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Label</label><input value={form.budget} onChange={e => u("budget", e.target.value)} placeholder="e.g. ETB 5 Million" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   398→   398→   398→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Amount (ETB)</label><input type="number" value={form.budgetAmount || ""} onChange={e => u("budgetAmount", Number(e.target.value))} placeholder="e.g. 5000000" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   399→   399→   399→          </div>
+   400→   400→   400→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   401→   401→   401→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   402→   402→   402→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Status</label><select value={form.status} onChange={e => u("status", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Open">Open</option><option value="Closed">Closed</option><option value="Awarded">Awarded</option></select></div>
+   403→   403→   403→          </div>
+   404→   404→   404→          <div className="flex gap-3 pt-2">
+   405→   405→   405→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Bid"}</button>
+   406→   406→   406→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   407→   407→   407→          </div>
+   408→   408→   408→        </form>
+   409→   409→   409→      </div>
+   410→   410→   410→    </div>
+   411→   411→   411→  );
+   412→   412→   412→}
+   413→   413→   413→
+   414→   414→   414→/* ─── VACANCY LIST ─── */
+   415→   415→   415→function VacancyListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   416→   416→   416→  const [vacancies, setVacancies] = useState<VacancyItem[]>([]);
+   417→   417→   417→  const [search, setSearch] = useState("");
+   418→   418→   418→  const [loading, setLoading] = useState(true);
+   419→   419→   419→  const load = () => { fetch("/admin/api/vacancies").then(r => r.json()).then(setVacancies).finally(() => setLoading(false)); };
+   420→   420→   420→  useEffect(() => { load(); }, []);
+   421→   421→   421→  const handleDelete = async (id: string) => { if (!confirm("Delete this vacancy?")) return; await fetch(`/admin/api/vacancies?id=${id}`, { method: "DELETE" }); load(); };
+   422→   422→   422→  const filtered = vacancies.filter(v => v.title.toLowerCase().includes(search.toLowerCase()) || v.department.toLowerCase().includes(search.toLowerCase()));
+   423→   423→   423→  if (loading) return <Spinner />;
+   424→   424→   424→  return (
+   425→   425→   425→    <div className="space-y-6">
+   426→   426→   426→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   427→   427→   427→        <div><h1 className="text-2xl font-bold text-gray-900">Vacancies</h1><p className="text-sm text-gray-500 mt-1">{vacancies.length} total vacancies</p></div>
+   428→   428→   428→        <button onClick={() => nav("vacancy-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Vacancy</button>
+   429→   429→   429→      </div>
+   430→   430→   430→      <div className="relative max-w-sm">
+   431→   431→   431→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   432→   432→   432→        <input placeholder="Search vacancies..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   433→   433→   433→      </div>
+   434→   434→   434→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   435→   435→   435→        <div className="overflow-x-auto">
+   436→   436→   436→          <table className="w-full text-sm">
+   437→   437→   437→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   438→   438→   438→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   439→   439→   439→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Department</th>
+   440→   440→   440→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Type</th>
+   441→   441→   441→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   442→   442→   442→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   443→   443→   443→            </tr></thead>
+   444→   444→   444→            <tbody className="divide-y divide-gray-50">
+   445→   445→   445→              {filtered.map(item => (
+   446→   446→   446→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   447→   447→   447→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   448→   448→   448→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{item.department}</td>
+   449→   449→   449→                  <td className="py-3 px-4 hidden sm:table-cell"><span className="bg-[#0B3D2E] text-white text-xs px-2 py-0.5 rounded">{item.type}</span></td>
+   450→   450→   450→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   451→   451→   451→                  <td className="py-3 px-4">
+   452→   452→   452→                    <div className="flex items-center justify-end gap-1">
+   453→   453→   453→                      <button onClick={() => { nav("vacancy-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   454→   454→   454→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   455→   455→   455→                    </div>
+   456→   456→   456→                  </td>
+   457→   457→   457→                </tr>
+   458→   458→   458→              ))}
+   459→   459→   459→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No vacancies found.</td></tr>}
+   460→   460→   460→            </tbody>
+   461→   461→   461→          </table>
+   462→   462→   462→        </div>
+   463→   463→   463→      </div>
+   464→   464→   464→    </div>
+   465→   465→   465→  );
+   466→   466→   466→}
+   467→   467→   467→
+   468→   468→   468→/* ─── VACANCY FORM (new + edit) ─── */
+   469→   469→   469→function VacancyForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   470→   470→   470→  const [loading, setLoading] = useState(!!editId);
+   471→   471→   471→  const [saving, setSaving] = useState(false);
+   472→   472→   472→  const [form, setForm] = useState({ title: "", department: "", type: "Full-Time" as "Full-Time" | "Part-Time" | "Contract", deadline: "", description: "", requirements: "" });
+   473→   473→   473→
+   474→   474→   474→  useEffect(() => {
+   475→   475→   475→    if (!editId) return;
+   476→   476→   476→    fetch("/admin/api/vacancies").then(r => r.json()).then((items: VacancyItem[]) => {
+   477→   477→   477→      const item = items.find(v => v.id === editId);
+   478→   478→   478→      if (item) setForm({ title: item.title || "", department: item.department || "", type: item.type || "Full-Time", deadline: item.deadline || "", description: item.description || "", requirements: item.requirements || "" });
+   479→   479→   479→    }).finally(() => setLoading(false));
+   480→   480→   480→  }, [editId]);
+   481→   481→   481→
+   482→   482→   482→  const handleSubmit = async (e: React.FormEvent) => {
+   483→   483→   483→    e.preventDefault();
+   484→   484→   484→    if (!form.title.trim()) return;
+   485→   485→   485→    setSaving(true);
+   486→   486→   486→    try {
+   487→   487→   487→      await fetch("/admin/api/vacancies", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   488→   488→   488→      onBack();
+   489→   489→   489→    } catch { alert("Failed to save vacancy"); } finally { setSaving(false); }
+   490→   490→   490→  };
+   491→   491→   491→  const u = (k: string, v: string) => setForm({ ...form, [k]: v });
+   492→   492→   492→  if (loading) return <Spinner />;
+   493→   493→   493→
+   494→   494→   494→  return (
+   495→   495→   495→    <div className="max-w-3xl mx-auto space-y-6">
+   496→   496→   496→      <div className="flex items-center gap-3">
+   497→   497→   497→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   498→   498→   498→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Vacancy</h1>
+   499→   499→   499→      </div>
+   500→   500→   500→      <div className="bg-white rounded-xl shadow-sm p-6">
+   501→   501→   501→        <h3 className="text-base font-semibold text-gray-900 mb-4">Vacancy Details</h3>
+   502→   502→   502→        <form onSubmit={handleSubmit} className="space-y-5">
+   503→   503→   503→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="e.g. Health Extension Workers" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   504→   504→   504→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   505→   505→   505→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Department</label><input value={form.department} onChange={e => u("department", e.target.value)} placeholder="e.g. Health Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   506→   506→   506→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Type</label><select value={form.type} onChange={e => u("type", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Full-Time">Full-Time</option><option value="Part-Time">Part-Time</option><option value="Contract">Contract</option></select></div>
+   507→   507→   507→          </div>
+   508→   508→   508→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Application Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   509→   509→   509→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Job description..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   510→   510→   510→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Requirements</label><textarea value={form.requirements} onChange={e => u("requirements", e.target.value)} placeholder="Required qualifications..." rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   511→   511→   511→          <div className="flex gap-3 pt-2">
+   512→   512→   512→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Vacancy"}</button>
+   513→   513→   513→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   514→   514→   514→          </div>
+   515→   515→   515→        </form>
+   516→   516→   516→      </div>
+   517→   517→   517→    </div>
+   518→   518→   518→  );
+   519→   519→   519→}
+   520→   520→   520→
+   521→   521→   521→/* ─── SUBSCRIBERS ─── */
+   522→   522→   522→function SubscribersPage() {
+   523→   523→   523→  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+   524→   524→   524→  const [search, setSearch] = useState("");
+   525→   525→   525→  const [loading, setLoading] = useState(true);
+   526→   526→   526→  const load = () => { fetch("/admin/api/subscribers").then(r => r.json()).then(setSubscribers).finally(() => setLoading(false)); };
+   527→   527→   527→  useEffect(() => { load(); }, []);
+   528→   528→   528→  const handleDelete = async (id: string) => { if (!confirm("Delete this subscriber?")) return; await fetch(`/admin/api/subscribers?id=${id}`, { method: "DELETE" }); load(); };
+   529→   529→   529→  const handleExport = () => {
+   530→   530→   530→    const csv = ["Email,Subscribed At", ...subscribers.map(s => `${s.email},${s.subscribedAt}`)].join("\n");
+   531→   531→   531→    const blob = new Blob([csv], { type: "text/csv" });
+   532→   532→   532→    const url = URL.createObjectURL(blob);
+   533→   533→   533→    const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
+   534→   534→   534→    URL.revokeObjectURL(url);
+   535→   535→   535→  };
+   536→   536→   536→  const filtered = subscribers.filter(s => s.email.toLowerCase().includes(search.toLowerCase()));
+   537→   537→   537→  if (loading) return <Spinner />;
+   538→   538→   538→  return (
+   539→   539→   539→    <div className="space-y-6">
+   540→   540→   540→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   541→   541→   541→        <div><h1 className="text-2xl font-bold text-gray-900">Subscribers</h1><p className="text-sm text-gray-500 mt-1">{subscribers.length} email subscribers</p></div>
+   542→   542→   542→        <button onClick={handleExport} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">📥 Export CSV</button>
+   543→   543→   543→      </div>
+   544→   544→   544→      <div className="relative max-w-sm">
+   545→   545→   545→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   546→   546→   546→        <input placeholder="Search subscribers..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   547→   547→   547→      </div>
+   548→   548→   548→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   549→   549→   549→        <div className="overflow-x-auto">
+   550→   550→   550→          <table className="w-full text-sm">
+   551→   551→   551→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   552→   552→   552→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Email</th>
+   553→   553→   553→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Subscribed At</th>
+   554→   554→   554→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   555→   555→   555→            </tr></thead>
+   556→   556→   556→            <tbody className="divide-y divide-gray-50">
+   557→   557→   557→              {filtered.map(sub => (
+   558→   558→   558→                <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+   559→   559→   559→                  <td className="py-3 px-4">
+   560→   560→   560→                    <div className="flex items-center gap-2">
+   561→   561→   561→                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-xs">✉️</div>
+   562→   562→   562→                      <span className="font-medium text-gray-900">{sub.email}</span>
+   563→   563→   563→                    </div>
+   564→   564→   564→                  </td>
+   565→   565→   565→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(sub.subscribedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+   566→   566→   566→                  <td className="py-3 px-4"><div className="flex items-center justify-end"><button onClick={() => handleDelete(sub.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></div></td>
+   567→   567→   567→                </tr>
+   568→   568→   568→              ))}
+   569→   569→   569→              {filtered.length === 0 && <tr><td colSpan={3} className="py-12 text-center text-gray-400">No subscribers found.</td></tr>}
+   570→   570→   570→            </tbody>
+   571→   571→   571→          </table>
+   572→   572→   572→        </div>
+   573→   573→   573→      </div>
+   574→   574→   574→    </div>
+   575→   575→   575→  );
+   576→   576→   576→}
+   577→   577→   577→
+   578→   578→   578→/* ─── MENU MANAGER ─── */
+   579→   579→   579→interface MenuItem { id: string; label: string; href: string; order: number; children?: { id: string; label: string; href: string; order: number }[]; }
+   580→   580→   580→
+   581→   581→   581→function MenusPage() {
+   582→   582→   582→  const [menus, setMenus] = useState<MenuItem[]>([]);
+   583→   583→   583→  const [loading, setLoading] = useState(true);
+   584→   584→   584→  const [saving, setSaving] = useState(false);
+   585→   585→   585→  const [saved, setSaved] = useState(false);
+   586→   586→   586→
+   587→   587→   587→  useEffect(() => { fetch("/admin/api/menu").then(r => r.json()).then(d => { setMenus(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+   588→   588→   588→
+   589→   589→   589→  const updateMenu = (idx: number, field: string, value: string | number) => {
+   590→   590→   590→    const m = [...menus];
+   591→   591→   591→    (m[idx] as any)[field] = value;
+   592→   592→   592→    setMenus(m); setSaved(false);
+   593→   593→   593→  };
+   594→   594→   594→  const updateChild = (pIdx: number, cIdx: number, field: string, value: string | number) => {
+   595→   595→   595→    const m = [...menus];
+   596→   596→   596→    if (m[pIdx].children) { (m[pIdx].children![cIdx] as any)[field] = value; }
+   597→   597→   597→    setMenus(m); setSaved(false);
+   598→   598→   598→  };
+   599→   599→   599→  const addChild = (pIdx: number) => {
+   600→   600→   600→    const m = [...menus];
+   601→   601→   601→    if (!m[pIdx].children) m[pIdx].children = [];
+   602→   602→   602→    m[pIdx].children!.push({ id: Date.now().toString(), label: "New Item", href: "", order: m[pIdx].children!.length });
+   603→   603→   603→    setMenus(m); setSaved(false);
+   604→   604→   604→  };
+   605→   605→   605→  const removeChild = (pIdx: number, cIdx: number) => {
+   606→   606→   606→    const m = [...menus];
+   607→   607→   607→    m[pIdx].children?.splice(cIdx, 1);
+   608→   608→   608→    setMenus(m); setSaved(false);
+   609→   609→   609→  };
+   610→   610→   610→  const addMenu = () => {
+   611→   611→   611→    setMenus([...menus, { id: Date.now().toString(), label: "New Menu", href: "", order: menus.length, children: [] }]);
+   612→   612→   612→    setSaved(false);
+   613→   613→   613→  };
+   614→   614→   614→  const removeMenu = (idx: number) => {
+   615→   615→   615→    const m = [...menus]; m.splice(idx, 1);
+   616→   616→   616→    setMenus(m); setSaved(false);
+   617→   617→   617→  };
+   618→   618→   618→  const moveMenu = (idx: number, dir: -1 | 1) => {
+   619→   619→   619→    const target = idx + dir;
+   620→   620→   620→    if (target < 0 || target >= menus.length) return;
+   621→   621→   621→    const m = [...menus];
+   622→   622→   622→    [m[idx], m[target]] = [m[target], m[idx]];
+   623→   623→   623→    m.forEach((item, i) => item.order = i);
+   624→   624→   624→    setMenus(m); setSaved(false);
+   625→   625→   625→  };
+   626→   626→   626→  const save = async () => {
+   627→   627→   627→    setSaving(true);
+   628→   628→   628→    try {
+   629→   629→   629→      const res = await fetch("/admin/api/menu", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(menus) });
+   630→   630→   630→      if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+   631→   631→   631→    } finally { setSaving(false); }
+   632→   632→   632→  };
+   633→   633→   633→
+   634→   634→   634→  if (loading) return <Spinner />;
+   635→   635→   635→
+   636→   636→   636→  return (
+   637→   637→   637→    <div>
+   638→   638→   638→      <div className="flex items-center justify-between mb-6">
+   639→   639→   639→        <div><h1 className="text-2xl font-bold text-gray-900">Menu Manager</h1><p className="text-sm text-gray-500 mt-1">Manage navigation menus and sub-menus</p></div>
+   640→   640→   640→        <div className="flex gap-2">
+   641→   641→   641→          <button onClick={addMenu} className="px-4 py-2 bg-[#0B3D2E] text-white text-sm font-medium rounded-lg hover:bg-[#145A44] transition-colors">+ Add Menu</button>
+   642→   642→   642→          <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#EAB308] text-[#0B3D2E] text-sm font-bold rounded-lg hover:bg-[#CA8A04] transition-colors disabled:opacity-60 flex items-center gap-2">
+   643→   643→   643→            {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save All"}
+   644→   644→   644→          </button>
+   645→   645→   645→        </div>
+   646→   646→   646→      </div>
+   647→   647→   647→      <div className="space-y-4">
+   648→   648→   648→        {menus.map((menu, idx) => (
+   649→   649→   649→          <div key={menu.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+   650→   650→   650→            <div className="p-4 border-b border-gray-50 flex items-center gap-3 flex-wrap">
+   651→   651→   651→              <div className="flex flex-col gap-1">
+   652→   652→   652→                <input type="text" value={menu.label} onChange={e => updateMenu(idx, "label", e.target.value)} className="text-sm font-bold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" />
+   653→   653→   653→                <input type="text" value={menu.href} onChange={e => updateMenu(idx, "href", e.target.value)} className="text-xs text-gray-400 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" placeholder="Page ID (href)" />
+   654→   654→   654→              </div>
+   655→   655→   655→              <div className="ml-auto flex items-center gap-1">
+   656→   656→   656→                <span className="text-[10px] text-gray-400 mr-1">Order: {idx}</span>
+   657→   657→   657→                <button onClick={() => moveMenu(idx, -1)} disabled={idx === 0} className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-30 text-xs">↑</button>
+   658→   658→   658→                <button onClick={() => moveMenu(idx, 1)} disabled={idx === menus.length - 1} className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-30 text-xs">↓</button>
+   659→   659→   659→                <button onClick={() => addChild(idx)} className="ml-1 px-2.5 py-1 text-xs font-medium text-[#0B3D2E] bg-[#F0FDF4] rounded-lg hover:bg-[#dcfce7] transition-colors">+ Sub</button>
+   660→   660→   660→                <button onClick={() => removeMenu(idx)} className="ml-1 px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">Delete</button>
+   661→   661→   661→              </div>
+   662→   662→   662→            </div>
+   663→   663→   663→            {menu.children && menu.children.length > 0 && (
+   664→   664→   664→              <div className="divide-y divide-gray-50">
+   665→   665→   665→                {menu.children.map((child, cIdx) => (
+   666→   666→   666→                  <div key={child.id} className="px-4 py-3 ml-8 flex items-center gap-3">
+   667→   667→   667→                    <span className="text-gray-300 text-xs">↳</span>
+   668→   668→   668→                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+   669→   669→   669→                      <input type="text" value={child.label} onChange={e => updateChild(idx, cIdx, "label", e.target.value)} className="text-sm text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors" />
+   670→   670→   670→                      <input type="text" value={child.href} onChange={e => updateChild(idx, cIdx, "href", e.target.value)} className="text-xs text-gray-400 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" placeholder="Page ID (href)" />
+   671→   671→   671→                    </div>
+   672→   672→   672→                    <button onClick={() => removeChild(idx, cIdx)} className="px-2 py-0.5 text-xs text-red-500 hover:bg-red-50 rounded transition-colors">Remove</button>
+   673→   673→   673→                  </div>
+   674→   674→   674→                ))}
+   675→   675→   675→              </div>
+   676→   676→   676→            )}
+   677→   677→   677→          </div>
+   678→   678→   678→        ))}
+   679→   679→   679→      </div>
+   680→   680→   680→    </div>
+   681→   681→   681→  );
+   682→   682→   682→}
+   683→   683→   683→
+   684→   684→   684→/* ─── APPLICATIONS PAGE ─── */
+   685→   685→   685→interface ApplicationItem { id: string; fullName: string; email: string; phone: string; gender: string; education: string; institution: string; experienceYears: string; currentEmployer: string; currentPosition: string; keyQualifications: string; cvName: string; coverLetterName: string; vacancyTitle: string; vacancyId: string; appliedAt: string; status: string; }
+   686→   686→   686→
+   687→   687→   687→function ApplicationsPage() {
+   688→   688→   688→  const [apps, setApps] = useState<ApplicationItem[]>([]);
+   689→   689→   689→  const [selected, setSelected] = useState<ApplicationItem | null>(null);
+   690→   690→   690→  const [loading, setLoading] = useState(true);
+   691→   691→   691→  const [search, setSearch] = useState("");
+   692→   692→   692→
+   693→   693→   693→  useEffect(() => {
+   694→   694→   694→    try {
+   695→   695→   695→      const d = localStorage.getItem("amharasint_applications");
+   696→   696→   696→      setApps(d ? JSON.parse(d) : []);
+   697→   697→   697→    } catch { setApps([]); }
+   698→   698→   698→    setLoading(false);
+   699→   699→   699→  }, []);
+   700→   700→   700→
+   701→   701→   701→  const updateStatus = (id: string, status: string) => {
+   702→   702→   702→    const updated = apps.map(a => a.id === id ? { ...a, status } : a);
+   703→   703→   703→    setApps(updated);
+   704→   704→   704→    localStorage.setItem("amharasint_applications", JSON.stringify(updated));
+   705→   705→   705→  };
+   706→   706→   706→
+   707→   707→   707→  const deleteApp = (id: string) => {
+   708→   708→   708→    if (!confirm("Delete this application?")) return;
+   709→   709→   709→    const updated = apps.filter(a => a.id !== id);
+   710→   710→   710→    setApps(updated);
+   711→   711→   711→    localStorage.setItem("amharasint_applications", JSON.stringify(updated));
+   712→   712→   712→    if (selected?.id === id) setSelected(null);
+   713→   713→   713→  };
+   714→   714→   714→
+   715→   715→   715→  const filtered = apps.filter(a =>
+   716→   716→   716→    a.fullName.toLowerCase().includes(search.toLowerCase()) ||
+   717→   717→   717→    a.email.toLowerCase().includes(search.toLowerCase()) ||
+   718→   718→   718→    a.vacancyTitle.toLowerCase().includes(search.toLowerCase())
+   719→   719→   719→  );
+   720→   720→   720→
+   721→   721→   721→  if (loading) return <Spinner />;
+   722→   722→   722→
+   723→   723→   723→  return (
+   724→   724→   724→    <div className="space-y-6">
+   725→   725→   725→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   726→   726→   726→        <div><h1 className="text-2xl font-bold text-gray-900">Applications Management</h1><p className="text-sm text-gray-500 mt-1">{apps.length} total applications received</p></div>
+   727→   727→   727→        <div className="flex gap-2">
+   728→   728→   728→          {["Under Review", "Shortlisted", "Interviewed", "Rejected"].map(s => (
+   729→   729→   729→            <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">{s}: {apps.filter(a => a.status === s).length}</span>
+   730→   730→   730→          ))}
+   731→   731→   731→        </div>
+   732→   732→   732→      </div>
+   733→   733→   733→      <div className="relative max-w-sm">
+   734→   734→   734→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   735→   735→   735→        <input placeholder="Search by name, email, or position..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   736→   736→   736→      </div>
+   737→   737→   737→
+   738→   738→   738→      {selected ? (
+   739→   739→   739→        <div className="bg-white rounded-xl shadow-sm p-6">
+   740→   740→   740→          <button onClick={() => setSelected(null)} className="text-sm text-gray-500 hover:text-gray-900 mb-4 flex items-center gap-1">← Back to list</button>
+   741→   741→   741→          <div className="grid md:grid-cols-2 gap-6">
+   742→   742→   742→            <div className="space-y-4">
+   743→   743→   743→              <h3 className="text-lg font-bold text-gray-900">{selected.fullName}</h3>
+   744→   744→   744→              <div className="space-y-2">
+   745→   745→   745→                {[
+   746→   746→   746→                  ["Email", selected.email], ["Phone", selected.phone], ["Gender", selected.gender],
+   747→   747→   747→                  ["Education", selected.education], ["Institution", selected.institution],
+   748→   748→   748→                  ["Experience", selected.experienceYears], ["Current Employer", selected.currentEmployer || "N/A"],
+   749→   749→   749→                  ["Current Position", selected.currentPosition || "N/A"],
+   750→   750→   750→                ].map(([k, v]) => (
+   751→   751→   751→                  <div key={k} className="flex justify-between py-1.5 border-b border-gray-50 last:border-0">
+   752→   752→   752→                    <span className="text-sm text-gray-500">{k}</span><span className="text-sm font-medium text-gray-900">{v || "N/A"}</span>
+   753→   753→   753→                  </div>
+   754→   754→   754→                ))}
+   755→   755→   755→              </div>
+   756→   756→   756→            </div>
+   757→   757→   757→            <div className="space-y-4">
+   758→   758→   758→              <div className="bg-gray-50 rounded-xl p-4">
+   759→   759→   759→                <h4 className="text-sm font-bold text-gray-700 mb-2">Applied For</h4>
+   760→   760→   760→                <p className="text-base font-bold text-[#0B3D2E]">{selected.vacancyTitle}</p>
+   761→   761→   761→                <p className="text-xs text-gray-500 mt-1">Applied: {new Date(selected.appliedAt).toLocaleString()}</p>
+   762→   762→   762→              </div>
+   763→   763→   763→              <div className="bg-gray-50 rounded-xl p-4">
+   764→   764→   764→                <h4 className="text-sm font-bold text-gray-700 mb-2">Key Qualifications</h4>
+   765→   765→   765→                <p className="text-sm text-gray-600">{selected.keyQualifications}</p>
+   766→   766→   766→              </div>
+   767→   767→   767→              <div className="bg-gray-50 rounded-xl p-4">
+   768→   768→   768→                <h4 className="text-sm font-bold text-gray-700 mb-2">Documents</h4>
+   769→   769→   769→                <p className="text-sm text-gray-600">CV: {selected.cvName}</p>
+   770→   770→   770→                <p className="text-sm text-gray-600">Cover Letter: {selected.coverLetterName}</p>
+   771→   771→   771→              </div>
+   772→   772→   772→              <div className="flex gap-2">
+   773→   773→   773→                {["Under Review", "Shortlisted", "Interviewed", "Rejected"].map(s => (
+   774→   774→   774→                  <button key={s} onClick={() => updateStatus(selected.id, s)}
+   775→   775→   775→                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${selected.status === s ? (s === "Rejected" ? "bg-red-100 text-red-700" : "bg-[#0B3D2E] text-white") : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+   776→   776→   776→                    {s}
+   777→   777→   777→                  </button>
+   778→   778→   778→                ))}
+   779→   779→   779→              </div>
+   780→   780→   780→            </div>
+   781→   781→   781→          </div>
+   782→   782→   782→        </div>
+   783→   783→   783→      ) : (
+   784→   784→   784→        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   785→   785→   785→          <div className="overflow-x-auto">
+   786→   786→   786→            <table className="w-full text-sm">
+   787→   787→   787→              <thead className="bg-gray-50 border-b border-gray-100">
+   788→   788→   788→                <tr>
+   789→   789→   789→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">Applicant</th>
+   790→   790→   790→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Position</th>
+   791→   791→   791→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden lg:table-cell">Education</th>
+   792→   792→   792→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">Status</th>
+   793→   793→   793→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden sm:table-cell">Date</th>
+   794→   794→   794→                  <th className="py-3 px-4"></th>
+   795→   795→   795→                </tr>
+   796→   796→   796→              </thead>
+   797→   797→   797→              <tbody className="divide-y divide-gray-50">
+   798→   798→   798→                {filtered.map(app => (
+   799→   799→   799→                  <tr key={app.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setSelected(app)}>
+   800→   800→   800→                    <td className="py-3 px-4">
+   801→   801→   801→                      <div className="flex items-center gap-3">
+   802→   802→   802→                        <div className="w-8 h-8 rounded-full bg-[#0B3D2E] text-white flex items-center justify-center shrink-0 text-xs font-bold">{app.fullName.split(" ").map(n => n[0]).join("")}</div>
+   803→   803→   803→                        <div><span className="font-medium text-gray-900">{app.fullName}</span><div className="text-xs text-gray-400">{app.email}</div></div>
+   804→   804→   804→                      </div>
+   805→   805→   805→                    </td>
+   806→   806→   806→                    <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{app.vacancyTitle}</td>
+   807→   807→   807→                    <td className="py-3 px-4 text-gray-500 hidden lg:table-cell">{app.education}</td>
+   808→   808→   808→                    <td className="py-3 px-4">
+   809→   809→   809→                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${app.status === "Shortlisted" || app.status === "Interviewed" ? "bg-green-50 text-green-700" : app.status === "Rejected" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-700"}`}>{app.status}</span>
+   810→   810→   810→                    </td>
+   811→   811→   811→                    <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(app.appliedAt).toLocaleDateString()}</td>
+   812→   812→   812→                    <td className="py-3 px-4"><button onClick={(e) => { e.stopPropagation(); deleteApp(app.id); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></td>
+   813→   813→   813→                  </tr>
+   814→   814→   814→                ))}
+   815→   815→   815→                {filtered.length === 0 && <tr><td colSpan={6} className="py-12 text-center text-gray-400">No applications found.</td></tr>}
+   816→   816→   816→              </tbody>
+   817→   817→   817→            </table>
+   818→   818→   818→          </div>
+   819→   819→   819→        </div>
+   820→   820→   820→      )}
+   821→   821→   821→    </div>
+   822→   822→   822→  );
+   823→   823→   823→}
+   824→   824→   824→
+   825→   825→   825→/* ─── SETTINGS ─── */
+   826→   826→   826→function SettingsPage() {
+   827→   827→   827→  return (
+   828→   828→   828→    <div className="space-y-6 max-w-2xl">
+   829→   829→   829→      <div><h1 className="text-2xl font-bold text-gray-900">Settings</h1><p className="text-sm text-gray-500 mt-1">Admin panel configuration</p></div>
+   830→   830→   830→      <div className="bg-white rounded-xl shadow-sm p-6">
+   831→   831→   831→        <h3 className="text-base font-semibold text-gray-900 mb-4">System Information</h3>
+   832→   832→   832→        <div className="space-y-4">
+   833→   833→   833→          {[["Application", "Amhara Sint Woreda Portal"], ["Version", "1.0.0"], ["Framework", "Next.js 16"], ["Storage", "JSON File Storage"]].map(([k, v]) => (
+   834→   834→   834→            <div key={k} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+   835→   835→   835→              <span className="text-sm text-gray-600">{k}</span>
+   836→   836→   836→              <span className="text-sm font-medium text-gray-900">{v}</span>
+   837→   837→   837→            </div>
+   838→   838→   838→          ))}
+   839→   839→   839→        </div>
+   840→   840→   840→      </div>
+   841→   841→   841→      <div className="bg-white rounded-xl shadow-sm p-6">
+   842→   842→   842→        <h3 className="text-base font-semibold text-gray-900 mb-2">Admin Access</h3>
+   843→   843→   843→        <p className="text-sm text-gray-500">Admin authentication is password-based. The password is configured via the <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-xs mx-1">ADMIN_PASSWORD</code> environment variable.</p>
+   844→   844→   844→      </div>
+   845→   845→   845→    </div>
+   846→   846→   846→  );
+   847→   847→   847→}
+   848→   848→   848→
+   849→   849→   849→/* ─── MAIN ─── */
+   850→   850→   850→export default function AdminPage() {
+   851→   851→   851→  const [page, setPage] = useState<AdminPage>("dashboard");
+   852→   852→   852→  const [editId, setEditId] = useState<string | null>(null);
+   853→   853→   853→
+   854→   854→   854→  const nav = useCallback((p: AdminPage) => {
+   855→   855→   855→    if (p === "news-edit" || p === "bids-edit" || p === "vacancy-edit") {
+   856→   856→   856→      setEditId((window as unknown as { __adminEditId: string }).__adminEditId || null);
+   857→   857→   857→    } else {
+   858→   858→   858→      setEditId(null);
+   859→   859→   859→    }
+   860→   860→   860→    setPage(p);
+   861→   861→   861→    // close mobile sidebar
+   862→   862→   862→    const s = document.getElementById("admin-sidebar");
+   863→   863→   863→    const o = document.getElementById("sidebar-overlay");
+   864→   864→   864→    if (s) s.classList.add("-translate-x-full");
+   865→   865→   865→    if (o) o.classList.add("hidden");
+   866→   866→   866→  }, []);
+   867→   867→   867→
+   868→   868→   868→  const handleLogout = async () => {
+   869→   869→   869→    await fetch("/admin/api/logout", { method: "POST" });
+   870→   870→   870→    window.location.href = "/admin/login";
+   871→   871→   871→  };
+   872→   872→   872→
+   873→   873→   873→  return (
+   874→   874→   874→    <div className="min-h-screen flex bg-gray-50">
+   875→   875→   875→      <Sidebar page={page} nav={nav} onLogout={handleLogout} />
+   876→   876→   876→      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
+   877→   877→   877→        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+   878→   878→   878→          <div className="flex items-center gap-3">
+   879→   879→   879→            <button onClick={() => { const s = document.getElementById("admin-sidebar"); if (s) s.classList.toggle("-translate-x-full"); const o = document.getElementById("sidebar-overlay"); if (o) o.classList.toggle("hidden"); }} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600" aria-label="Toggle menu">
+   880→   880→   880→              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+   881→   881→   881→            </button>
+   882→   882→   882→            <div>
+   883→   883→   883→              <h2 className="text-sm font-semibold text-gray-900">Amhara Sint Woreda</h2>
+   884→   884→   884→              <p className="text-xs text-gray-400">Administration Panel</p>
+   885→   885→   885→            </div>
+   886→   886→   886→          </div>
+   887→   887→   887→          <div className="flex items-center gap-3">
+   888→   888→   888→            <form action="/admin/api/logout" method="POST"><button type="submit" className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
+   889→   889→   889→              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+   890→   890→   890→              Logout
+   891→   891→   891→            </button></form>
+   892→   892→   892→            <a href="/" target="_blank" className="text-xs text-gray-500 hover:text-[#0B3D2E] flex items-center gap-1 transition-colors">View Website <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>
+   893→   893→   893→          </div>
+   894→   894→   894→        </header>
+   895→   895→   895→        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+   896→   896→   896→          {page === "dashboard" && <DashboardPage nav={nav} />}
+   897→   897→   897→          {page === "news" && <NewsListPage nav={nav} />}
+   898→   898→   898→          {page === "news-new" && <NewsForm editId={null} onBack={() => nav("news")} />}
+   899→   899→   899→          {page === "news-edit" && <NewsForm editId={editId} onBack={() => nav("news")} />}
+   900→   900→   900→          {page === "bids" && <BidsListPage nav={nav} />}
+   901→   901→   901→          {page === "bids-new" && <BidForm editId={null} onBack={() => nav("bids")} />}
+   902→   902→   902→          {page === "bids-edit" && <BidForm editId={editId} onBack={() => nav("bids")} />}
+   903→   903→   903→          {page === "vacancy" && <VacancyListPage nav={nav} />}
+   904→   904→   904→          {page === "vacancy-new" && <VacancyForm editId={null} onBack={() => nav("vacancy")} />}
+   905→   905→   905→          {page === "vacancy-edit" && <VacancyForm editId={editId} onBack={() => nav("vacancy")} />}
+   906→   906→   906→          {page === "subscribers" && <SubscribersPage />}
+   907→   907→   907→          {page === "menus" && <MenusPage />}
+   908→   908→   908→          {page === "applications" && <ApplicationsPage />}
+   909→   909→   909→          {page === "settings" && <SettingsPage />}
+   910→   910→   910→        </main>
+   911→   911→   911→      </div>
+   912→   912→   912→    </div>
+   913→   913→   913→  );
+   914→   914→   914→}

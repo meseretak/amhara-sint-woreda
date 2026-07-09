@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian TVET college technical training workshop"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian TVET college technical training workshop",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/a842501dc00b.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "956px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/e5fcdedb4641.jpeg",
+      "caption": "",
+      "source": "China Daily",
+      "original_width": "1200px",
+      "original_height": "675px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/f6e0c1839417.jpg",
+      "caption": "",
+      "source": "LKDF",
+      "original_width": "3840px",
+      "original_height": "2560px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/65373a6a4ccb.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "955px"
+    }
+  ]
+}

@@ -1,0 +1,502 @@
+  1501→        <div className="grid md:grid-cols-2 gap-6">
+  1502→          <ContentCard delay={100}>
+  1503→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Wheat className="w-5 h-5 text-[#EAB308]" /> Major Crops & Production Statistics</h3>
+  1504→            <div className="space-y-3">
+  1505→              {[
+  1506→                { crop: "Teff (Staple)", area: "28,000 ha", yield: "1.2 t/ha", total: "33,600 tons" },
+  1507→                { crop: "Barley (Highland)", area: "18,000 ha", yield: "1.8 t/ha", total: "32,400 tons" },
+  1508→                { crop: "Wheat", area: "15,000 ha", yield: "2.0 t/ha", total: "30,000 tons" },
+  1509→                { crop: "Sorghum & Maize", area: "12,000 ha", yield: "2.2 t/ha", total: "26,400 tons" },
+  1510→                { crop: "Fava Beans & Peas", area: "8,000 ha", yield: "1.5 t/ha", total: "12,000 tons" },
+  1511→                { crop: "Potatoes & Vegetables", area: "4,000 ha", yield: "15 t/ha", total: "60,000 tons" },
+  1512→              ].map((item) => (
+  1513→                <div key={item.crop} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F0FDF4] border border-[#0B3D2E]/5">
+  1514→                  <span className="font-semibold text-[#0B3D2E] text-xs">{item.crop}</span>
+  1515→                  <div className="flex items-center gap-3 text-[10px] text-[#0B3D2E]/50">
+  1516→                    <span>{item.area}</span>
+  1517→                    <span className="text-[#10B981] font-semibold">{item.total}</span>
+  1518→                  </div>
+  1519→                </div>
+  1520→              ))}
+  1521→            </div>
+  1522→          </ContentCard>
+  1523→          <ContentCard delay={150}>
+  1524→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Baby className="w-5 h-5 text-[#EAB308]" /> Livestock Population</h3>
+  1525→            <div className="space-y-3">
+  1526→              {[
+  1527→                { animal: "Cattle (Oxen & Cows)", count: "68,000", icon: "🐄" },
+  1528→                { animal: "Sheep", count: "45,000", icon: "🐑" },
+  1529→                { animal: "Goats", count: "32,000", icon: "🐐" },
+  1530→                { animal: "Poultry", count: "125,000", icon: "🐔" },
+  1531→                { animal: "Donkeys & Mules", count: "8,500", icon: "🫏" },
+  1532→                { animal: "Bee Colonies (Modern)", count: "3,500", icon: "🐝" },
+  1533→              ].map((item) => (
+  1534→                <div key={item.animal} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F0FDF4] border border-[#0B3D2E]/5">
+  1535→                  <span className="font-semibold text-[#0B3D2E] text-xs">{item.animal}</span>
+  1536→                  <span className="text-sm font-bold text-[#EAB308]">{item.count}</span>
+  1537→                </div>
+  1538→              ))}
+  1539→            </div>
+  1540→          </ContentCard>
+  1541→        </div>
+  1542→
+  1543→        {/* Extension Services & Programs */}
+  1544→        <ContentCard delay={200}>
+  1545→          <h3 className="font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1546→            <TrendingUp className="w-5 h-5 text-[#EAB308]" /> Extension Services & Development Programs
+  1547→          </h3>
+  1548→          <div className="grid md:grid-cols-2 gap-4">
+  1549→            {[
+  1550→              { title: "Improved Seed & Fertilizer Distribution", desc: "Annual distribution of improved crop varieties and blended fertilizer (NPS) to over 10,000 farming households. Partnerships with the regional agriculture bureau ensure timely supply before each planting season." },
+  1551→              { title: "Irrigation Development", desc: "Small-scale irrigation schemes using river diversion, shallow wells, and motorized pumps now cover 1,200 hectares, enabling farmers to produce two harvests per year and significantly increasing household food security and income." },
+  1552→              { title: "Veterinary Services & Livestock Health", desc: "Five veterinary clinics and 18 para-veterinarians provide vaccination, deworming, and treatment services. Annual vaccination campaigns cover over 90% of the livestock population against major diseases." },
+  1553→              { title: "Soil Conservation & Watershed Management", desc: "Physical and biological soil conservation structures on 15,000 hectares of degraded land. Community-based watershed management has reduced soil erosion by 40% and increased ground water recharge in treated areas." },
+  1554→              { title: "Cooperative Development", desc: "120+ registered agricultural cooperatives with over 8,000 members provide collective input procurement, output marketing, credit access, and value addition services. Cooperatives have increased farmer income by an average of 25%." },
+  1555→              { title: "Market Access & Value Chain", desc: "Linking farmers to regional markets through cooperative unions, market information systems, and the construction of collection centers. Weekly market days in 8 kebele towns facilitate local trade of produce and livestock." },
+  1556→            ].map((prog) => (
+  1557→              <div key={prog.title} className="bg-[#F0FDF4] rounded-xl p-4 border border-[#0B3D2E]/5">
+  1558→                <h4 className="font-bold text-[#0B3D2E] text-sm mb-1.5">{prog.title}</h4>
+  1559→                <p className="text-[#0B3D2E]/55 text-xs leading-relaxed">{prog.desc}</p>
+  1560→              </div>
+  1561→            ))}
+  1562→          </div>
+  1563→        </ContentCard>
+  1564→      </div>
+  1565→    </SubPage>
+  1566→  );
+  1567→}
+  1568→
+  1569→/* ─── SERVICE: Transport ──────────────────────────────────── */
+  1570→function ServiceTransportPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1571→  return (
+  1572→    <SubPage onNavigate={onNavigate} title="Transport Services" breadcrumb="Services / Transport" badge="Infrastructure">
+  1573→      <div className="space-y-8 max-w-4xl mx-auto">
+  1574→        <ContentCard>
+  1575→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1576→            <Truck className="w-6 h-6 text-[#EAB308]" /> Transport & Roads
+  1577→          </h2>
+  1578→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1579→            Amhara Sint Woreda has made significant progress in expanding its road network to connect remote kebeles to the woreda capital and zonal centers. The road infrastructure development is a top priority, with both all-weather gravel roads and dry-weather roads being constructed and maintained.
+  1580→          </p>
+  1581→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1582→            The woreda currently has approximately 85 km of all-weather roads, with an ambitious target of reaching 150 km within the next five years. Rural accessibility remains a challenge, and the administration is working with regional and federal authorities to secure funding for road construction projects.
+  1583→          </p>
+  1584→        </ContentCard>
+  1585→        <div className="grid md:grid-cols-2 gap-6">
+  1586→          {[
+  1587→            { stat: "85 km", label: "All-Weather Roads (current)", pct: 57 },
+  1588→            { stat: "150 km", label: "All-Weather Roads (target)", pct: 100 },
+  1589→            { stat: "12", label: "Bridges Constructed", pct: 60 },
+  1590→            { stat: "14 / 22", label: "Kebeles Road Connected", pct: 64 },
+  1591→          ].map((s, i) => (
+  1592→            <ContentCard key={s.label} delay={i * 100}>
+  1593→              <div className="flex justify-between mb-2">
+  1594→                <span className="text-sm font-semibold text-[#0B3D2E]">{s.label}</span>
+  1595→                <span className="text-sm font-bold text-[#EAB308]">{s.stat}</span>
+  1596→              </div>
+  1597→              <div className="h-3 bg-[#0B3D2E]/10 rounded-full overflow-hidden">
+  1598→                <div className="h-full rounded-full bg-gradient-to-r from-[#0B3D2E] to-[#10B981]" style={{ width: `${s.pct}%` }} />
+  1599→              </div>
+  1600→            </ContentCard>
+  1601→          ))}
+  1602→        </div>
+  1603→      </div>
+  1604→    </SubPage>
+  1605→  );
+  1606→}
+  1607→
+  1608→/* ─── SERVICE: Water ───────────────────────────────────────── */
+  1609→function ServiceWaterPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1610→  return (
+  1611→    <SubPage onNavigate={onNavigate} title="Water & Sanitation" breadcrumb="Services / Water" badge="Water Sector">
+  1612→      <div className="space-y-8 max-w-4xl mx-auto">
+  1613→        <ContentCard>
+  1614→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1615→            <Droplets className="w-6 h-6 text-[#EAB308]" /> Water Supply & Sanitation
+  1616→          </h2>
+  1617→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1618→            Access to clean water remains one of the most critical challenges in Amhara Sint Woreda. The Water, Mines & Energy Office manages 64 clean water access points, including hand-dug wells, protected springs, and boreholes equipped with hand pumps. Despite this progress, many rural communities still rely on unprotected water sources.
+  1619→          </p>
+  1620→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1621→            The woreda is implementing an ambitious water supply expansion program with support from regional and international partners. The goal is to achieve 85% clean water coverage within the next five years, combined with comprehensive sanitation and hygiene promotion activities.
+  1622→          </p>
+  1623→        </ContentCard>
+  1624→        <div className="grid md:grid-cols-3 gap-6">
+  1625→          {[
+  1626→            { stat: "64", label: "Water Points" },
+  1627→            { stat: "52%", label: "Clean Water Coverage" },
+  1628→            { stat: "85%", label: "Target Coverage (5yr)" },
+  1629→            { stat: "35%", label: "Sanitation Coverage" },
+  1630→            { stat: "18", label: "New Projects Planned" },
+  1631→            { stat: "22", label: "Kebeles Served" },
+  1632→          ].map((s, i) => (
+  1633→            <ContentCard key={s.label} delay={i * 80}>
+  1634→              <div className="text-center">
+  1635→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1636→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1637→              </div>
+  1638→            </ContentCard>
+  1639→          ))}
+  1640→        </div>
+  1641→      </div>
+  1642→    </SubPage>
+  1643→  );
+  1644→}
+  1645→
+  1646→/* ─── SERVICE: Justice ─────────────────────────────────────── */
+  1647→function ServiceJusticePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1648→  return (
+  1649→    <SubPage onNavigate={onNavigate} title="Justice & Security" breadcrumb="Services / Justice" badge="Justice Sector">
+  1650→      <div className="space-y-8 max-w-4xl mx-auto">
+  1651→        <ContentCard>
+  1652→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1653→            <Scale className="w-6 h-6 text-[#EAB308]" /> Justice & Security Services
+  1654→          </h2>
+  1655→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1656→            Amhara Sint Woreda maintains a justice system that includes a woreda court, social courts, and alternative dispute resolution mechanisms. The Justice Office works to ensure the rule of law, protect citizens&apos; rights, and provide accessible justice services to all community members.
+  1657→          </p>
+  1658→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1659→            Community-based dispute resolution through elders and local mediators remains an important part of the justice landscape, particularly for civil and family matters. The woreda also maintains law enforcement through the local police department, which works to maintain peace and security across all kebeles.
+  1660→          </p>
+  1661→        </ContentCard>
+  1662→        <div className="grid md:grid-cols-2 gap-6">
+  1663→          {[
+  1664→            { title: "Woreda Court", desc: "Handles major civil and criminal cases within the woreda jurisdiction.", icon: Scale },
+  1665→            { title: "Social Courts", desc: "Community-level courts for minor disputes, family law, and local matters.", icon: Building },
+  1666→            { title: "Police Department", desc: "Maintains public safety, prevents crime, and enforces laws.", icon: Siren },
+  1667→            { title: "Legal Aid", desc: "Free legal consultation and support for vulnerable community members.", icon: Shield },
+  1668→          ].map((s, i) => (
+  1669→            <ContentCard key={s.title} delay={i * 100}>
+  1670→              <div className="flex items-start gap-4">
+  1671→                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+  1672→                  <s.icon className="w-5 h-5 text-white" />
+  1673→                </div>
+  1674→                <div>
+  1675→                  <h3 className="font-bold text-[#0B3D2E] mb-1">{s.title}</h3>
+  1676→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{s.desc}</p>
+  1677→                </div>
+  1678→              </div>
+  1679→            </ContentCard>
+  1680→          ))}
+  1681→        </div>
+  1682→      </div>
+  1683→    </SubPage>
+  1684→  );
+  1685→}
+  1686→
+  1687→/* ─── SERVICE: Finance ───────────────────────────────────── */
+  1688→function ServiceFinancePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1689→  return (
+  1690→    <SubPage onNavigate={onNavigate} title="Finance & Revenue" breadcrumb="Services / Finance" badge="Finance Sector">
+  1691→      <div className="space-y-8 max-w-4xl mx-auto">
+  1692→        <ContentCard>
+  1693→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1694→            <Banknote className="w-6 h-6 text-[#EAB308]" /> Finance & Revenue
+  1695→          </h2>
+  1696→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1697→            The Finance and Economic Development Office manages the woreda&apos;s budget, revenue collection, and financial planning. The office is responsible for collecting local taxes, fees, and duties, as well as managing the disbursement of funds to various departments and development programs.
+  1698→          </p>
+  1699→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1700→            The woreda budget is funded through a combination of federal and regional government transfers, local revenue collection, and donor support for specific development projects. Transparency and accountability in financial management are key priorities, with regular audits and public financial reporting.
+  1701→          </p>
+  1702→        </ContentCard>
+  1703→        <div className="grid md:grid-cols-3 gap-6">
+  1704→          {[
+  1705→            { stat: "120+", label: "Registered Cooperatives" },
+  1706→            { stat: "5,000+", label: "Tax-Paying Households" },
+  1707→            { stat: "85%", label: "Budget Utilization Rate" },
+  1708→            { stat: "22", label: "Revenue Collection Points" },
+  1709→            { stat: "150+", label: "Micro Enterprises Supported" },
+  1710→            { stat: "3", label: "Financial Audits Per Year" },
+  1711→          ].map((s, i) => (
+  1712→            <ContentCard key={s.label} delay={i * 80}>
+  1713→              <div className="text-center">
+  1714→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1715→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1716→              </div>
+  1717→            </ContentCard>
+  1718→          ))}
+  1719→        </div>
+  1720→      </div>
+  1721→    </SubPage>
+  1722→  );
+  1723→}
+  1724→
+  1725→/* ─── NEWS: Latest News ───────────────────────────────────── */
+  1726→function NewsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1727→  const newsItems = [
+  1728→    { date: "June 28, 2026", title: "New Primary School Construction Completed in Gonder Ber Kebele", summary: "A new 8-classroom primary school has been completed and handed over to the community, serving over 400 students.", icon: School },
+  1729→    { date: "June 15, 2026", title: "Health Center Expansion Project Launched", summary: "Construction has begun on expanding the main health center to include maternity and pediatric wards.", icon: HeartPulse },
+  1730→    { date: "June 5, 2026", title: "Road Construction Connecting 3 Remote Kebeles Approved", summary: "The regional government has approved funding for 25 km of new all-weather roads.", icon: Truck },
+  1731→    { date: "May 22, 2026", title: "Annual Agricultural Input Distribution Campaign", summary: "Over 10,000 households received improved seeds and fertilizer for the planting season.", icon: Tractor },
+  1732→    { date: "May 10, 2026", title: "Woreda Council Approves Annual Budget", summary: "The council approved a budget of ETB 85 million for the fiscal year 2026/27.", icon: PieChart },
+  1733→    { date: "April 28, 2026", title: "Clean Water Project Benefits 5,000 Residents", summary: "Five new deep boreholes with solar-powered pumps now provide clean water access.", icon: Droplets },
+  1734→  ];
+  1735→  return (
+  1736→    <SubPage onNavigate={onNavigate} title="Latest News" breadcrumb="News / Latest News" badge="News & Updates">
+  1737→      <div className="max-w-4xl mx-auto space-y-4">
+  1738→        {newsItems.map((item, i) => (
+  1739→          <ContentCard key={item.title} delay={i * 60}>
+  1740→            <div className="flex items-start gap-4">
+  1741→              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+  1742→                <item.icon className="w-5 h-5 text-white" />
+  1743→              </div>
+  1744→              <div className="min-w-0 flex-1">
+  1745→                <p className="text-[#EAB308] text-xs font-semibold mb-1">{item.date}</p>
+  1746→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1747→                <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{item.summary}</p>
+  1748→              </div>
+  1749→            </div>
+  1750→          </ContentCard>
+  1751→        ))}
+  1752→      </div>
+  1753→    </SubPage>
+  1754→  );
+  1755→}
+  1756→
+  1757→/* ─── NEWS: Bids ──────────────────────────────────────────── */
+  1758→function BidsPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1759→  return (
+  1760→    <SubPage onNavigate={onNavigate} title="Bid Announcements" breadcrumb="News / Bids" badge="Procurement">
+  1761→      <div className="max-w-4xl mx-auto space-y-4">
+  1762→        {[
+  1763→          { deadline: "July 30, 2026", title: "Construction of All-Weather Road (Kebele A to Kebele B)", budget: "ETB 15 Million", status: "Open" },
+  1764→          { deadline: "July 20, 2026", title: "Supply of Medical Equipment for Health Center Expansion", budget: "ETB 3.2 Million", status: "Open" },
+  1765→          { deadline: "July 15, 2026", title: "Office Furniture Procurement for Woreda Administration", budget: "ETB 850,000", status: "Open" },
+  1766→          { deadline: "June 30, 2026", title: "Borehole Drilling in 5 Kebeles (Water Supply Project)", budget: "ETB 8 Million", status: "Closed" },
+  1767→          { deadline: "June 15, 2026", title: "School Construction (4 Classroom Blocks)", budget: "ETB 12 Million", status: "Awarded" },
+  1768→        ].map((item, i) => (
+  1769→          <ContentCard key={item.title} delay={i * 60}>
+  1770→            <div className="flex items-start justify-between gap-4">
+  1771→              <div className="min-w-0">
+  1772→                <div className="flex items-center gap-2 mb-2">
+  1773→                  <Badge className={item.status === "Open" ? "bg-green-100 text-green-700 border-green-200" : item.status === "Closed" ? "bg-gray-100 text-gray-600" : "bg-amber-100 text-amber-700 border-amber-200"}>{item.status}</Badge>
+  1774→                  <span className="text-xs text-[#0B3D2E]/50">Deadline: {item.deadline}</span>
+  1775→                </div>
+  1776→                <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1777→                <p className="text-[#EAB308] text-sm font-semibold">{item.budget}</p>
+  1778→              </div>
+  1779→            </div>
+  1780→          </ContentCard>
+  1781→        ))}
+  1782→      </div>
+  1783→    </SubPage>
+  1784→  );
+  1785→}
+  1786→
+  1787→/* ─── NEWS: Vacancy ────────────────────────────────────────── */
+  1788→function VacancyPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1789→  const vacancies = [
+  1790→    { id: 1, deadline: "July 25, 2026", title: "Health Extension Workers (10 Positions)", type: "Full-Time", dept: "Health Office", salary: "ETB 6,500 - 8,500/month", requirement: "Diploma in Health Extension or Clinical Nursing" },
+  1791→    { id: 2, deadline: "July 20, 2026", title: "Primary School Teachers (15 Positions)", type: "Full-Time", dept: "Education Office", salary: "ETB 7,000 - 9,500/month", requirement: "B.Ed. in Education or relevant subject area" },
+  1792→    { id: 3, deadline: "July 15, 2026", title: "Agricultural Extension Experts (5 Positions)", type: "Full-Time", dept: "Agriculture Office", salary: "ETB 8,000 - 11,000/month", requirement: "B.Sc. in Agriculture or Natural Resource Management" },
+  1793→    { id: 4, deadline: "July 10, 2026", title: "Accountant (2 Positions)", type: "Full-Time", dept: "Finance Office", salary: "ETB 7,500 - 10,000/month", requirement: "B.A. in Accounting with 2+ years experience" },
+  1794→    { id: 5, deadline: "July 5, 2026", title: "ICT Support Officer (1 Position)", type: "Full-Time", dept: "Administration", salary: "ETB 9,000 - 12,000/month", requirement: "B.Sc. in Computer Science or IT, CCNA preferred" },
+  1795→    { id: 6, deadline: "July 1, 2026", title: "Road Construction Engineers (3 Positions)", type: "Contract", dept: "Road Office", salary: "ETB 12,000 - 18,000/month", requirement: "B.Sc. in Civil Engineering, 3+ years experience" },
+  1796→  ];
+  1797→
+  1798→  const [selectedVacancy, setSelectedVacancy] = useState<(typeof vacancies)[number] | null>(null);
+  1799→  const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  1800→
+  1801→  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  1802→    e.preventDefault();
+  1803→    setFormStatus("loading");
+  1804→    try {
+  1805→      const formData = new FormData(e.currentTarget);
+  1806→      const data = Object.fromEntries(formData.entries());
+  1807→      const res = await fetch("/api/applications", {
+  1808→        method: "POST",
+  1809→        headers: { "Content-Type": "application/json" },
+  1810→        body: JSON.stringify({ ...data, vacancyId: selectedVacancy?.id, vacancyTitle: selectedVacancy?.title }),
+  1811→      });
+  1812→      if (res.ok) {
+  1813→        setFormStatus("success");
+  1814→        setTimeout(() => {
+  1815→          setSelectedVacancy(null);
+  1816→          setFormStatus("idle");
+  1817→        }, 3000);
+  1818→      } else {
+  1819→        setFormStatus("error");
+  1820→      }
+  1821→    } catch {
+  1822→      setFormStatus("error");
+  1823→    }
+  1824→  };
+  1825→
+  1826→  return (
+  1827→    <SubPage onNavigate={onNavigate} title="Job Vacancies" breadcrumb="News / Vacancy" badge="Careers">
+  1828→      <div className="max-w-4xl mx-auto space-y-6">
+  1829→        {formStatus === "success" && (
+  1830→          <ContentCard>
+  1831→            <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+  1832→              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+  1833→                <ThumbsUp className="w-7 h-7 text-green-600" />
+  1834→              </div>
+  1835→              <h3 className="font-bold text-green-800 text-lg mb-1">Application Submitted Successfully!</h3>
+  1836→              <p className="text-green-600 text-sm">Thank you for applying for the {selectedVacancy?.title} position. We will review your application and contact you if shortlisted.</p>
+  1837→            </div>
+  1838→          </ContentCard>
+  1839→        )}
+  1840→
+  1841→        {!selectedVacancy ? (
+  1842→          <>
+  1843→            <ContentCard>
+  1844→              <h2 className="text-xl font-bold text-[#0B3D2E] mb-2">Open Positions</h2>
+  1845→              <p className="text-[#0B3D2E]/60 text-sm">Browse available positions and click &quot;Apply Now&quot; to submit your application online.</p>
+  1846→            </ContentCard>
+  1847→            {vacancies.map((item, i) => (
+  1848→              <AnimatedSection key={item.id} delay={i * 60}>
+  1849→                <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all">
+  1850→                  <CardContent className="p-5 md:p-6">
+  1851→                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+  1852→                      <div className="min-w-0 flex-1">
+  1853→                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+  1854→                          <Badge className="bg-[#0B3D2E] text-white text-xs">{item.type}</Badge>
+  1855→                          <Badge variant="secondary" className="text-xs">{item.dept}</Badge>
+  1856→                          <Badge className="bg-[#EAB308]/15 text-[#A16207] text-xs border-[#EAB308]/30">{item.salary}</Badge>
+  1857→                        </div>
+  1858→                        <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{item.title}</h3>
+  1859→                        <p className="text-[#0B3D2E]/50 text-xs mb-1">Requirement: {item.requirement}</p>
+  1860→                        <p className="text-[#0B3D2E]/40 text-xs">Deadline: {item.deadline}</p>
+  1861→                      </div>
+  1862→                      <button
+  1863→                        onClick={() => { setSelectedVacancy(item); setFormStatus("idle"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+  1864→                        className="shrink-0 inline-flex items-center gap-2 bg-[#0B3D2E] hover:bg-[#145A44] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg"
+  1865→                      >
+  1866→                        Apply Now <ChevronRight className="w-4 h-4" />
+  1867→                      </button>
+  1868→                    </div>
+  1869→                  </CardContent>
+  1870→                </Card>
+  1871→              </AnimatedSection>
+  1872→            ))}
+  1873→          </>
+  1874→        ) : (
+  1875→          <>
+  1876→            <button
+  1877→              onClick={() => { setSelectedVacancy(null); setFormStatus("idle"); }}
+  1878→              className="inline-flex items-center gap-2 text-[#0B3D2E]/60 hover:text-[#0B3D2E] text-sm font-medium transition-colors mb-2"
+  1879→            >
+  1880→              <ArrowLeft className="w-4 h-4" /> Back to Vacancies
+  1881→            </button>
+  1882→            <ContentCard>
+  1883→              <div className="bg-gradient-to-r from-[#0B3D2E] to-[#145A44] rounded-xl p-5 text-white mb-6">
+  1884→                <div className="flex items-center gap-2 mb-2">
+  1885→                  <Badge className="bg-[#EAB308] text-[#0B3D2E] text-xs font-bold">{selectedVacancy.type}</Badge>
+  1886→                  <Badge className="bg-white/15 text-white text-xs">{selectedVacancy.dept}</Badge>
+  1887→                </div>
+  1888→                <h2 className="text-lg md:text-xl font-bold mb-1">{selectedVacancy.title}</h2>
+  1889→                <div className="flex flex-wrap gap-4 text-xs text-white/70 mt-2">
+  1890→                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Deadline: {selectedVacancy.deadline}</span>
+  1891→                  <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />{selectedVacancy.salary}</span>
+  1892→                </div>
+  1893→              </div>
+  1894→
+  1895→              <form onSubmit={handleSubmit} className="space-y-6">
+  1896→                {/* Personal Information */}
+  1897→                <div>
+  1898→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Users className="w-5 h-5 text-[#EAB308]" /> Personal Information</h3>
+  1899→                  <div className="grid md:grid-cols-2 gap-4">
+  1900→                    <div>
+  1901→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Full Name *</label>
+  1902→                      <input name="fullName" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="Enter your full name" />
+  1903→                    </div>
+  1904→                    <div>
+  1905→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Phone Number *</label>
+  1906→                      <input name="phone" required type="tel" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="+251 9XX XXX XXX" />
+  1907→                    </div>
+  1908→                    <div>
+  1909→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Email Address *</label>
+  1910→                      <input name="email" required type="email" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="your@email.com" />
+  1911→                    </div>
+  1912→                    <div>
+  1913→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Address</label>
+  1914→                      <input name="address" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="City, Woreda, Zone" />
+  1915→                    </div>
+  1916→                    <div>
+  1917→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Age *</label>
+  1918→                      <input name="age" required type="number" min="18" max="65" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="18-65" />
+  1919→                    </div>
+  1920→                    <div>
+  1921→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Gender *</label>
+  1922→                      <select name="gender" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  1923→                        <option value="">Select</option>
+  1924→                        <option value="Male">Male</option>
+  1925→                        <option value="Female">Female</option>
+  1926→                      </select>
+  1927→                    </div>
+  1928→                    <div className="md:col-span-2">
+  1929→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Marital Status</label>
+  1930→                      <select name="maritalStatus" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  1931→                        <option value="">Select</option>
+  1932→                        <option value="Single">Single</option>
+  1933→                        <option value="Married">Married</option>
+  1934→                        <option value="Divorced">Divorced</option>
+  1935→                        <option value="Widowed">Widowed</option>
+  1936→                      </select>
+  1937→                    </div>
+  1938→                  </div>
+  1939→                </div>
+  1940→
+  1941→                {/* Educational Background */}
+  1942→                <div>
+  1943→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-[#EAB308]" /> Educational Background</h3>
+  1944→                  <div className="grid md:grid-cols-2 gap-4">
+  1945→                    <div>
+  1946→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Highest Qualification *</label>
+  1947→                      <select name="qualification" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all bg-white">
+  1948→                        <option value="">Select</option>
+  1949→                        <option value="Certificate">Certificate</option>
+  1950→                        <option value="Diploma">Diploma</option>
+  1951→                        <option value="BA/BSc">BA / BSc Degree</option>
+  1952→                        <option value="MA/MSc">MA / MSc Degree</option>
+  1953→                        <option value="PhD">PhD</option>
+  1954→                      </select>
+  1955→                    </div>
+  1956→                    <div>
+  1957→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Field of Study *</label>
+  1958→                      <input name="fieldOfStudy" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="e.g., Accounting, Computer Science" />
+  1959→                    </div>
+  1960→                    <div>
+  1961→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Institution *</label>
+  1962→                      <input name="institution" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="University/College name" />
+  1963→                    </div>
+  1964→                    <div>
+  1965→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Year of Graduation *</label>
+  1966→                      <input name="gradYear" required type="number" min="1980" max="2026" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="e.g., 2022" />
+  1967→                    </div>
+  1968→                  </div>
+  1969→                </div>
+  1970→
+  1971→                {/* Work Experience */}
+  1972→                <div>
+  1973→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5 text-[#EAB308]" /> Work Experience</h3>
+  1974→                  <div className="grid md:grid-cols-2 gap-4">
+  1975→                    <div className="md:col-span-2">
+  1976→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Most Recent Organization</label>
+  1977→                      <input name="company" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="Company / Organization name" />
+  1978→                    </div>
+  1979→                    <div>
+  1980→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Position Held</label>
+  1981→                      <input name="position" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="Job title" />
+  1982→                    </div>
+  1983→                    <div>
+  1984→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Duration</label>
+  1985→                      <input name="duration" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all" placeholder="e.g., 2 years, 6 months" />
+  1986→                    </div>
+  1987→                    <div className="md:col-span-2">
+  1988→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Key Responsibilities</label>
+  1989→                      <textarea name="responsibilities" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] transition-all resize-none" placeholder="Describe your key responsibilities..." />
+  1990→                    </div>
+  1991→                  </div>
+  1992→                </div>
+  1993→
+  1994→                {/* Documents */}
+  1995→                <div>
+  1996→                  <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><FileText className="w-5 h-5 text-[#EAB308]" /> Documents</h3>
+  1997→                  <div className="grid md:grid-cols-2 gap-4">
+  1998→                    <div>
+  1999→                      <label className="block text-xs font-semibold text-[#0B3D2E]/70 mb-1.5">Upload CV / Resume (PDF) *</label>
+  2000→                      <input name="cv" required type="file" accept=".pdf,.doc,.docx" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-[#0B3D2E] file:text-white file:text-xs file:font-semibold file:cursor-pointer" />
+
+[showing lines 1501-2000 of 2633; use offset=2001 with limit to continue reading]

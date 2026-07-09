@@ -1,0 +1,2002 @@
+     1→"use client";
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from "react";
+     4→import {
+     5→  Users, School, Building2, MapPin, TreePine, Droplets,
+     6→  Home as HomeIcon, ChevronLeft, ChevronRight, ChevronDown, BarChart3, TrendingUp,
+     7→  Landmark, Stethoscope, Menu, X, Phone, Mail, MapPinned, ArrowUp,
+     8→  ArrowLeft, ArrowRight, Tractor, GraduationCap, Truck, Wheat,
+     9→  Briefcase, Newspaper, Award, UserCheck, FileText, Building, Shield,
+    10→  Scale, Flag, UsersRound, Siren, Banknote, PieChart, ClipboardList,
+    11→  HeartPulse, Baby, Eye, BookOpen, Globe, ThumbsUp, Clock,
+    12→  Image as ImageIcon, Camera, Facebook, Youtube, Linkedin,
+    13→  Github, Instagram, Twitter, ExternalLink, Calendar,
+    14→  Monitor, HardHat, Store, CheckCircle2, AlertCircle, Upload,
+    15→  Send, User, Map, ChevronUp, Zap, Layers, Target,
+    16→  FileCheck, CircleDollarSign, Sprout, Wrench, MessageSquare,
+    17→  Plus, Minus, Trash2, Edit3, Save, Settings, Crown, Heart,
+    18→  Compass, Share2, MessageCircle, Copy,
+    19→  Handshake, Megaphone, Leaf, UsersRound as People,
+    20→  Mountain, ArrowDown,
+    21→} from "lucide-react";
+    22→import { Card, CardContent } from "@/components/ui/card";
+    23→import { Progress } from "@/components/ui/progress";
+    24→import { Badge } from "@/components/ui/badge";
+    25→import CookieConsentBanner from "@/components/cookie-consent";
+    26→
+    27→/* ─── Types ────────────────────────────────────────────────── */
+    28→type PageId =
+    29→  | "home" | "about-history" | "about-overview" | "about-location"
+    30→  | "gov-leadership" | "gov-structure" | "gov-offices"
+    31→  | "svc-education" | "svc-health" | "svc-agriculture"
+    32→  | "svc-transport" | "svc-water" | "svc-justice" | "svc-finance"
+    33→  | "svc-trade" | "svc-technology" | "svc-construction"
+    34→  | "news-news" | "news-bids" | "news-vacancy" | "news-announcements"
+    35→  | "gallery" | "vacancy" | "bids" | "contact" | "submit-cv";
+    36→
+    37→interface ApplicationData {
+    38→  id: string; fullName: string; email: string; phone: string;
+    39→  dob: string; gender: string; address: string;
+    40→  education: string; institution: string; yearGraduated: string;
+    41→  experienceYears: string; currentEmployer: string; currentPosition: string;
+    42→  keyQualifications: string; coverLetterName: string; cvName: string;
+    43→  vacancyTitle: string; vacancyId: string; appliedAt: string; status: string;
+    44→}
+    45→
+    46→/* ─── Animated Counter ─────────────────────────────────────── */
+    47→function AnimatedCounter({ target, suffix = "", duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
+    48→  const [count, setCount] = useState(0);
+    49→  const ref = useRef<HTMLSpanElement>(null);
+    50→  const hasAnimated = useRef(false);
+    51→  useEffect(() => {
+    52→    const observer = new IntersectionObserver(([entry]) => {
+    53→      if (entry.isIntersecting && !hasAnimated.current) {
+    54→        hasAnimated.current = true;
+    55→        const start = performance.now();
+    56→        const step = (now: number) => {
+    57→          const p = Math.min((now - start) / duration, 1);
+    58→          setCount(Math.floor((1 - Math.pow(1 - p, 3)) * target));
+    59→          if (p < 1) requestAnimationFrame(step);
+    60→        };
+    61→        requestAnimationFrame(step);
+    62→      }
+    63→    }, { threshold: 0.3 });
+    64→    if (ref.current) observer.observe(ref.current);
+    65→    return () => observer.disconnect();
+    66→  }, [target, duration]);
+    67→  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+    68→}
+    69→
+    70→/* ─── Animated Section ──────────────────────────────────────── */
+    71→function AnimatedSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+    72→  const ref = useRef<HTMLDivElement>(null);
+    73→  const [visible, setVisible] = useState(false);
+    74→  useEffect(() => {
+    75→    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.1 });
+    76→    if (ref.current) o.observe(ref.current);
+    77→    return () => o.disconnect();
+    78→  }, []);
+    79→  return (
+    80→    <div ref={ref} className={`transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+    81→      {children}
+    82→    </div>
+    83→  );
+    84→}
+    85→
+    86→/* ─── Animated Leader Photo Component ──────────────────────── */
+    87→function LeaderPhoto({ name, avatar, size = 120, title, socials }: {
+    88→  name: string; avatar: string; size?: number; title: string;
+    89→  socials?: { platform: string; url: string; icon: string }[];
+    90→}) {
+    91→  const [hovered, setHovered] = useState(false);
+    92→  const iconMap: Record<string, React.ElementType> = { facebook: Facebook, telegram: Twitter, youtube: Youtube, linkedin: Linkedin, instagram: Instagram, twitter: Twitter };
+    93→  const colorMap: Record<string, string> = { facebook: "#1877F2", telegram: "#0088CC", youtube: "#FF0000", linkedin: "#0A66C2", instagram: "#E4405F", twitter: "#1DA1F2" };
+    94→
+    95→  return (
+    96→    <div className="flex flex-col items-center text-center group" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    97→      <div className="relative mb-4">
+    98→        {/* Animated pulse rings */}
+    99→        <span className={`absolute inset-0 rounded-full border-2 border-[#EAB308]/40 transition-all duration-500 ${hovered ? "scale-110 opacity-60" : "scale-100 opacity-0"}`} style={{ width: size, height: size }} />
+   100→        <span className={`absolute inset-0 rounded-full border-2 border-[#0B3D2E]/30 transition-all duration-700 ${hovered ? "scale-125 opacity-40" : "scale-100 opacity-0"}`} style={{ width: size, height: size }} />
+   101→
+   102→        {/* Photo circle */}
+   103→        <div className="relative overflow-hidden rounded-full shadow-xl border-4 border-white transition-all duration-500 group-hover:shadow-2xl group-hover:border-[#EAB308]/50 group-hover:scale-105"
+   104→          style={{ width: size, height: size }}>
+   105→          <img src={avatar} alt={name} className="w-full h-full object-cover" />
+   106→          {/* Gradient overlay on hover */}
+   107→          <div className={`absolute inset-0 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 ${hovered ? "opacity-100" : "opacity-0"}`} />
+   108→          <div className={`absolute bottom-2 left-0 right-0 text-white text-[10px] font-medium transition-opacity duration-300 ${hovered ? "opacity-100" : "opacity-0"}`}>
+   109→            View Profile
+   110→          </div>
+   111→        </div>
+   112→      </div>
+   113→      <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1 group-hover:text-[#EAB308] transition-colors">{name}</h3>
+   114→      <p className="text-[#EAB308] text-xs font-semibold mb-3">{title}</p>
+   115→
+   116→      {/* Social links */}
+   117→      {socials && socials.length > 0 && (
+   118→        <div className="flex items-center justify-center gap-2">
+   119→          {socials.map((s) => {
+   120→            const Icon = iconMap[s.icon.toLowerCase()] || Globe;
+   121→            const color = colorMap[s.icon.toLowerCase()] || "#0B3D2E";
+   122→            return (
+   123→              <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer" title={s.platform}
+   124→                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
+   125→                style={{ backgroundColor: color + "15", color: color }}
+   126→                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = color; (e.currentTarget as HTMLElement).style.color = "white"; }}
+   127→                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = color + "15"; (e.currentTarget as HTMLElement).style.color = color; }}>
+   128→                <Icon className="w-3.5 h-3.5" />
+   129→              </a>
+   130→            );
+   131→          })}
+   132→        </div>
+   133→      )}
+   134→    </div>
+   135→  );
+   136→}
+   137→
+   138→/* ─── Hero Slides ──────────────────────────────────────────── */
+   139→const SLIDES = [
+   140→  { image: "https://sfile.chatglm.cn/images-ppt/5d712c5b8f44.jpg", title: "Welcome to Amhara Sint Woreda", subtitle: "A land of beauty, culture, and progress in South Wollo Zone, Amhara Region" },
+   141→  { image: "https://sfile.chatglm.cn/images-ppt/e2eed6eb06d5.jpg", title: "Majestic Highland Landscapes", subtitle: "Rolling highlands and fertile valleys stretching from the Blue Nile to Mount Tabor at 4,247m" },
+   142→  { image: "https://sfile.chatglm.cn/images-ppt/c9ebd2951a03.jpg", title: "Rich Natural Heritage", subtitle: "Diverse ecosystems and breathtaking scenery in the heart of the Amhara highlands" },
+   143→  { image: "https://sfile.chatglm.cn/images-ppt/b37b6e89b27a.jpg", title: "Vibrant Cultural Traditions", subtitle: "Ancient Orthodox heritage, Meskel celebrations, and time-honored customs define our community" },
+   144→  { image: "https://sfile.chatglm.cn/images-ppt/2c0bd22da89e.jpg", title: "The Blue Nile Canyon", subtitle: "The western boundary of the woreda features one of the most dramatic river canyons in all of Ethiopia" },
+   145→  { image: "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg", title: "Agricultural Heartland", subtitle: "Supporting farmers with modern techniques across 1,437 km² of fertile highland terrain" },
+   146→  { image: "https://sfile.chatglm.cn/images-ppt/15e928c7ad4d.jpg", title: "Building the Future", subtitle: "Roads, schools, and health facilities connecting communities to opportunities" },
+   147→  { image: "https://sfile.chatglm.cn/images-ppt/395da4df6bb6.jpg", title: "Trade & Commerce", subtitle: "Local markets, cooperatives, and enterprises driving economic growth" },
+   148→  { image: "https://sfile.chatglm.cn/images-ppt/a842501dc00b.jpg", title: "Education & Youth Empowerment", subtitle: "Amhara Sint TVET College and preparatory schools preparing the next generation" },
+   149→  { image: "https://sfile.chatglm.cn/images-ppt/5d19c0f98d58.jpg", title: "Our Vision", subtitle: "A prosperous, equitable, and self-reliant Amhara Sint — rooted in tradition, reaching for the future" },
+   150→];
+   151→
+   152→/* ─── Nav Links ────────────────────────────────────────────── */
+   153→interface NavItem { label: string; href: PageId; children?: { label: string; href: PageId; icon: React.ElementType }[]; }
+   154→const NAV_LINKS: NavItem[] = [
+   155→  { label: "Home", href: "home" },
+   156→  { label: "About", href: "about-overview", children: [
+   157→    { label: "History & Background", href: "about-history", icon: BookOpen },
+   158→    { label: "Overview", href: "about-overview", icon: Globe },
+   159→    { label: "Location & Geography", href: "about-location", icon: MapPin },
+   160→  ]},
+   161→  { label: "Government", href: "gov-leadership", children: [
+   162→    { label: "Leadership", href: "gov-leadership", icon: UserCheck },
+   163→    { label: "Administrative Structure", href: "gov-structure", icon: Building },
+   164→    { label: "Offices & Departments", href: "gov-offices", icon: Shield },
+   165→  ]},
+   166→  { label: "Services", href: "svc-education", children: [
+   167→    { label: "Education", href: "svc-education", icon: GraduationCap },
+   168→    { label: "Health", href: "svc-health", icon: HeartPulse },
+   169→    { label: "Agriculture", href: "svc-agriculture", icon: Tractor },
+   170→    { label: "Trade & Commerce", href: "svc-trade", icon: Store },
+   171→    { label: "Technology", href: "svc-technology", icon: Monitor },
+   172→    { label: "Construction", href: "svc-construction", icon: HardHat },
+   173→    { label: "Transport", href: "svc-transport", icon: Truck },
+   174→    { label: "Water & Sanitation", href: "svc-water", icon: Droplets },
+   175→    { label: "Justice & Security", href: "svc-justice", icon: Scale },
+   176→    { label: "Finance & Revenue", href: "svc-finance", icon: Banknote },
+   177→  ]},
+   178→  { label: "Vacancy", href: "vacancy" },
+   179→  { label: "Announcements", href: "news-announcements", children: [
+   180→    { label: "News", href: "news-news", icon: Newspaper },
+   181→    { label: "Bids & Tenders", href: "bids", icon: Briefcase },
+   182→    { label: "Events", href: "news-announcements", icon: Calendar },
+   183→    { label: "Announcements", href: "news-announcements", icon: Award },
+   184→  ]},
+   185→  { label: "Gallery", href: "gallery" },
+   186→  { label: "Submit CV", href: "submit-cv" },
+   187→];
+   188→
+   189→/* ─── HEADER ───────────────────────────────────────────────── */
+   190→function Header({ currentPage, onNavigate }: { currentPage: PageId; onNavigate: (p: PageId) => void }) {
+   191→  const [scrolled, setScrolled] = useState(false);
+   192→  const [mobileOpen, setMobileOpen] = useState(false);
+   193→  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+   194→  const tRef = useRef<NodeJS.Timeout | null>(null);
+   195→  useEffect(() => { const h = () => setScrolled(window.scrollY > 20); window.addEventListener("scroll", h); return () => window.removeEventListener("scroll", h); }, []);
+   196→  const mE = (l: string) => { if (tRef.current) clearTimeout(tRef.current); setOpenDropdown(l); };
+   197→  const mL = () => { tRef.current = setTimeout(() => setOpenDropdown(null), 200); };
+   198→  const nav = (p: PageId) => { onNavigate(p); setMobileOpen(false); setOpenDropdown(null); window.scrollTo({ top: 0, behavior: "smooth" }); };
+   199→
+   200→  return (
+   201→    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#0B3D2E]/95 backdrop-blur-md shadow-lg shadow-black/20" : "bg-gradient-to-r from-[#062B1F] via-[#0B3D2E] to-[#145A44]"}`}>
+   202→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   203→        <div className="flex items-center justify-between h-[92px] md:h-[110px]">
+   204→          <button onClick={() => nav("home")} className="flex items-center gap-4 group shrink-0">
+   205→            <img src="/logo.png" alt="Amhara Sint Woreda" className="h-[88px] w-auto rounded-2xl shadow-xl group-hover:scale-105 transition-transform object-contain ring-2 ring-white/20 ring-offset-2 ring-offset-[#0B3D2E]" />
+   206→            <div className="hidden sm:block">
+   207→              <h1 className="text-white font-bold text-xl md:text-2xl leading-tight">Amhara Sint</h1>
+   208→              <p className="text-[#86EFAC] text-xs md:text-sm font-medium">Woreda Administration</p>
+   209→            </div>
+   210→          </button>
+   211→          <nav className="hidden lg:flex items-center gap-1.5">
+   212→            {NAV_LINKS.map((item) => (
+   213→              <div key={item.label} className="relative" onMouseEnter={() => item.children && mE(item.label)} onMouseLeave={mL}>
+   214→                <button onClick={() => item.children ? setOpenDropdown(openDropdown === item.label ? null : item.label) : nav(item.href)}
+   215→                  className={`flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-[15px] font-semibold transition-all duration-200 ${currentPage === item.href ? "text-[#EAB308] bg-white/10" : "text-white/80 hover:text-white hover:bg-white/10"}`}>
+   216→                  {item.label}{item.children && <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openDropdown === item.label ? "rotate-180" : ""}`} />}
+   217→                </button>
+   218→                {item.children && openDropdown === item.label && (
+   219→                  <div className="absolute top-full left-0 mt-1 w-64 bg-[#0a3327]/95 backdrop-blur-lg border border-white/15 rounded-2xl shadow-2xl py-2 z-[100]">
+   220→                    {item.children.map((c) => (
+   221→                      <button key={c.href} onClick={() => nav(c.href)}
+   222→                        className={`w-full flex items-center gap-3 px-4 py-3 text-[14px] font-medium transition-all ${currentPage === c.href ? "text-[#EAB308] bg-white/10" : "text-white/70 hover:text-white hover:bg-white/10"}`}>
+   223→                        <c.icon className="w-4 h-4 shrink-0" />{c.label}
+   224→                      </button>
+   225→                    ))}
+   226→                  </div>
+   227→                )}
+   228→              </div>
+   229→            ))}
+   230→          </nav>
+   231→          <div className="flex items-center gap-2">
+   232→            <button onClick={() => nav("contact")} className="hidden md:inline-flex items-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-bold text-[15px] px-6 py-2.5 rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105">
+   233→              <Phone className="w-[18px] h-[18px]" /> Contact Us
+   234→            </button>
+   235→            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg" aria-label="Toggle menu">
+   236→              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+   237→            </button>
+   238→          </div>
+   239→        </div>
+   240→      </div>
+   241→      {mobileOpen && (
+   242→        <div className="lg:hidden bg-[#0B3D2E] border-t border-white/10 shadow-xl max-h-[80vh] overflow-y-auto">
+   243→          <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
+   244→            {NAV_LINKS.map((item) => (
+   245→              <div key={item.label}>
+   246→                <button onClick={() => item.children ? setOpenDropdown(openDropdown === item.label ? null : item.label) : nav(item.href)}
+   247→                  className="w-full flex items-center justify-between text-white/80 hover:text-white hover:bg-white/10 px-4 py-2.5 rounded-lg text-sm font-medium transition-all">
+   248→                  {item.label}{item.children && <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === item.label ? "rotate-180" : ""}`} />}
+   249→                </button>
+   250→                {item.children && openDropdown === item.label && (
+   251→                  <div className="ml-4 mt-1 flex flex-col gap-1">
+   252→                    {item.children.map((c) => (
+   253→                      <button key={c.href} onClick={() => nav(c.href)} className={`flex items-center gap-2.5 text-sm px-4 py-2 rounded-lg transition-all ${currentPage === c.href ? "text-[#EAB308] bg-white/10" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
+   254→                        <c.icon className="w-4 h-4" />{c.label}
+   255→                      </button>
+   256→                    ))}
+   257→                  </div>
+   258→                )}
+   259→              </div>
+   260→            ))}
+   261→            <button onClick={() => nav("contact")} className="flex items-center justify-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-semibold text-sm px-4 py-2.5 rounded-lg mt-3 transition-all">
+   262→              <Phone className="w-4 h-4" /> Contact Us
+   263→            </button>
+   264→          </nav>
+   265→        </div>
+   266→      )}
+   267→    </header>
+   268→  );
+   269→}
+   270→
+   271→/* ─── QUICK NAV BAR (Home) ──────────────────────────────── */
+   272→const QUICK_NAV_ITEMS = [
+   273→  { label: "Services", icon: Layers, href: "svc-education" as PageId },
+   274→  { label: "News & Events", icon: Newspaper, href: "news-news" as PageId },
+   275→  { label: "Vacancy", icon: Briefcase, href: "vacancy" as PageId },
+   276→  { label: "Submit CV", icon: Upload, href: "submit-cv" as PageId },
+   277→  { label: "Bids & Tenders", icon: FileCheck, href: "bids" as PageId },
+   278→  { label: "Gallery", icon: ImageIcon, href: "gallery" as PageId },
+   279→  { label: "Announcements", icon: Award, href: "news-announcements" as PageId },
+   280→  { label: "Contact", icon: Phone, href: "contact" as PageId },
+   281→];
+   282→function QuickNavBar({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   283→  return (
+   284→    <div className="bg-white border-b border-gray-100">
+   285→      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+   286→        <div className="flex items-center gap-2.5 py-3.5 overflow-x-auto scrollbar-hide">
+   287→          {QUICK_NAV_ITEMS.map((item) => (
+   288→            <button key={item.label} onClick={() => onNavigate(item.href)}
+   289→              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gray-50 hover:bg-[#0B3D2E] text-[#0B3D2E]/70 hover:text-white text-[13px] font-medium border border-gray-200 hover:border-[#0B3D2E] transition-all duration-200 whitespace-nowrap shrink-0">
+   290→              <item.icon className="w-4 h-4" />{item.label}
+   291→            </button>
+   292→          ))}
+   293→          <button onClick={() => onNavigate("contact")}
+   294→            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-50 hover:bg-red-100 text-red-600 text-[13px] font-semibold border border-red-200 transition-all duration-200 whitespace-nowrap shrink-0 ml-auto">
+   295→            <Siren className="w-4 h-4" /> Emergency 991
+   296→          </button>
+   297→        </div>
+   298→      </div>
+   299→    </div>
+   300→  );
+   301→}
+   302→
+   303→/* ─── HERO STATS SECTION (Below Slider) — FULL WIDTH COLOR BAR ─── */
+   304→const HERO_STATS = [
+   305→  { value: 144972, suffix: "", display: "144,972", label: "Population", icon: Users, color: "#10B981", bg: "bg-emerald-500", hoverBg: "hover:bg-emerald-600" },
+   306→  { value: 37, suffix: "", display: null, label: "Kebeles", icon: MapPin, color: "#6366F1", bg: "bg-indigo-500", hoverBg: "hover:bg-indigo-600" },
+   307→  { value: 100, suffix: "+", display: null, label: "Schools", icon: School, color: "#F59E0B", bg: "bg-amber-500", hoverBg: "hover:bg-amber-600" },
+   308→  { value: 16, suffix: "", display: "16", label: "Health Facilities", icon: HeartPulse, color: "#F43F5E", bg: "bg-rose-500", hoverBg: "hover:bg-rose-600" },
+   309→  { value: 1437, suffix: "", display: "1,437", label: "Area (km\u00B2)", icon: Map, color: "#8B5CF6", bg: "bg-violet-500", hoverBg: "hover:bg-violet-600" },
+   310→  { value: 200, suffix: " M ETB", display: "200M ETB", label: "Annual Budget", icon: Banknote, color: "#06B6D4", bg: "bg-cyan-500", hoverBg: "hover:bg-cyan-600" },
+   311→];
+   312→function HeroStatsSection() {
+   313→  const [visible, setVisible] = useState(false);
+   314→  const ref = useRef<HTMLDivElement>(null);
+   315→  useEffect(() => {
+   316→    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.1 });
+   317→    if (ref.current) o.observe(ref.current);
+   318→    return () => o.disconnect();
+   319→  }, []);
+   320→  return (
+   321→    <section ref={ref} className="w-full">
+   322→      <div className="grid grid-cols-3 md:grid-cols-6">
+   323→        {HERO_STATS.map((s, i) => (
+   324→          <div
+   325→            key={s.label}
+   326→            className={`${s.bg} ${s.hoverBg} flex flex-col items-center justify-center py-5 md:py-7 px-3 transition-all duration-500 cursor-default group ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"} border-r border-white/20 last:border-r-0`}
+   327→            style={{ transitionDelay: `${i * 80}ms` }}
+   328→          >
+   329→            <s.icon className="w-5 h-5 md:w-6 md:h-6 text-white/80 mb-1.5 group-hover:scale-110 group-hover:text-white transition-all duration-300" />
+   330→            <div className="text-lg md:text-2xl lg:text-3xl font-black text-white leading-tight group-hover:scale-105 transition-transform duration-300">
+   331→              {s.display || <AnimatedCounter target={s.value} suffix={s.suffix} />}
+   332→            </div>
+   333→            <p className="text-[10px] md:text-xs text-white/70 font-semibold mt-1 text-center uppercase tracking-wide">{s.label}</p>
+   334→          </div>
+   335→        ))}
+   336→      </div>
+   337→    </section>
+   338→  );
+   339→}
+   340→
+   341→/* ─── DID YOU KNOW BAR (Home) ─────────────────────────────── */
+   342→function DidYouKnowBar() {
+   343→  const facts = [
+   344→    "Sayint (Amhara Sint) has 37 kebeles and a population of 144,972 (CSA 2007 census).",
+   345→    "The woreda covers 1,437.30 km\u00B2, bordered by the Blue Nile and Bashilo River.",
+   346→    "Mount Tabor (4,247m), the highest point in South Wollo Zone, lies on the border with Legambo.",
+   347→    "98% of inhabitants practice Orthodox Tewahedo, and 99.96% are Amhara (Amharic speaking).",
+   348→    "The historic Tadbaba Maryam monastery was founded during the reign of Emperor Minilik I.",
+   349→    "Emperor Tewodros II's mother, Atitegeb Wondbewossen, was a native of Amhara Sayint.",
+   350→    "Amhara Sint TVET College offers technical and vocational training programs for the youth.",
+   351→    "100 schools and 3 preparatory schools serve students across the entire woreda.",
+   352→  ];
+   353→  const [idx, setIdx] = useState(0);
+   354→  useEffect(() => { const t = setInterval(() => setIdx((p) => (p + 1) % facts.length), 5000); return () => clearInterval(t); }, []);
+   355→  return (
+   356→    <div className="bg-amber-50 border-y border-amber-200/50">
+   357→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+   358→        <div className="flex items-center gap-2 shrink-0">
+   359→          <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center"><Zap className="w-4 h-4 text-white" /></div>
+   360→          <span className="text-xs font-extrabold text-amber-700 uppercase tracking-wider hidden sm:block">Did You Know?</span>
+   361→        </div>
+   362→        <p className="text-sm text-amber-800/80 font-medium transition-all duration-300">{facts[idx]}</p>
+   363→      </div>
+   364→    </div>
+   365→  );
+   366→}
+   367→
+   368→/* ─── HERO SLIDER ──────────────────────────────────────────── */
+   369→function HeroSlider() {
+   370→  const [current, setCurrent] = useState(0);
+   371→  const tRef = useRef<NodeJS.Timeout | null>(null);
+   372→  const start = useCallback(() => { if (tRef.current) clearInterval(tRef.current); tRef.current = setInterval(() => setCurrent((p) => (p + 1) % SLIDES.length), 5000); }, []);
+   373→  useEffect(() => { start(); return () => { if (tRef.current) clearInterval(tRef.current); }; }, [start]);
+   374→  const goTo = (i: number) => { setCurrent(i); start(); };
+   375→  return (
+   376→    <section className="relative h-[60vh] min-h-[380px] max-h-[600px] overflow-hidden">
+   377→      {SLIDES.map((slide, i) => (
+   378→        <div key={i} className="absolute inset-0 transition-opacity duration-1000" style={{ opacity: i === current ? 1 : 0 }}>
+   379→          <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+   380→          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+   381→          <div className="absolute inset-0 flex items-center justify-center px-4">
+   382→            <div className="text-center max-w-3xl">
+   383→              <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white mb-4 leading-tight drop-shadow-lg">{slide.title}</h2>
+   384→              <p className="text-base sm:text-lg md:text-xl text-white/80 mb-8 drop-shadow-md">{slide.subtitle}</p>
+   385→              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+   386→                <button onClick={() => document.getElementById("statistics-section")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">Explore Statistics <ChevronRight className="w-5 h-5" /></button>
+   387→                <button onClick={() => document.getElementById("services-section")?.scrollIntoView({ behavior: "smooth" })} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/30 hover:bg-white/20 text-white font-bold px-8 py-3.5 rounded-xl transition-all">Our Services <ArrowRight className="w-5 h-5" /></button>
+   388→              </div>
+   389→            </div>
+   390→          </div>
+   391→        </div>
+   392→      ))}
+   393→      <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)} className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white flex items-center justify-center hover:bg-black/50 transition-all z-20"><ChevronLeft className="w-6 h-6" /></button>
+   394→      <button onClick={() => goTo((current + 1) % SLIDES.length)} className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white flex items-center justify-center hover:bg-black/50 transition-all z-20"><ChevronRight className="w-6 h-6" /></button>
+   395→      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+   396→        {SLIDES.map((_, i) => (<button key={i} onClick={() => goTo(i)} className={`rounded-full transition-all duration-300 ${i === current ? "w-10 h-3 bg-[#EAB308]" : "w-3 h-3 bg-white/50 hover:bg-white/80"}`} />))}
+   397→      </div>
+   398→    </section>
+   399→  );
+   400→}
+   401→
+   402→/* ─── NEWS FEED (Home) — Template-Inspired List Layout ── */
+   403→function timeAgo(dateStr: string) {
+   404→  const diff = Date.now() - new Date(dateStr).getTime();
+   405→  const mins = Math.floor(diff / 60000);
+   406→  if (mins < 60) return `${mins}m ago`;
+   407→  const hrs = Math.floor(mins / 60);
+   408→  if (hrs < 24) return `${hrs}h ago`;
+   409→  const days = Math.floor(hrs / 24);
+   410→  if (days < 7) return `${days}d ago`;
+   411→  return dateStr;
+   412→}
+   413→function NewsFeedSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   414→  const [items, setItems] = useState<any[]>([]);
+   415→  const [currentPage, setCurrentPage] = useState(1);
+   416→  const perPage = 3;
+   417→  const [likes, setLikes] = useState<Record<string, number>>({});
+   418→  const [liked, setLiked] = useState<Record<string, boolean>>({});
+   419→
+   420→  useEffect(() => {
+   421→    // First try localStorage (for backwards compatibility)
+   422→    try { const d = localStorage.getItem("amharasint_news"); if (d) { const parsed = JSON.parse(d); if (Array.isArray(parsed) && parsed.length > 0) { setItems(parsed); return; } } } catch {}
+   423→    // Then try admin API (published news managed by admin)
+   424→    fetch("/admin/api/news").then(r => r.json()).then(data => {
+   425→      if (Array.isArray(data) && data.length > 0) {
+   426→        const published = data.filter((n: any) => n.status === "published");
+   427→        if (published.length > 0) { setItems(published); return; }
+   428→      }
+   429→      // Fallback to default data
+   430→      setItems([
+   431→        { id: "1", title: "Amhara Sint Launches New Water Supply Project", summary: "A major clean water initiative covering 8 kebeles has been approved with a budget of ETB 12 million, bringing safe drinking water to over 15,000 residents.", category: "Water", author: "Communications Office", status: "published", featured: true, date: "2026-06-28", image: "https://sfile.chatglm.cn/images-ppt/35f5cc0fa1a7.jpg", initialLikes: 47, initialComments: 12 },
+   432→        { id: "2", title: "Annual Agricultural Exhibition a Great Success", summary: "Over 2,000 farmers participated in this year's exhibition showcasing modern farming techniques, improved seed varieties, and irrigation methods.", category: "Agriculture", author: "Agriculture Office", status: "published", featured: false, date: "2026-06-25", image: "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg", initialLikes: 83, initialComments: 24 },
+   433→        { id: "3", title: "New Primary School Inaugurated in Kebele 05", summary: "The woreda administration inaugurated a fully equipped primary school serving 400 students with modern classrooms, a computer lab, and a library.", category: "Education", author: "Education Office", status: "published", featured: false, date: "2026-06-20", image: "https://sfile.chatglm.cn/images-ppt/b60b21cb0921.jpg", initialLikes: 62, initialComments: 8 },
+   434→        { id: "4", title: "TVET College Enrolls Record 500 Students", summary: "Amhara Sint TVET College has enrolled a record 500 students this academic year in construction, ICT, wood work, and agriculture programs.", category: "Education", author: "TVET College Office", status: "published", featured: false, date: "2026-06-15", image: "https://sfile.chatglm.cn/images-ppt/a842501dc00b.jpg", initialLikes: 95, initialComments: 31 },
+   435→        { id: "5", title: "Meskel Celebration Unites Community", summary: "Thousands of residents gathered for the annual Meskel celebration with Demera bonfire, prayer, and cultural performances across the woreda.", category: "Culture", author: "Culture & Tourism Office", status: "published", featured: false, date: "2026-06-10", image: "https://sfile.chatglm.cn/images-ppt/b37b6e89b27a.jpg", initialLikes: 128, initialComments: 45 },
+   436→        { id: "6", title: "Road Construction Connects Remote Kebeles", summary: "A new 18 km all-weather road now connects 5 previously isolated kebeles to the main town, improving access for over 8,000 residents.", category: "Infrastructure", author: "Road Authority", status: "published", featured: false, date: "2026-06-05", image: "https://sfile.chatglm.cn/images-ppt/15e928c7ad4d.jpg", initialLikes: 56, initialComments: 15 },
+   437→        { id: "7", title: "Health Campaign Reaches 10,000 Residents", summary: "A week-long health awareness campaign reached 10,000 residents with free screenings for diabetes, hypertension, and eye diseases.", category: "Health", author: "Communications Office", status: "published", featured: false, date: "2026-05-28", image: "https://sfile.chatglm.cn/images-ppt/40afb43a5118.jpg", initialLikes: 71, initialComments: 19 },
+   438→        { id: "8", title: "Youth Entrepreneurship Training Program Launch", summary: "The woreda launched a 3-month entrepreneurship training program for 200 youth, covering business planning, financial literacy, and digital skills.", category: "Youth", author: "Communications Office", status: "published", featured: false, date: "2026-05-20", image: "https://sfile.chatglm.cn/images-ppt/395da4df6bb6.jpg", initialLikes: 44, initialComments: 11 },
+   439→        { id: "9", title: "New Market Built in Ajibar Town", summary: "A modern market facility with 150 stalls, cold storage, and sanitation facilities was inaugurated to support local traders and farmers.", category: "Trade", author: "Communications Office", status: "published", featured: false, date: "2026-05-15", image: "https://sfile.chatglm.cn/images-ppt/395da4df6bb6.jpg", initialLikes: 67, initialComments: 22 },
+   440→      ]);
+   441→    }).catch(() => {
+   442→      setItems([
+   443→        { id: "1", title: "Amhara Sint Launches New Water Supply Project", summary: "A major clean water initiative covering 8 kebeles has been approved with a budget of ETB 12 million, bringing safe drinking water to over 15,000 residents.", category: "Water", author: "Communications Office", status: "published", featured: true, date: "2026-06-28", image: "https://sfile.chatglm.cn/images-ppt/35f5cc0fa1a7.jpg", initialLikes: 47, initialComments: 12 },
+   444→        { id: "2", title: "Annual Agricultural Exhibition a Great Success", summary: "Over 2,000 farmers participated in this year's exhibition showcasing modern farming techniques, improved seed varieties, and irrigation methods.", category: "Agriculture", author: "Agriculture Office", status: "published", featured: false, date: "2026-06-25", image: "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg", initialLikes: 83, initialComments: 24 },
+   445→      ]);
+   446→    });
+   447→  }, []);
+   448→
+   449→  const toggleLike = (id: string) => {
+   450→    setLiked(p => ({ ...p, [id]: !p[id] }));
+   451→    setLikes(p => ({ ...p, [id]: (p[id] || 0) + (liked[id] ? -1 : 1) }));
+   452→  };
+   453→
+   454→  const featured = items.find(i => i.featured);
+   455→  const nonFeatured = items.filter(i => !i.featured);
+   456→  const totalPages = Math.ceil(nonFeatured.length / perPage);
+   457→  const pageItems = nonFeatured.slice((currentPage - 1) * perPage, currentPage * perPage);
+   458→
+   459→  const categoryColors: Record<string, string> = {
+   460→    Water: "bg-blue-500", Agriculture: "bg-green-500", Education: "bg-indigo-500", Culture: "bg-amber-500",
+   461→    Infrastructure: "bg-orange-500", Health: "bg-rose-500", Youth: "bg-purple-500", Trade: "bg-teal-500",
+   462→  };
+   463→
+   464→  const quickLinks = [
+   465→    { label: "Services", icon: Layers, href: "svc-education" as PageId, color: "#6366F1" },
+   466→    { label: "Submit CV", icon: Upload, href: "submit-cv" as PageId, color: "#8B5CF6" },
+   467→    { label: "Vacancy", icon: Briefcase, href: "vacancy" as PageId, color: "#F59E0B" },
+   468→    { label: "Bids & Tenders", icon: FileCheck, href: "bids" as PageId, color: "#F43F5E" },
+   469→    { label: "Gallery", icon: ImageIcon, href: "gallery" as PageId, color: "#10B981" },
+   470→    { label: "Announcements", icon: Award, href: "news-announcements" as PageId, color: "#06B6D4" },
+   471→    { label: "Contact Us", icon: Phone, href: "contact" as PageId, color: "#EF4444" },
+   472→  ];
+   473→
+   474→  return (
+   475→    <section className="py-10 md:py-14 bg-gray-50/80">
+   476→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   477→        {/* Section header */}
+   478→        <AnimatedSection>
+   479→          <div className="flex items-end justify-between mb-8">
+   480→            <div>
+   481→              <h2 className="text-2xl md:text-3xl font-extrabold text-[#0B3D2E] mb-1">Latest News & Events</h2>
+   482→              <p className="text-[#0B3D2E]/50 text-sm">Stay informed about developments from Amhara Sint Woreda</p>
+   483→            </div>
+   484→            <button onClick={() => onNavigate("news-news")} className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold text-[#16A34A] hover:text-[#15803d] transition-colors">
+   485→              View All <ArrowRight className="w-4 h-4" />
+   486→            </button>
+   487→          </div>
+   488→        </AnimatedSection>
+   489→
+   490→        <div className="grid lg:grid-cols-3 gap-8">
+   491→          {/* Main news column (2/3) */}
+   492→          <div className="lg:col-span-2 space-y-6">
+   493→            {/* Featured card — compact */}
+   494→            {featured && (
+   495→              <AnimatedSection delay={100}>
+   496→                <div className="relative rounded-2xl overflow-hidden group cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 h-52 sm:h-60" onClick={() => onNavigate("news-news")}>
+   497→                  <img src={featured.image} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+   498→                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+   499→                  <div className="absolute top-4 left-4 flex items-center gap-2">
+   500→                    <span className={`${categoryColors[featured.category] || "bg-[#EAB308]"} text-white text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-wider`}>{featured.category}</span>
+   501→                    <span className="bg-[#EAB308] text-[#0B3D2E] text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-wider">Featured</span>
+   502→                  </div>
+   503→                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
+   504→                    <h3 className="text-white font-extrabold text-lg sm:text-xl md:text-2xl mb-1.5 leading-tight drop-shadow-lg">{featured.title}</h3>
+   505→                    <p className="text-white/70 text-sm mb-2 line-clamp-1 max-w-2xl">{featured.summary}</p>
+   506→                    <div className="flex items-center gap-4 text-white/50 text-xs">
+   507→                      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{featured.date}</span>
+   508→                      <span className="flex items-center gap-1.5"><Heart className="w-3.5 h-3.5" />{(featured.initialLikes || 0) + (likes[featured.id] || 0)}</span>
+   509→                      <span className="flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" />{featured.initialComments || 0}</span>
+   510→                    </div>
+   511→                  </div>
+   512→                </div>
+   513→              </AnimatedSection>
+   514→            )}
+   515→
+   516→            {/* News list */}
+   517→            <div className="space-y-3">
+   518→              {pageItems.map((item, i) => {
+   519→                const likeCount = (item.initialLikes || 0) + (likes[item.id] || 0);
+   520→                const isLiked = liked[item.id] || false;
+   521→                return (
+   522→                  <AnimatedSection key={item.id} delay={i * 50}>
+   523→                    <div className="bg-white rounded-xl border border-gray-100 p-3 md:p-4 flex gap-3 md:gap-4 hover:shadow-lg hover:border-gray-200 transition-all duration-300 group cursor-pointer" onClick={() => onNavigate("news-news")}>
+   524→                      <div className="relative w-24 h-20 sm:w-32 sm:h-24 rounded-lg overflow-hidden shrink-0">
+   525→                        <img src={item.image || "https://sfile.chatglm.cn/images-ppt/31a73cdbeed8.jpg"} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+   526→                        <span className={`absolute top-1.5 left-1.5 ${categoryColors[item.category] || "bg-[#EAB308]"} text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider`}>{item.category}</span>
+   527→                      </div>
+   528→                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+   529→                        <div>
+   530→                          <h3 className="font-bold text-[#0B3D2E] text-sm leading-snug mb-1 group-hover:text-[#EAB308] transition-colors line-clamp-2">{item.title}</h3>
+   531→                          <p className="text-[#0B3D2E]/50 text-xs leading-relaxed line-clamp-1 hidden sm:block">{item.summary}</p>
+   532→                        </div>
+   533→                        <div className="flex items-center gap-3 text-[#0B3D2E]/35 text-xs">
+   534→                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{item.date}</span>
+   535→                          <span className="hidden sm:flex items-center gap-1"><MessageCircle className="w-3 h-3" />{item.initialComments || 0}</span>
+   536→                          <button
+   537→                            onClick={(e) => { e.stopPropagation(); toggleLike(item.id); }}
+   538→                            className={`ml-auto flex items-center gap-1 transition-colors ${isLiked ? "text-red-500" : "text-[#0B3D2E]/30 hover:text-red-400"}`}
+   539→                          >
+   540→                            <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500" : ""}`} />{likeCount}
+   541→                          </button>
+   542→                        </div>
+   543→                      </div>
+   544→                    </div>
+   545→                  </AnimatedSection>
+   546→                );
+   547→              })}
+   548→            </div>
+   549→
+   550→            {/* Pagination */}
+   551→            {totalPages > 1 && (
+   552→              <div className="flex items-center justify-center gap-2">
+   553→                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+   554→                  className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold border border-gray-200 text-[#0B3D2E]/50 hover:bg-[#0B3D2E] hover:text-white hover:border-[#0B3D2E] transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+   555→                  <ChevronLeft className="w-4 h-4" />
+   556→                </button>
+   557→                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+   558→                  <button key={page} onClick={() => setCurrentPage(page)}
+   559→                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold transition-all duration-200 ${
+   560→                      currentPage === page ? "bg-[#0B3D2E] text-white shadow-md shadow-[#0B3D2E]/20" : "border border-gray-200 text-[#0B3D2E]/50 hover:bg-[#0B3D2E] hover:text-white hover:border-[#0B3D2E]"
+   561→                    }`}>
+   562→                    {page}
+   563→                  </button>
+   564→                ))}
+   565→                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+   566→                  className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold border border-gray-200 text-[#0B3D2E]/50 hover:bg-[#0B3D2E] hover:text-white hover:border-[#0B3D2E] transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+   567→                  <ChevronRight className="w-4 h-4" />
+   568→                </button>
+   569→              </div>
+   570→            )}
+   571→
+   572→            <div className="text-center sm:hidden">
+   573→              <button onClick={() => onNavigate("news-news")} className="inline-flex items-center gap-1.5 text-sm font-bold text-[#16A34A] hover:text-[#15803d] transition-colors">
+   574→                View All News <ArrowRight className="w-4 h-4" />
+   575→              </button>
+   576→            </div>
+   577→          </div>
+   578→
+   579→          {/* Sidebar (1/3) */}
+   580→          <div className="hidden lg:flex flex-col gap-5">
+   581→            {/* Quick Access */}
+   582→            <AnimatedSection delay={150}>
+   583→              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+   584→                <div className="bg-[#0B3D2E] px-5 py-3">
+   585→                  <h3 className="text-white font-bold text-sm flex items-center gap-2"><Zap className="w-4 h-4 text-[#EAB308]" />Quick Access</h3>
+   586→                </div>
+   587→                <div className="p-3 grid grid-cols-2 gap-2">
+   588→                  {quickLinks.map((item) => (
+   589→                    <button key={item.label} onClick={() => onNavigate(item.href)}
+   590→                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all duration-200 group">
+   591→                      <div className="w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110" style={{ backgroundColor: item.color + "15" }}>
+   592→                        <item.icon className="w-4 h-4" style={{ color: item.color }} />
+   593→                      </div>
+   594→                      <span className="text-[11px] font-semibold text-[#0B3D2E]/70 group-hover:text-[#0B3D2E]">{item.label}</span>
+   595→                    </button>
+   596→                  ))}
+   597→                </div>
+   598→              </div>
+   599→            </AnimatedSection>
+   600→
+   601→            {/* Emergency Hotline */}
+   602→            <AnimatedSection delay={200}>
+   603→              <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl p-5 text-white shadow-lg">
+   604→                <div className="flex items-center gap-2 mb-3">
+   605→                  <Siren className="w-5 h-5 animate-pulse" />
+   606→                  <h3 className="font-bold text-sm">Emergency Hotline</h3>
+   607→                </div>
+   608→                <p className="text-white/80 text-xs mb-3">For emergencies, call immediately:</p>
+   609→                <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center">
+   610→                  <p className="text-2xl font-black tracking-wider">991</p>
+   611→                  <p className="text-[10px] text-white/60 mt-1">Free Emergency Number</p>
+   612→                </div>
+   613→              </div>
+   614→            </AnimatedSection>
+   615→
+   616→            {/* Location Card */}
+   617→            <AnimatedSection delay={250}>
+   618→              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+   619→                <div className="bg-[#0B3D2E] px-5 py-3">
+   620→                  <h3 className="text-white font-bold text-sm flex items-center gap-2"><MapPin className="w-4 h-4 text-[#EAB308]" />Our Location</h3>
+   621→                </div>
+   622→                <div className="p-4">
+   623→                  <div className="rounded-xl overflow-hidden mb-3 border border-gray-100">
+   624→                    <iframe
+   625→                      title="Mini Map"
+   626→                      src="https://www.openstreetmap.org/export/embed.html?bbox=38.5%2C10.8%2C38.8%2C11.05&layer=mapnik&marker=10.92%2C38.65"
+   627→                      className="w-full h-[160px] border-0"
+   628→                      loading="lazy"
+   629→                    />
+   630→                  </div>
+   631→                  <div className="space-y-1.5 text-xs text-[#0B3D2E]/60">
+   632→                    <p className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-[#EAB308]" /> South Wollo Zone, Amhara</p>
+   633→                    <p className="flex items-center gap-2"><Compass className="w-3.5 h-3.5 text-[#EAB308]" /> 10.92° N, 38.65° E</p>
+   634→                    <button onClick={() => onNavigate("about-location")} className="text-[#16A34A] font-semibold hover:text-[#15803d] transition-colors flex items-center gap-1 mt-1">
+   635→                      View Full Map <ArrowRight className="w-3 h-3" />
+   636→                    </button>
+   637→                  </div>
+   638→                </div>
+   639→              </div>
+   640→            </AnimatedSection>
+   641→          </div>
+   642→        </div>
+   643→      </div>
+   644→    </section>
+   645→  );
+   646→}
+   647→
+   648→/* ─── TVET COLLEGE SECTION (Home) ───────────────────────── */
+   649→const TVET_PROGRAMS = [
+   650→  { sector: "Manufacturing", icon: Wrench, color: "#F59E0B", bg: "#FFFBEB", programs: ["Wood Work Technology", "Garment Production"] },
+   651→  { sector: "Construction", icon: HardHat, color: "#F97316", bg: "#FFF7ED", programs: ["Structural Construction", "Building Technology"] },
+   652→  { sector: "ICT", icon: Monitor, color: "#6366F1", bg: "#EEF2FF", programs: ["Web Development", "Computer Networking"] },
+   653→  { sector: "Agriculture", icon: Sprout, color: "#16A34A", bg: "#F0FDF4", programs: ["Animal Production", "Crop Production"] },
+   654→];
+   655→function TVETCollegeSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   656→  const [activeSector, setActiveSector] = useState(0);
+   657→  const collegeStats = [
+   658→    { value: 500, label: "Students Enrolled", icon: Users, color: "#10B981" },
+   659→    { value: 8, label: "Training Programs", icon: BookOpen, color: "#6366F1" },
+   660→    { value: 4, label: "Sectors", icon: Layers, color: "#F59E0B" },
+   661→    { value: 4, label: "Certification Levels", icon: Award, color: "#F43F5E" },
+   662→  ];
+   663→  return (
+   664→    <section className="py-10 md:py-14 bg-white relative overflow-hidden">
+   665→      <div className="absolute inset-0 pointer-events-none">
+   666→        <div className="absolute top-20 right-0 w-72 h-72 bg-[#0B3D2E]/[0.03] rounded-full blur-3xl" />
+   667→        <div className="absolute bottom-20 left-0 w-96 h-96 bg-[#EAB308]/[0.03] rounded-full blur-3xl" />
+   668→      </div>
+   669→
+   670→      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 relative z-10">
+   671→        <AnimatedSection>
+   672→          <div className="text-center mb-8">
+   673→            <div className="inline-flex items-center gap-2 bg-[#0B3D2E]/5 border border-[#0B3D2E]/10 rounded-full px-4 py-1.5 mb-3">
+   674→              <GraduationCap className="w-4 h-4 text-[#0B3D2E]" />
+   675→              <span className="text-[#0B3D2E] text-xs font-bold uppercase tracking-[0.15em]">Technical &amp; Vocational Education</span>
+   676→            </div>
+   677→            <h2 className="text-2xl md:text-3xl font-black text-[#0B3D2E] mb-2 leading-tight">
+   678→              Amhara Sint <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0B3D2E] to-[#EAB308]">TVET College</span>
+   679→            </h2>
+   680→            <p className="text-[#0B3D2E]/50 max-w-2xl mx-auto text-sm leading-relaxed">
+   681→              Equipping youth with market-relevant skills in manufacturing, construction, ICT, and agriculture.
+   682→            </p>
+   683→          </div>
+   684→        </AnimatedSection>
+   685→
+   686→        {/* College Stats */}
+   687→        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+   688→          {collegeStats.map((stat, i) => (
+   689→            <AnimatedSection key={stat.label} delay={i * 80}>
+   690→              <div className="relative bg-white border border-gray-100 rounded-2xl p-5 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-500 group overflow-hidden">
+   691→                <div className="absolute top-0 right-0 w-14 h-14 rounded-bl-[32px] opacity-10 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: stat.color }} />
+   692→                <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3" style={{ backgroundColor: stat.color }}>
+   693→                  <stat.icon className="w-6 h-6 text-white" />
+   694→                </div>
+   695→                <div className="text-2xl md:text-3xl font-black mb-1" style={{ color: stat.color }}>
+   696→                  <AnimatedCounter target={stat.value} suffix="+" />
+   697→                </div>
+   698→                <p className="text-gray-500 text-xs font-semibold">{stat.label}</p>
+   699→              </div>
+   700→            </AnimatedSection>
+   701→          ))}
+   702→        </div>
+   703→
+   704→        {/* Programs — Interactive Tabs */}
+   705→        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+   706→          <AnimatedSection delay={200}>
+   707→            <div className="space-y-3">
+   708→              {TVET_PROGRAMS.map((sector, i) => (
+   709→                <button key={sector.sector} onClick={() => setActiveSector(i)}
+   710→                  className={`w-full flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-500 text-left group ${activeSector === i ? "bg-[#0B3D2E] border-[#0B3D2E] shadow-xl shadow-[#0B3D2E]/10 -translate-y-0.5" : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-md"}`}>
+   711→                  <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300" style={{ backgroundColor: activeSector === i ? "rgba(255,255,255,0.1)" : sector.color + "12" }}>
+   712→                    <sector.icon className="w-7 h-7 transition-colors duration-300" style={{ color: activeSector === i ? "#EAB308" : sector.color }} />
+   713→                  </div>
+   714→                  <div className="flex-1 min-w-0">
+   715→                    <h3 className={`font-bold text-base transition-colors duration-300 ${activeSector === i ? "text-white" : "text-[#0B3D2E]"}`}>{sector.sector}</h3>
+   716→                    <p className={`text-xs mt-0.5 transition-colors duration-300 ${activeSector === i ? "text-white/50" : "text-[#0B3D2E]/40"}`}>{sector.programs.join(" · ")}</p>
+   717→                  </div>
+   718→                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${activeSector === i ? "bg-[#EAB308]" : "bg-gray-50"}`}>
+   719→                    <ArrowRight className={`w-4 h-4 transition-all duration-300 ${activeSector === i ? "text-[#0B3D2E]" : "text-gray-300"}`} />
+   720→                  </div>
+   721→                </button>
+   722→              ))}
+   723→            </div>
+   724→          </AnimatedSection>
+   725→
+   726→          <AnimatedSection delay={300}>
+   727→            <div className="relative">
+   728→              {TVET_PROGRAMS.map((sector, i) => (
+   729→                <div key={sector.sector} className={`absolute inset-0 transition-all duration-500 ${activeSector === i ? "opacity-100 translate-x-0 z-10" : "opacity-0 translate-x-4 z-0"}`}>
+   730→                  <div className="h-full rounded-2xl overflow-hidden border border-gray-100 shadow-lg" style={{ backgroundColor: sector.bg }}>
+   731→                    <div className="p-8 md:p-10 flex flex-col justify-center h-full">
+   732→                      <div className="flex items-center gap-3 mb-6">
+   733→                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: sector.color + "20" }}>
+   734→                          <sector.icon className="w-7 h-7" style={{ color: sector.color }} />
+   735→                        </div>
+   736→                        <div>
+   737→                          <h3 className="text-2xl font-black text-[#0B3D2E]">{sector.sector}</h3>
+   738→                          <p className="text-sm text-[#0B3D2E]/40 font-medium">{sector.programs.length} Training Programs</p>
+   739→                        </div>
+   740→                      </div>
+   741→                      <div className="space-y-4">
+   742→                        {sector.programs.map((p) => (
+   743→                          <div key={p} className="flex items-center gap-3 bg-white/60 rounded-xl px-5 py-3.5 border border-white/80 hover:shadow-md transition-all duration-300 cursor-default">
+   744→                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: sector.color + "15" }}>
+   745→                              <CheckCircle2 className="w-4 h-4" style={{ color: sector.color }} />
+   746→                            </div>
+   747→                            <span className="font-semibold text-[#0B3D2E] text-sm">{p}</span>
+   748→                            <span className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: sector.color + "12", color: sector.color }}>Certificate</span>
+   749→                          </div>
+   750→                        ))}
+   751→                      </div>
+   752→                      <button onClick={() => onNavigate("svc-education")} className="mt-6 inline-flex items-center gap-2 bg-[#0B3D2E] hover:bg-[#145A44] text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] w-fit">
+   753→                        View Full Details <ArrowRight className="w-4 h-4" />
+   754→                      </button>
+   755→                    </div>
+   756→                  </div>
+   757→                </div>
+   758→              ))}
+   759→              <div className="h-full min-h-[320px]" />
+   760→            </div>
+   761→          </AnimatedSection>
+   762→        </div>
+   763→
+   764→        {/* Enrollment Banner — 2026/27 Academic Year */}
+   765→        <AnimatedSection delay={400}>
+   766→          <div className="relative overflow-hidden bg-gradient-to-br from-[#062B1F] via-[#0B3D2E] to-[#0d4a38] rounded-2xl">
+   767→            {/* Animated background orbs */}
+   768→            <div className="absolute inset-0 pointer-events-none">
+   769→              <div className="absolute top-0 left-[5%] w-72 h-72 bg-[#EAB308]/[0.07] rounded-full blur-3xl animate-glow-pulse" />
+   770→              <div className="absolute bottom-0 right-[10%] w-96 h-96 bg-[#16A34A]/[0.08] rounded-full blur-3xl animate-glow-pulse" style={{ animationDelay: "1.5s" }} />
+   771→              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#EAB308]/[0.03] rounded-full blur-3xl animate-spin-slow" />
+   772→              <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle, #EAB308 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+   773→            </div>
+   774→
+   775→            <div className="relative z-10 px-6 sm:px-8 lg:px-10 py-8 md:py-10">
+   776→              <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+   777→                {/* Image */}
+   778→                <div className="relative shrink-0">
+   779→                  <div className="relative">
+   780→                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden ring-4 ring-[#EAB308]/30 shadow-2xl shadow-[#EAB308]/10 animate-float">
+   781→                      <img src="https://sfile.chatglm.cn/images-ppt/a842501dc00b.jpg" alt="TVET College" className="w-full h-full object-cover" />
+   782→                    </div>
+   783→                    <span className="absolute -inset-2 rounded-2xl border-2 border-[#EAB308]/20 animate-pulse" />
+   784→                    <div className="absolute -top-3 -right-3 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg animate-float-delayed tracking-wider">NEW</div>
+   785→                  </div>
+   786→                </div>
+   787→
+   788→                {/* Text */}
+   789→                <div className="flex-1 text-center lg:text-left">
+   790→                  <div className="inline-flex items-center gap-2 bg-[#EAB308]/10 border border-[#EAB308]/20 rounded-full px-4 py-1.5 mb-4 animate-scale-in">
+   791→                    <span className="relative flex h-2 w-2">
+   792→                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EAB308] opacity-75"></span>
+   793→                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#EAB308]"></span>
+   794→                    </span>
+   795→                    <GraduationCap className="w-3.5 h-3.5 text-[#EAB308]" />
+   796→                    <span className="text-[#EAB308] text-[10px] md:text-xs font-bold uppercase tracking-[0.15em]">Admissions Open 2026/27</span>
+   797→                  </div>
+   798→                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-3 leading-[1.1] tracking-tight">
+   799→                    Enroll Now for{" "}
+   800→                    <span className="relative inline-block">
+   801→                      <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#EAB308] via-[#FDE047] to-[#EAB308] animate-gradient-shift bg-[length:200%_200%]">2026/27</span>
+   802→                      <span className="absolute bottom-1 left-0 right-0 h-2 bg-[#EAB308]/20 rounded-full -z-0" />
+   803→                    </span>{" "}
+   804→                    Academic Year
+   805→                  </h3>
+   806→                  <p className="text-white/55 text-sm md:text-base max-w-xl mx-auto lg:mx-0 leading-relaxed mb-4">
+   807→                    Certificate &amp; Diploma programs · Level I–IV · Duration: 1–4 years · Hands-on practical training
+   808→                  </p>
+   809→                  <div className="flex flex-wrap items-center gap-4 justify-center lg:justify-start">
+   810→                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+   811→                      <Phone className="w-4 h-4 text-[#EAB308]" />
+   812→                      <span className="text-white/70 text-xs md:text-sm font-medium">0334 470 0026 / 0027 / 0117</span>
+   813→                    </div>
+   814→                    <div className="hidden sm:flex items-center gap-3 text-white/30 text-xs">
+   815→                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> 500+ Students</span>
+   816→                      <span>·</span>
+   817→                      <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> 8 Programs</span>
+   818→                      <span>·</span>
+   819→                      <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5" /> Level I–IV</span>
+   820→                    </div>
+   821→                  </div>
+   822→                </div>
+   823→
+   824→                {/* CTA */}
+   825→                <div className="shrink-0">
+   826→                  <button
+   827→                    onClick={() => onNavigate("svc-education")}
+   828→                    className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-[#EAB308] via-[#FDE047] to-[#EAB308] hover:from-[#d4a30a] hover:via-[#EAB308] hover:to-[#d4a30a] text-[#0B3D2E] font-black text-base md:text-lg px-8 py-4 rounded-2xl shadow-2xl shadow-[#EAB308]/25 hover:shadow-[#EAB308]/40 transition-all duration-500 hover:scale-105 animate-gradient-shift bg-[length:200%_200%]"
+   829→                  >
+   830→                    <span className="flex items-center justify-center w-8 h-8 bg-[#0B3D2E]/10 rounded-xl group-hover:bg-[#0B3D2E]/20 transition-all">
+   831→                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+   832→                    </span>
+   833→                    Learn More
+   834→                  </button>
+   835→                </div>
+   836→              </div>
+   837→
+   838→              {/* Scrolling programs marquee */}
+   839→              <div className="mt-8 overflow-hidden relative">
+   840→                <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#062B1F] to-transparent z-10 rounded-l-2xl" />
+   841→                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#0d4a38] to-transparent z-10 rounded-r-2xl" />
+   842→                <div className="flex animate-marquee whitespace-nowrap">
+   843→                  {[...Array(2)].map((_, si) => (
+   844→                    <div key={si} className="flex items-center gap-6 mr-6">
+   845→                      {["Wood Work Technology", "Garment Production", "Structural Construction", "Building Technology", "Web Development", "Computer Networking", "Animal Production", "Crop Production"].map((p, i) => (
+   846→                        <span key={`${si}-${i}`} className="text-white/15 text-sm font-semibold flex items-center gap-2">
+   847→                          <span className="w-1.5 h-1.5 rounded-full bg-[#EAB308]/30" />{p}
+   848→                        </span>
+   849→                      ))}
+   850→                    </div>
+   851→                  ))}
+   852→                </div>
+   853→              </div>
+   854→            </div>
+   855→          </div>
+   856→        </AnimatedSection>
+   857→      </div>
+   858→    </section>
+   859→  );
+   860→}
+   861→
+   862→/* ─── QUICK STATS (Home) — Compact horizontal row ───────── */
+   863→const KEY_STATS = [
+   864→  { label: "Population", value: 144972, suffix: "", display: "144,972", icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
+   865→  { label: "Kebeles", value: 37, suffix: "", display: null, icon: MapPin, color: "text-blue-600", bg: "bg-blue-50" },
+   866→  { label: "Schools", value: 100, suffix: "", display: null, icon: School, color: "text-amber-600", bg: "bg-amber-50" },
+   867→  { label: "Health Facilities", value: 16, suffix: "", display: null, icon: HeartPulse, color: "text-rose-600", bg: "bg-rose-50" },
+   868→  { label: "Area (km\u00B2)", value: 1437, suffix: "", display: "1,437", icon: Map, color: "text-purple-600", bg: "bg-purple-50" },
+   869→  { label: "Budget (ETB)", value: 200, suffix: " M", display: "200 M", icon: Banknote, color: "text-teal-600", bg: "bg-teal-50" },
+   870→];
+   871→function QuickStats() {
+   872→  return (
+   873→    <section id="statistics-section" className="bg-white border-b border-gray-100">
+   874→      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-7 md:py-8">
+   875→        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-5">
+   876→          {KEY_STATS.map((s, i) => (
+   877→            <AnimatedSection key={s.label} delay={i * 60}>
+   878→              <div className={`${s.bg} rounded-xl p-3 md:p-4 flex items-center gap-3 hover:shadow-md transition-all duration-300 group cursor-default`}>
+   879→                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${s.bg} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+   880→                  <s.icon className={`w-5 h-5 md:w-6 md:h-6 ${s.color}`} />
+   881→                </div>
+   882→                <div className="min-w-0">
+   883→                  <div className="text-lg md:text-2xl font-extrabold leading-tight" style={{ color: s.color === "text-emerald-600" ? "#059669" : s.color === "text-blue-600" ? "#2563EB" : s.color === "text-amber-600" ? "#D97706" : s.color === "text-rose-600" ? "#E11D48" : s.color === "text-purple-600" ? "#9333EA" : "#0D9488" }}>
+   884→                    {s.display ? s.display : <><AnimatedCounter target={s.value} suffix={s.suffix} /></>}
+   885→                  </div>
+   886→                  <p className="text-[10px] md:text-xs text-gray-500 font-medium truncate">{s.label}</p>
+   887→                </div>
+   888→              </div>
+   889→            </AnimatedSection>
+   890→          ))}
+   891→        </div>
+   892→      </div>
+   893→    </section>
+   894→  );
+   895→}
+   896→
+   897→/* ─── SERVICES OVERVIEW (Home) ─────────────────────────── */
+   898→const HOME_SERVICE_CARDS = [
+   899→  { title: "Education", desc: "100+ schools, TVET college, 680+ teachers", icon: GraduationCap, color: "#1D4ED8", bg: "from-blue-500 to-indigo-600", image: "https://sfile.chatglm.cn/images-ppt/b60b21cb0921.jpg", href: "svc-education" as PageId },
+   900→  { title: "Health", desc: "23 health facilities, 120+ health workers", icon: HeartPulse, color: "#DC2626", bg: "from-rose-500 to-pink-600", image: "https://sfile.chatglm.cn/images-ppt/10cf906e32cf.jpg", href: "svc-health" as PageId },
+   901→  { title: "Agriculture", desc: "28,500+ farm households, 120+ cooperatives", icon: Tractor, color: "#16A34A", bg: "from-emerald-500 to-teal-600", image: "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg", href: "svc-agriculture" as PageId },
+   902→  { title: "Construction", desc: "85 km roads, 34 public buildings, 64 water points", icon: HardHat, color: "#EA580C", bg: "from-orange-500 to-red-600", image: "https://sfile.chatglm.cn/images-ppt/56336ff1a645.jpg", href: "svc-construction" as PageId },
+   903→  { title: "Trade & Commerce", desc: "850+ enterprises, 8 markets, 45 cooperatives", icon: Store, color: "#9333EA", bg: "from-purple-500 to-violet-600", image: "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg", href: "svc-trade" as PageId },
+   904→  { title: "Technology & ICT", desc: "12 computer labs, 5 internet centers, 1,200+ trained", icon: Monitor, color: "#0891B2", bg: "from-cyan-500 to-blue-600", image: "https://sfile.chatglm.cn/images-ppt/4db62da31bf6.png", href: "svc-technology" as PageId },
+   905→];
+   906→function ServicesOverviewSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   907→  return (
+   908→    <section className="py-10 md:py-14 bg-gradient-to-b from-gray-50 to-white" id="services-section">
+   909→      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+   910→        <AnimatedSection>
+   911→          <div className="text-center mb-8">
+   912→            <div className="inline-flex items-center gap-2 bg-[#0B3D2E]/5 border border-[#0B3D2E]/10 rounded-full px-4 py-1.5 mb-3">
+   913→              <Layers className="w-4 h-4 text-[#0B3D2E]" />
+   914→              <span className="text-[#0B3D2E] text-xs font-bold uppercase tracking-[0.15em]">Our Services</span>
+   915→            </div>
+   916→            <h2 className="text-2xl md:text-3xl font-black text-[#0B3D2E] mb-2">What We <span className="text-[#EAB308]">Deliver</span></h2>
+   917→            <p className="text-[#0B3D2E]/50 max-w-2xl mx-auto text-sm">Comprehensive public services across education, health, agriculture, infrastructure, trade, and technology.</p>
+   918→          </div>
+   919→        </AnimatedSection>
+   920→        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+   921→          {HOME_SERVICE_CARDS.map((svc, i) => (
+   922→            <AnimatedSection key={svc.title} delay={i * 80}>
+   923→              <button onClick={() => onNavigate(svc.href)} className="w-full text-left bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden group transition-all duration-500 hover:-translate-y-1.5">
+   924→                <div className="relative h-36 overflow-hidden">
+   925→                  <img src={svc.image} alt={svc.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+   926→                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+   927→                  <div className="absolute bottom-3 left-4 flex items-center gap-2.5">
+   928→                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${svc.bg} flex items-center justify-center shadow-lg`}>
+   929→                      <svc.icon className="w-5 h-5 text-white" />
+   930→                    </div>
+   931→                    <div>
+   932→                      <h3 className="text-white font-bold text-base">{svc.title}</h3>
+   933→                    </div>
+   934→                  </div>
+   935→                </div>
+   936→                <div className="p-4">
+   937→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{svc.desc}</p>
+   938→                  <div className="mt-3 flex items-center gap-1.5 text-xs font-bold" style={{ color: svc.color }}>
+   939→                    Learn more <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+   940→                  </div>
+   941→                </div>
+   942→              </button>
+   943→            </AnimatedSection>
+   944→          ))}
+   945→        </div>
+   946→      </div>
+   947→    </section>
+   948→  );
+   949→}
+   950→
+   951→/* ─── CULTURAL PLACES (Home) ─────────────────────────────── */
+   952→const CULTURAL_PLACES = [
+   953→  {
+   954→    title: "Tadbaba Maryam Monastery",
+   955→    subtitle: "The Tabernacle of Zion — ተድባበ ማርያም",
+   956→    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/TedbabeMariyam_Church.jpg/800px-TedbabeMariyam_Church.jpg",
+   957→    gallery: [
+   958→      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Thesaurus_of_T%C3%A4dbab%C3%A4_Maryam.jpg/400px-Thesaurus_of_T%C3%A4dbab%C3%A4_Maryam.jpg",
+   959→      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Shields_gifted_to_T%C3%A4dbab%C3%A4_Maryam.jpg/400px-Shields_gifted_to_T%C3%A4dbab%C3%A4_Maryam.jpg",
+   960→      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Throne_of_King_Dawit_%28Unknown_King_David%29.jpg/400px-Throne_of_King_Dawit_%28Unknown_King_David%29.jpg",
+   961→      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Traditionally_crafted_umbrella_of_T%C3%A4dbab%C3%A4_Maryam.jpg/400px-Traditionally_crafted_umbrella_of_T%C3%A4dbab%C3%A4_Maryam.jpg",
+   962→    ],
+   963→    location: "28 km from Ajibar, Ta Guba Kebele",
+   964→    coordinates: "11.114°N, 38.753°E",
+   965→    tag: "UNESCO Heritage Candidate",
+   966→    tagColor: "bg-amber-100 text-amber-800",
+   967→    tagGradient: "from-amber-500 to-yellow-600",
+   968→    description: "Among the first four temples in Ethiopia where sacrificial offerings were implemented before the birth of Jesus Christ. The name combines two Ge'ez words: 'Tadbaba' meaning Tabernacle and 'Maryam/Tsion' meaning Zion — 'The Tabernacle of Zion'. According to the chronicle, the Ark arrived in 982 BCE, coinciding with the disappearance of the Ark of the Covenant during the reign of King Solomon (970-931 BCE). The current spectacular circular church was built by Emperor Gelawdewos after his victory at the Battle of Wayna Daga in 1543, where he personally cut off the head of Imam Ahmad ibn Ibrahim al-Ghazi.",
+   969→    longDescription: "The church is a circular complex with four magnificent doors (over 3m height) and 32 windows (over 2m height). By design, it is arranged in concentric circles with three sections — the innermost being the Holy of Holies (Qeddus Qeddusan), approximately 24 meters in diameter. The high priests are always selected from tribes of the priestly class, believed to be descendants of Jews. Deacons, only under the age of 9, are allowed to deliver service. Most relics and utilities are made of pure gold, including the incense burner. A rope is tied to the high priest when entering the Holy of Holies to enable assistants to safely pull the body out in the event of mishap.",
+   970→    highlights: ["Ark arrived ~982 BCE during King Solomon's era", "Circular church built by Emperor Gelawdewos (1543)", "Battle of Wayna Daga — defeated Ahmad al-Ghazi", "Treasures dating back to Old Testament times", "Pure gold relics, Aramaic & Ge'ez manuscripts", "Holy of Holies — 24m diameter inner sanctum", "Shield of King Kaleb, Cross of St. John the Baptist"],
+   971→    stats: [
+   972→      { label: "Founded", value: "~982 BCE", icon: Clock },
+   973→      { label: "Battle", value: "1543", icon: Shield },
+   974→      { label: "Treasures", value: "50+", icon: Crown },
+   975→      { label: "Diameter", value: "24m", icon: Compass },
+   976→    ],
+   977→    featured: true,
+   978→  },
+   979→  {
+   980→    title: "Mount Tabor (Tabor Terara)",
+   981→    subtitle: "Highest Peak in South Wollo — 4,247m",
+   982→    img: "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg",
+   983→    gallery: [
+   984→      "https://sfile.chatglm.cn/images-ppt/4781a70c681c.jpg",
+   985→      "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+   986→    ],
+   987→    location: "Border with Legambo, ~170 km East of Dessie",
+   988→    coordinates: "11.0°N, 39.0°E",
+   989→    tag: "Natural Landmark",
+   990→    tagColor: "bg-blue-100 text-blue-800",
+   991→    tagGradient: "from-blue-500 to-indigo-600",
+   992→    description: "The highest point in the entire South Wollo Zone at 4,247 meters (13,934 ft), Mount Tabor is one of the most iconic mountains in Amhara Sayint Woreda. It hosts different types of wildlife not found in other parts of Ethiopia, including endemic highland species adapted to the Afro-alpine environment. The mountain holds profound historical and spiritual significance in local Amhara culture, serving as a visible landmark from much of the surrounding region. Its dramatic peaks and valleys create breathtaking landscapes that attract nature enthusiasts, hikers, and researchers from across Ethiopia and beyond.",
+   993→    longDescription: "Mount Tabor's Afro-alpine ecosystem supports unique biodiversity including giant lobelia, Erica shrubs, and endemic grasses found nowhere else on Earth. The mountain serves as a watershed for multiple rivers that feed into the Blue Nile basin. Local communities hold annual ceremonies on its slopes, and it features prominently in Amhara oral traditions and spiritual practices. The panoramic views from the summit extend over 100 kilometers in all directions on clear days, encompassing the Blue Nile gorge, the South Wollo highlands, and the dramatic escarpments of the Ethiopian Rift Valley.",
+   994→    highlights: ["Highest peak in South Wollo Zone (4,247m)", "Endemic Afro-alpine wildlife & flora", "Watershed for Blue Nile basin rivers", "Panoramic 100km+ views from summit", "Annual spiritual ceremonies on slopes", "Prominent in Amhara oral traditions"],
+   995→    stats: [
+   996→      { label: "Elevation", value: "4,247m", icon: Mountain },
+   997→      { label: "Visibility", value: "100+ km", icon: Eye },
+   998→      { label: "Ecosystem", value: "Alpine", icon: TreePine },
+   999→      { label: "Species", value: "50+", icon: Sprout },
+  1000→    ],
+  1001→    featured: false,
+  1002→  },
+  1003→  {
+  1004→    title: "Borena Sayint National Park",
+  1005→    subtitle: "Where Culture Meets Wild Nature",
+  1006→    img: "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg",
+  1007→    gallery: [
+  1008→      "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg",
+  1009→      "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+  1010→    ],
+  1011→    location: "Blue Nile (Abay) Canyon",
+  1012→    coordinates: "11.2°N, 38.5°E",
+  1013→    tag: "Nature & Culture",
+  1014→    tagColor: "bg-emerald-100 text-emerald-800",
+  1015→    tagGradient: "from-emerald-500 to-teal-600",
+  1016→    description: "A stunning park offering a perfect mix of culture and nature. Beyond its diverse wildlife and dramatic, rugged cliffs plunging toward the Blue Nile (Abay) canyon, the park is famous for the traditional apiculture (beekeeping) practiced by the surrounding communities, providing deep insight into the region's ancient agricultural lifestyle. The canyon views from the cliff edges are among the most spectacular in all of Ethiopia.",
+  1017→    longDescription: "The park's dramatic cliffs provide nesting sites for endangered birds of prey including Lammergeier (Bearded Vulture) and Ethiopian Wolf. The intersection of highland and lowland ecosystems creates extraordinary biodiversity. Traditional beekeeping communities maintain centuries-old apiculture practices, producing some of Ethiopia's finest honey. The park serves as a living museum of Ethiopian highland ecology and traditional resource management.",
+  1018→    highlights: ["Dramatic cliffs plunging to the Abay canyon", "Traditional apiculture (beekeeping) communities", "Endangered Lammergeier & Ethiopian Wolf habitat", "Unique highland-lowland ecosystem intersection", "Centuries-old honey production traditions"],
+  1019→    stats: [
+  1020→      { label: "Area", value: "Large", icon: Map },
+  1021→      { label: "Wildlife", value: "100+ sp", icon: UsersRound },
+  1022→      { label: "Elevation", value: "500-3000m", icon: TrendingUp },
+  1023→      { label: "Cliffs", value: "Dramatic", icon: Mountain },
+  1024→    ],
+  1025→    featured: false,
+  1026→  },
+  1027→  {
+  1028→    title: "The Abay (Blue Nile) Canyon",
+  1029→    subtitle: "Ethiopia's Grand Canyon — 2,500m Drop",
+  1030→    img: "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+  1031→    gallery: [
+  1032→      "https://sfile.chatglm.cn/images-ppt/6c328167366f.jpg",
+  1033→      "https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg",
+  1034→    ],
+  1035→    location: "Western Boundary of the Woreda",
+  1036→    coordinates: "11.0°N, 38.3°E",
+  1037→    tag: "Natural Wonder",
+  1038→    tagColor: "bg-violet-100 text-violet-800",
+  1039→    tagGradient: "from-violet-500 to-purple-600",
+  1040→    description: "The western boundary of Amhara Sayint is defined by the spectacular canyon of the Abay (Blue Nile) River. The elevation drops from over 3,000m highland plateaus down to just 500 metres at the canyon floor, creating one of the most dramatic elevation gradients in Ethiopia. The historic Daga ford provides an ancient crossing point connecting the woreda to Enbise Sar Midir in the Gojjam region, used for centuries by traders and travelers.",
+  1041→    longDescription: "The Abay Canyon in this region rivals the Grand Canyon in scale and beauty. The 2,500-meter elevation change creates multiple climate zones within a few kilometers, supporting diverse ecosystems from cloud forest to semi-arid savanna. The canyon has been a natural barrier and highway for millennia — shaping trade routes, military campaigns, and cultural exchange between the Gojjam and Wollo regions. The Daga ford crossing remains one of the few practical routes across the Blue Nile in this stretch.",
+  1042→    highlights: ["Spectacular 2,500m elevation drop", "From 3,000m plateaus to 500m canyon floor", "Historic Daga ford — ancient crossing point", "Multiple climate zones within few kilometers", "Connects Gojjam and Wollo since antiquity"],
+  1043→    stats: [
+  1044→      { label: "Drop", value: "2,500m", icon: ArrowDown },
+  1045→      { label: "Top", value: "3,000m", icon: Mountain },
+  1046→      { label: "Floor", value: "500m", icon: Map },
+  1047→      { label: "Crossing", value: "Daga", icon: Compass },
+  1048→    ],
+  1049→    featured: false,
+  1050→  },
+  1051→];
+  1052→
+  1053→function CulturalPlacesSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1054→  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  1055→  const featured = CULTURAL_PLACES.find(p => p.featured);
+  1056→  const others = CULTURAL_PLACES.filter(p => !p.featured);
+  1057→
+  1058→  return (
+  1059→    <section className="py-12 md:py-16 bg-gradient-to-b from-white via-gray-50/50 to-gray-50 relative overflow-hidden">
+  1060→      {/* Decorative bg */}
+  1061→      <div className="absolute inset-0 pointer-events-none">
+  1062→        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl" />
+  1063→        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl" />
+  1064→      </div>
+  1065→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  1066→        <AnimatedSection>
+  1067→          <div className="text-center mb-10">
+  1068→            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-full px-5 py-2 mb-4">
+  1069→              <Landmark className="w-4 h-4 text-amber-600" />
+  1070→              <span className="text-amber-800 text-xs font-bold uppercase tracking-[0.15em]">Heritage & Treasures</span>
+  1071→            </div>
+  1072→            <h2 className="text-3xl md:text-4xl font-black text-[#0B3D2E] mb-3">Cultural & Natural <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600">Heritage</span></h2>
+  1073→            <p className="text-[#0B3D2E]/50 max-w-2xl mx-auto text-sm leading-relaxed">Ancient monasteries dating to King Solomon's era, dramatic canyons, and towering peaks — discover the extraordinary treasures of Amhara Sint Woreda.</p>
+  1074→          </div>
+  1075→        </AnimatedSection>
+  1076→
+  1077→        {/* Featured: Tadbaba Maryam — Full Width Hero Card */}
+  1078→        {featured && (
+  1079→          <AnimatedSection delay={100}>
+  1080→            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-amber-200/30 mb-8 group cursor-pointer" onClick={() => setExpandedCard(expandedCard === featured.title ? null : featured.title)}>
+  1081→              <div className="grid md:grid-cols-2">
+  1082→                <div className="relative h-64 md:h-full min-h-[320px] overflow-hidden">
+  1083→                  <img src={featured.img} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="eager" />
+  1084→                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-black/10" />
+  1085→                  <div className="absolute top-4 left-4 flex items-center gap-2">
+  1086→                    <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1"><Crown className="w-3 h-3" /> Featured Heritage</span>
+  1087→                    <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full">{featured.tag}</span>
+  1088→                  </div>
+  1089→                  {/* Coordinates badge */}
+  1090→                  <div className="absolute bottom-4 left-4 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm text-white/80 text-[10px] px-3 py-1.5 rounded-full">
+  1091→                    <Compass className="w-3 h-3" />{featured.coordinates}
+  1092→                  </div>
+  1093→                </div>
+  1094→                <div className="p-6 md:p-8 lg:p-10 flex flex-col justify-center bg-gradient-to-br from-white to-amber-50/30">
+  1095→                  <div className="text-amber-600 text-xs font-bold uppercase tracking-[0.15em] mb-2">{featured.subtitle}</div>
+  1096→                  <h3 className="text-2xl md:text-3xl font-black text-[#0B3D2E] mb-3 leading-tight">{featured.title}</h3>
+  1097→                  <p className="text-[#0B3D2E]/60 leading-relaxed mb-4 text-sm">{featured.description}</p>
+  1098→
+  1099→                  {/* Stats row */}
+  1100→                  {featured.stats && (
+  1101→                    <div className="grid grid-cols-4 gap-2 mb-5">
+  1102→                      {featured.stats.map((st) => (
+  1103→                        <div key={st.label} className="bg-white/80 rounded-xl p-2.5 text-center border border-amber-100/50">
+  1104→                          <st.icon className="w-4 h-4 mx-auto mb-1 text-amber-500" />
+  1105→                          <div className="text-sm font-black text-[#0B3D2E]">{st.value}</div>
+  1106→                          <div className="text-[9px] text-[#0B3D2E]/40 font-medium">{st.label}</div>
+  1107→                        </div>
+  1108→                      ))}
+  1109→                    </div>
+  1110→                  )}
+  1111→
+  1112→                  {/* Gallery thumbnails */}
+  1113→                  {featured.gallery && featured.gallery.length > 0 && (
+  1114→                    <div className="flex items-center gap-2">
+  1115→                      <div className="flex -space-x-2">
+  1116→                        {featured.gallery.slice(0, 4).map((g, gi) => (
+  1117→                          <div key={gi} className="w-10 h-10 rounded-lg overflow-hidden border-2 border-white shadow-md">
+  1118→                            <img src={g} alt="" className="w-full h-full object-cover" loading="lazy" />
+  1119→                          </div>
+  1120→                        ))}
+  1121→                      </div>
+  1122→                      <span className="text-xs text-amber-600 font-bold">{featured.gallery.length} photos</span>
+  1123→                    </div>
+  1124→                  )}
+  1125→
+  1126→                  {/* Expand button */}
+  1127→                  <button className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors">
+  1128→                    {expandedCard === featured.title ? "Show Less" : "Read Full History"} <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedCard === featured.title ? "rotate-180" : ""}`} />
+  1129→                  </button>
+  1130→                </div>
+  1131→              </div>
+  1132→              {/* Expanded content */}
+  1133→              {expandedCard === featured.title && featured.longDescription && (
+  1134→                <div className="px-6 md:px-8 lg:px-10 pb-6 md:pb-8">
+  1135→                  <div className="bg-white/80 rounded-2xl p-5 md:p-6 border border-amber-100/50">
+  1136→                    <h4 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4 text-amber-500" /> Architecture & Religious Significance</h4>
+  1137→                    <p className="text-[#0B3D2E]/60 text-sm leading-relaxed mb-4">{featured.longDescription}</p>
+  1138→                    {/* Gallery grid */}
+  1139→                    {featured.gallery && (
+  1140→                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  1141→                        {featured.gallery.map((g, gi) => (
+  1142→                          <div key={gi} className="relative rounded-xl overflow-hidden aspect-square group/img">
+  1143→                            <img src={g} alt={`Tadbaba Maryam treasure ${gi + 1}`} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" loading="lazy" />
+  1144→                            <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/30 transition-colors flex items-end p-2">
+  1145→                              <span className="text-white text-[10px] font-bold opacity-0 group-hover/img:opacity-100 transition-opacity">Treasure {gi + 1}</span>
+  1146→                            </div>
+  1147→                          </div>
+  1148→                        ))}
+  1149→                      </div>
+  1150→                    )}
+  1151→                  </div>
+  1152→                </div>
+  1153→              )}
+  1154→            </div>
+  1155→          </AnimatedSection>
+  1156→        )}
+  1157→
+  1158→        {/* Other heritage sites — 3-column grid */}
+  1159→        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+  1160→          {others.map((place, i) => (
+  1161→            <AnimatedSection key={place.title} delay={(i + 2) * 80}>
+  1162→              <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group h-full flex flex-col" onClick={() => setExpandedCard(expandedCard === place.title ? null : place.title)}>
+  1163→                <div className="h-48 relative overflow-hidden">
+  1164→                  <img src={place.img} alt={place.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+  1165→                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+  1166→                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+  1167→                    <div className="flex items-center gap-2">
+  1168→                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${place.tagColor}`}>{place.tag}</span>
+  1169→                    </div>
+  1170→                    <span className="text-[10px] font-medium text-white/80 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1"><MapPin className="w-3 h-3" />{place.location.split(",")[0]}</span>
+  1171→                  </div>
+  1172→                  {/* Stats overlay */}
+  1173→                  {place.stats && (
+  1174→                    <div className="absolute top-3 right-3 flex gap-1.5">
+  1175→                      {place.stats.slice(0, 2).map((st) => (
+  1176→                        <span key={st.label} className="bg-black/40 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded-full flex items-center gap-1"><st.icon className="w-3 h-3" />{st.value}</span>
+  1177→                      ))}
+  1178→                    </div>
+  1179→                  )}
+  1180→                </div>
+  1181→                <div className="p-4 md:p-5 flex flex-col flex-1">
+  1182→                  <div className="text-[#0B3D2E]/40 text-[10px] font-bold uppercase tracking-wider mb-1">{place.subtitle}</div>
+  1183→                  <h3 className="text-base md:text-lg font-extrabold text-[#0B3D2E] mb-2 group-hover:text-[#EAB308] transition-colors">{place.title}</h3>
+  1184→                  <p className="text-[#0B3D2E]/60 leading-relaxed mb-3 text-xs line-clamp-3 flex-1">{place.description}</p>
+  1185→
+  1186→                  {/* Highlights as compact pills */}
+  1187→                  <div className="flex flex-wrap gap-1.5 mb-3">
+  1188→                    {place.highlights.slice(0, 3).map((h) => (
+  1189→                      <span key={h} className="flex items-center gap-1 text-[10px] bg-gray-50 text-[#0B3D2E]/50 px-2 py-1 rounded-md">
+  1190→                        <CheckCircle2 className="w-3 h-3 text-[#EAB308]" />{h.length > 35 ? h.substring(0, 35) + "..." : h}
+  1191→                      </span>
+  1192→                    ))}
+  1193→                  </div>
+  1194→
+  1195→                  {/* Gallery thumbnails */}
+  1196→                  {place.gallery && place.gallery.length > 0 && (
+  1197→                    <div className="flex items-center gap-2 mt-auto">
+  1198→                      <div className="flex -space-x-1.5">
+  1199→                        {place.gallery.slice(0, 2).map((g, gi) => (
+  1200→                          <div key={gi} className="w-7 h-7 rounded-md overflow-hidden border-2 border-white shadow-sm">
+  1201→                            <img src={g} alt="" className="w-full h-full object-cover" loading="lazy" />
+  1202→                          </div>
+  1203→                        ))}
+  1204→                      </div>
+  1205→                      <span className="text-[10px] text-[#0B3D2E]/30 font-medium">{place.gallery.length} photos</span>
+  1206→                      <ChevronDown className={`w-3.5 h-3.5 ml-auto text-[#0B3D2E]/20 transition-transform ${expandedCard === place.title ? "rotate-180" : ""}`} />
+  1207→                    </div>
+  1208→                  )}
+  1209→                </div>
+  1210→                {/* Expanded content */}
+  1211→                {expandedCard === place.title && place.longDescription && (
+  1212→                  <div className="px-5 pb-5">
+  1213→                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+  1214→                      <p className="text-[#0B3D2E]/60 text-xs leading-relaxed">{place.longDescription}</p>
+  1215→                      {place.gallery && place.gallery.length > 0 && (
+  1216→                        <div className="grid grid-cols-2 gap-2 mt-3">
+  1217→                          {place.gallery.map((g, gi) => (
+  1218→                            <div key={gi} className="rounded-lg overflow-hidden aspect-video">
+  1219→                              <img src={g} alt="" className="w-full h-full object-cover" loading="lazy" />
+  1220→                            </div>
+  1221→                          ))}
+  1222→                        </div>
+  1223→                      )}
+  1224→                    </div>
+  1225→                  </div>
+  1226→                )}
+  1227→              </div>
+  1228→            </AnimatedSection>
+  1229→          ))}
+  1230→        </div>
+  1231→
+  1232→        {/* Explore more */}
+  1233→        <AnimatedSection delay={400}>
+  1234→          <div className="text-center mt-10">
+  1235→            <button onClick={() => onNavigate("about-history")}
+  1236→              className="group inline-flex items-center gap-2.5 bg-gradient-to-r from-[#0B3D2E] to-[#145A44] hover:from-[#145A44] hover:to-[#0B3D2E] text-white font-bold px-7 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 text-sm">
+  1237→              Explore Full History <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+  1238→            </button>
+  1239→          </div>
+  1240→        </AnimatedSection>
+  1241→      </div>
+  1242→    </section>
+  1243→  );
+  1244→}
+  1245→
+  1246→/* ─── GEOGRAPHIC MAP SECTION (Home) ──────────────────────── */
+  1247→function GeoMapSection({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1248→  const [activeTab, setActiveTab] = useState<"map" | "info">("map");
+  1249→  const borderItems = [
+  1250→    { dir: "South", name: "Debre Sina & Mehal Sayint" },
+  1251→    { dir: "West", name: "East Gojjam (Blue Nile)" },
+  1252→    { dir: "NW", name: "South Gondar (Bashilo R.)" },
+  1253→    { dir: "North", name: "Magdala" },
+  1254→    { dir: "East", name: "Tenta" },
+  1255→    { dir: "SE", name: "Legambo (Mt. Tabor)" },
+  1256→  ];
+  1257→  return (
+  1258→    <section className="py-10 md:py-14 bg-white">
+  1259→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1260→        <AnimatedSection>
+  1261→          <div className="text-center mb-8">
+  1262→            <h2 className="text-2xl md:text-3xl font-extrabold text-[#0B3D2E] mb-2">Explore <span className="text-[#EAB308]">Our Woreda</span></h2>
+  1263→            <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-sm">Located in the heart of South Wollo Zone, bordered by the Blue Nile and home to Mount Tabor.</p>
+  1264→          </div>
+  1265→        </AnimatedSection>
+  1266→        <AnimatedSection delay={100}>
+  1267→          <div className="grid lg:grid-cols-5 gap-6">
+  1268→            {/* Map */}
+  1269→            <div className="lg:col-span-3 rounded-2xl overflow-hidden shadow-xl border-2 border-gray-100 group">
+  1270→              <iframe
+  1271→                title="Amhara Sayint Location"
+  1272→                src="https://www.openstreetmap.org/export/embed.html?bbox=38.3%2C10.6%2C39.0%2C11.2&layer=mapnik&marker=10.92%2C38.65"
+  1273→                className="w-full h-[300px] md:h-[380px] border-0 grayscale group-hover:grayscale-0 transition-all duration-700"
+  1274→                loading="lazy"
+  1275→              />
+  1276→            </div>
+  1277→            {/* Info Panel */}
+  1278→            <div className="lg:col-span-2 space-y-4">
+  1279→              {/* Quick Facts */}
+  1280→              <div className="bg-gradient-to-br from-[#0B3D2E] to-[#145A44] rounded-2xl p-6 text-white shadow-xl">
+  1281→                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><MapPin className="w-5 h-5 text-[#EAB308]" /> Quick Facts</h3>
+  1282→                <div className="space-y-2.5 text-sm">
+  1283→                  {[
+  1284→                    ["Coordinates", "10.92° N, 38.65° E"],
+  1285→                    ["Elevation", "500m — 4,247m (Mt. Tabor)"],
+  1286→                    ["Major Town", "Ajibar"],
+  1287→                    ["Area", "1,437.30 km²"],
+  1288→                    ["Zone", "South Wollo, Amhara"],
+  1289→                  ].map(([label, value]) => (
+  1290→                    <div key={label} className="flex justify-between items-center py-1.5 border-b border-white/10 last:border-0">
+  1291→                      <span className="text-white/60">{label}</span>
+  1292→                      <span className="font-semibold text-[#EAB308]">{value}</span>
+  1293→                    </div>
+  1294→                  ))}
+  1295→                </div>
+  1296→                <a href="https://www.google.com/maps?q=10.92,38.65" target="_blank" rel="noopener noreferrer"
+  1297→                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all">
+  1298→                  <ExternalLink className="w-4 h-4" /> Open in Google Maps
+  1299→                </a>
+  1300→              </div>
+  1301→              {/* Borders */}
+  1302→              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+  1303→                <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Compass className="w-5 h-5 text-[#EAB308]" /> Neighboring Districts</h3>
+  1304→                <div className="grid grid-cols-2 gap-2">
+  1305→                  {borderItems.map((b) => (
+  1306→                    <div key={b.dir} className="flex items-center gap-2 text-sm">
+  1307→                      <span className="w-8 h-8 rounded-lg bg-[#0B3D2E] text-white text-[10px] font-bold flex items-center justify-center shrink-0">{b.dir}</span>
+  1308→                      <span className="text-[#0B3D2E]/70 text-xs leading-tight">{b.name}</span>
+  1309→                    </div>
+  1310→                  ))}
+  1311→                </div>
+  1312→              </div>
+  1313→              {/* CTA */}
+  1314→              <button onClick={() => onNavigate("about-location")}
+  1315→                className="w-full flex items-center justify-center gap-2 bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all">
+  1316→                View Full Location Details <ArrowRight className="w-5 h-5" />
+  1317→              </button>
+  1318→            </div>
+  1319→          </div>
+  1320→        </AnimatedSection>
+  1321→      </div>
+  1322→    </section>
+  1323→  );
+  1324→}
+  1325→
+  1326→/* ─── SERVICES OVERVIEW (Home) ─────────────────────────────── */
+  1327→const SERVICE_CARDS = [
+  1328→  { title: "Education", desc: "100 schools, 3 preparatory schools, and a TVET college providing quality education.", icon: GraduationCap, href: "svc-education" as PageId, color: "from-blue-500 to-indigo-600", img: "https://sfile.chatglm.cn/images-ppt/b60b21cb0921.jpg" },
+  1329→  { title: "Health", desc: "1 hospital and 15 clinics delivering comprehensive primary healthcare.", icon: HeartPulse, href: "svc-health" as PageId, color: "from-rose-500 to-pink-600", img: "https://sfile.chatglm.cn/images-ppt/40afb43a5118.jpg" },
+  1330→  { title: "Agriculture", desc: "Supporting farming households with modern techniques across 1,437 km².", icon: Tractor, href: "svc-agriculture" as PageId, color: "from-green-500 to-emerald-600", img: "https://sfile.chatglm.cn/images-ppt/4f86eab1aa4a.jpg" },
+  1331→  { title: "Trade", desc: "Promoting enterprises, market linkages, and cooperative development.", icon: Store, href: "svc-trade" as PageId, color: "from-purple-500 to-violet-600", img: "https://sfile.chatglm.cn/images-ppt/b4f869ff3165.jpg" },
+  1332→  { title: "Technology", desc: "Digital transformation, ICT training, and e-government services.", icon: Monitor, href: "svc-technology" as PageId, color: "from-cyan-500 to-teal-600", img: "https://sfile.chatglm.cn/images-ppt/31a73cdbeed8.jpg" },
+  1333→  { title: "Construction", desc: "Roads, public buildings, and community facilities development.", icon: HardHat, href: "svc-construction" as PageId, color: "from-orange-500 to-amber-600", img: "https://sfile.chatglm.cn/images-ppt/ebc225438557.png" },
+  1334→  { title: "Transport", desc: "Road networks and connectivity linking all 37 kebeles together.", icon: Truck, href: "svc-transport" as PageId, color: "from-sky-500 to-blue-600", img: "https://sfile.chatglm.cn/images-ppt/dd28c7e11c64.jpg" },
+  1335→  { title: "Water", desc: "Clean water points and sanitation programs for communities.", icon: Droplets, href: "svc-water" as PageId, color: "from-blue-400 to-cyan-500", img: "https://sfile.chatglm.cn/images-ppt/279feef8509d.jpg" },
+  1336→  { title: "Justice", desc: "Community policing, courts, and dispute resolution services.", icon: Scale, href: "svc-justice" as PageId, color: "from-slate-600 to-gray-700", img: "https://sfile.chatglm.cn/images-ppt/7f3715eb8025.jpg" },
+  1337→  { title: "Finance", desc: "Revenue collection, budget management, and financial administration.", icon: Banknote, href: "svc-finance" as PageId, color: "from-emerald-500 to-green-600", img: "https://sfile.chatglm.cn/images-ppt/9c67be723339.jpg" },
+  1338→];
+  1339→
+  1340→function ServicesOverview({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1341→  return (
+  1342→    <section id="services-section" className="py-10 md:py-14 bg-white">
+  1343→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1344→        <AnimatedSection><div className="text-center mb-8">
+  1345→          <h2 className="text-2xl md:text-3xl font-extrabold text-[#0B3D2E] mb-2">Our <span className="text-[#EAB308]">Services</span></h2>
+  1346→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-sm">Comprehensive public services designed to improve the lives of every citizen</p>
+  1347→        </div></AnimatedSection>
+  1348→        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+  1349→          {SERVICE_CARDS.map((svc, i) => (
+  1350→            <AnimatedSection key={svc.title} delay={i * 60}>
+  1351→              <button onClick={() => onNavigate(svc.href)} className="w-full group text-left">
+  1352→                <Card className="bg-white border border-gray-100 hover:border-[#EAB308]/30 hover:shadow-xl transition-all duration-300 h-full overflow-hidden">
+  1353→                  <div className="h-28 relative overflow-hidden">
+  1354→                    <img src={svc.img} alt={svc.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+  1355→                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+  1356→                    <div className={`absolute bottom-3 left-3 w-10 h-10 rounded-xl bg-gradient-to-br ${svc.color} flex items-center justify-center shadow-lg`}><svc.icon className="w-5 h-5 text-white" /></div>
+  1357→                  </div>
+  1358→                  <CardContent className="p-4">
+  1359→                    <h3 className="font-bold text-[#0B3D2E] text-sm mb-1 group-hover:text-[#EAB308] transition-colors">{svc.title}</h3>
+  1360→                    <p className="text-[#0B3D2E]/60 text-xs leading-relaxed line-clamp-2">{svc.desc}</p>
+  1361→                  </CardContent>
+  1362→                </Card>
+  1363→              </button>
+  1364→            </AnimatedSection>
+  1365→          ))}
+  1366→        </div>
+  1367→      </div>
+  1368→    </section>
+  1369→  );
+  1370→}
+  1371→
+  1372→/* ─── SUB PAGE LAYOUT ─────────────────────────────────────── */
+  1373→function SubPage({ onNavigate, title, breadcrumb, badge, badgeColor, children }: { onNavigate: (p: PageId) => void; title: string; breadcrumb: string; badge: string; badgeColor?: string; children: React.ReactNode }) {
+  1374→  const [sidebarOpen, setSidebarOpen] = useState(false);
+  1375→  const sidebarItems: { label: string; href: PageId }[] = [];
+  1376→  if (breadcrumb.startsWith("About")) sidebarItems.push({ label: "History", href: "about-history" }, { label: "Overview", href: "about-overview" }, { label: "Location", href: "about-location" });
+  1377→  if (breadcrumb.startsWith("Government")) sidebarItems.push({ label: "Leadership", href: "gov-leadership" }, { label: "Structure", href: "gov-structure" }, { label: "Offices", href: "gov-offices" });
+  1378→  if (breadcrumb.startsWith("Services")) sidebarItems.push({ label: "Education", href: "svc-education" }, { label: "Health", href: "svc-health" }, { label: "Agriculture", href: "svc-agriculture" }, { label: "Trade", href: "svc-trade" }, { label: "Technology", href: "svc-technology" }, { label: "Construction", href: "svc-construction" }, { label: "Transport", href: "svc-transport" }, { label: "Water", href: "svc-water" }, { label: "Justice", href: "svc-justice" }, { label: "Finance", href: "svc-finance" });
+  1379→
+  1380→  return (
+  1381→    <div className="min-h-screen pt-[92px] md:pt-[110px]">
+  1382→      <div className="bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] py-12 md:py-16">
+  1383→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1384→          <p className="text-white/50 text-sm mb-2">Home / {breadcrumb}</p>
+  1385→          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">{title}</h1>
+  1386→          <Badge className={`${badgeColor || "bg-[#EAB308]/20 text-[#EAB308] border-[#EAB308]/30"} text-sm font-medium`}>{badge}</Badge>
+  1387→        </div>
+  1388→      </div>
+  1389→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col lg:flex-row gap-8">
+  1390→        <div className="flex-1 min-w-0">{children}</div>
+  1391→        <div className="w-full lg:w-72 shrink-0">
+  1392→          <div className="lg:hidden mb-4">
+  1393→            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="flex items-center gap-2 text-sm font-semibold text-[#0B3D2E] bg-white border border-gray-200 px-4 py-2.5 rounded-lg shadow-sm">
+  1394→              {sidebarOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />} Navigation
+  1395→            </button>
+  1396→          </div>
+  1397→          {(sidebarOpen || typeof window !== "undefined") && (
+  1398→            <Card className="border-0 shadow-md lg:sticky lg:top-28 overflow-hidden">
+  1399→              <CardContent className="p-0">
+  1400→                <div className="bg-[#0B3D2E] px-5 py-4"><h3 className="text-white font-bold text-sm flex items-center gap-2"><Layers className="w-4 h-4 text-[#EAB308]" />Quick Navigation</h3></div>
+  1401→                <nav className="p-3 flex flex-col gap-0.5">
+  1402→                  {sidebarItems.map((item) => (
+  1403→                    <button key={item.href} onClick={() => onNavigate(item.href)}
+  1404→                      className={`text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${title.toLowerCase().includes(item.label.toLowerCase()) ? "bg-[#0B3D2E] text-white shadow-sm" : "text-[#0B3D2E]/60 hover:bg-[#0B3D2E]/5 hover:text-[#0B3D2E]"}`}>
+  1405→                      {item.label}
+  1406→                    </button>
+  1407→                  ))}
+  1408→                </nav>
+  1409→              </CardContent>
+  1410→            </Card>
+  1411→          )}
+  1412→        </div>
+  1413→      </div>
+  1414→    </div>
+  1415→  );
+  1416→}
+  1417→
+  1418→function ContentCard({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  1419→  return (
+  1420→    <AnimatedSection delay={delay}>
+  1421→      <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all duration-300">
+  1422→        <CardContent className="p-6 md:p-8">{children}</CardContent>
+  1423→      </Card>
+  1424→    </AnimatedSection>
+  1425→  );
+  1426→}
+  1427→
+  1428→/* ─── ABOUT: History ─────────────────────────────────────── */
+  1429→function AboutHistoryPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1430→  const timeline = [
+  1431→    { era: "Medieval Period (Pre-1900)", year: "Before 1900", desc: "The area that is now Amhara Sint was part of the medieval Amhara kingdom, strategically positioned along ancient trade routes connecting the northern highlands to the Shewa region. The woreda gained renown for its exceptional horse breeding, supplying cavalry mounts to regional lords and serving as a vital waypoint for merchants transporting salt, gold, and textiles. Ancient rock-hewn churches and archaeological sites bear testimony to a civilization that dates back centuries, with local oral traditions preserving epic tales of warriors and saints." },
+  1432→    { era: "Imperial Era (1900-1935)", year: "1900 - 1935", desc: "During the reign of Emperor Menelik II and later Emperor Haile Selassie I, Amhara Sint was formally established as an administrative district within the Wollo province. The imperial government constructed the first formal government offices, introduced modern tax collection systems, and established the first primary school. The town grew into a modest administrative center, attracting merchants, artisans, and civil servants. Ethiopian Orthodox Tewahedo Church influence deepened during this period." },
+  1433→    { era: "Italian Occupation (1935-1941)", year: "1935 - 1941", desc: "The five-year Italian occupation brought profound disruption. However, the people earned a distinguished reputation for fierce resistance against the fascist invaders. Local guerrilla fighters (Arbegnoch) operated from the rugged highland terrain, ambushing Italian patrols and maintaining communication with the broader Ethiopian resistance movement. Several local resistance leaders became celebrated figures, commemorated annually during patriotic celebrations." },
+  1434→    { era: "Post-Liberation (1941-1974)", year: "1941 - 1974", desc: "Following liberation, Amhara Sint experienced significant modernization. The imperial government expanded educational facilities, established agricultural extension services, and improved road connections to Dessie and other major towns. The woreda participated in Ethiopia's first limited parliamentary elections, sending representatives to the national assembly. The community's horse breeding traditions received official recognition, with annual horse fairs attracting traders from across the Amhara Region." },
+  1435→    { era: "Derg Era (1974-1991)", year: "1974 - 1991", desc: "The 1974 Revolution brought radical transformation. Sweeping land reform abolished the feudal landholding system, redistributing land to tenant farmers and establishing producer cooperatives. The woreda suffered during the devastating 1984-85 famine, with loss of life and mass displacement. Civil conflict in the late 1980s further challenged the community. Despite hardships, community institutions like the Idir and traditional mutual support networks played crucial roles in survival." },
+  1436→    { era: "Federal Era (1991-Present)", year: "1991 - Present", desc: "The establishment of the Federal Democratic Republic marked a new chapter. The woreda was reorganized under South Wollo Zone with an elected Woreda Council and Executive Committee. School enrollment increased from under 20% to over 85% at primary level, health facilities expanded from a single clinic to 23 institutions, and road connectivity reached 14 of 22 kebeles. The 2026/27 fiscal year budget reached ETB 85 million. Despite ongoing challenges, Amhara Sint continues toward its vision of a prosperous, equitable, and self-reliant community." },
+  1437→  ];
+  1438→  return (
+  1439→    <SubPage onNavigate={onNavigate} title="History & Background" breadcrumb="About / History" badge="About the Woreda">
+  1440→      <div className="space-y-8 max-w-4xl mx-auto">
+  1441→        <ContentCard>
+  1442→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><BookOpen className="w-6 h-6 text-[#EAB308]" /> Origins of Amhara Sint</h2>
+  1443→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">Amhara Sint (also known as Sayint) is one of the most historic woredas in the South Wollo Zone of the Amhara Region, Ethiopia. The name &ldquo;Sayint&rdquo; carries deep historical significance, referring to a place of gathering, administration, and strategic importance. Nestled in the rugged highlands of northern Ethiopia, the woreda has been a crossroads of civilizations for centuries.</p>
+  1444→          <p className="text-[#0B3D2E]/70 leading-relaxed">From its origins as a medieval settlement renowned for horse breeding, through the trials of foreign occupation and revolutionary upheaval, to its current position as a developing administrative district, the woreda has demonstrated remarkable resilience and an enduring commitment to community and progress.</p>
+  1445→        </ContentCard>
+  1446→        <ContentCard delay={100}>
+  1447→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-6 flex items-center gap-2"><Clock className="w-6 h-6 text-[#EAB308]" /> Historical Timeline</h2>
+  1448→          <div className="relative">
+  1449→            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#0B3D2E] via-[#EAB308] to-[#0B3D2E]"></div>
+  1450→            <div className="space-y-8">
+  1451→              {timeline.map((item) => (
+  1452→                <div key={item.era} className="relative pl-12 md:pl-16">
+  1453→                  <div className="absolute left-2.5 md:left-4.5 top-1.5 w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#EAB308] border-4 border-[#F0FDF4] shadow-md z-10"></div>
+  1454→                  <div className="bg-[#F0FDF4] rounded-xl p-5 border border-[#0B3D2E]/5">
+  1455→                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
+  1456→                      <span className="text-xs font-bold text-[#EAB308] bg-[#EAB308]/10 px-3 py-1 rounded-full w-fit">{item.year}</span>
+  1457→                      <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base">{item.era}</h3>
+  1458→                    </div>
+  1459→                    <p className="text-[#0B3D2E]/65 text-sm leading-relaxed">{item.desc}</p>
+  1460→                  </div>
+  1461→                </div>
+  1462→              ))}
+  1463→            </div>
+  1464→          </div>
+  1465→        </ContentCard>
+  1466→        <ContentCard delay={200}>
+  1467→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Landmark className="w-6 h-6 text-[#EAB308]" /> Cultural Heritage</h2>
+  1468→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">The woreda is home to a rich cultural heritage reflecting the deep traditions of the Amhara people. Ethiopian Orthodox Tewahedo Christianity forms the spiritual foundation, with ancient churches serving as centers of worship, education, and communal gathering. The annual Meskel and Demera celebrations are major cultural events bringing together thousands of residents. Timkat (Epiphany) features the Tabot carried in procession to nearby water bodies.</p>
+  1469→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">Local crafts including pottery, weaving (netela and gabi), and blacksmithing continue through generations. Customary dispute resolution by respected elders (Shimagile), communal labor traditions (Debo), and the Idir burial society remain vital social safety nets. Traditional musical instruments like masinko, krar, and washint accompany stories of love, heroism, and faith.</p>
+  1470→          <p className="text-[#0B3D2E]/70 leading-relaxed">The woreda's cuisine includes injera from locally grown teff, doro wot, and traditional dishes during holidays. Coffee ceremonies are central to community gatherings, conflict resolution, and welcoming guests. The famous horse breeding tradition continues with annual fairs attracting visitors from across the region.</p>
+  1471→        </ContentCard>
+  1472→        <ContentCard delay={300}>
+  1473→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Flag className="w-6 h-6 text-[#EAB308]" /> Resistance & Patriotism</h2>
+  1474→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">Amhara Sint holds a special place in Ethiopia's history of resistance. During the Italian occupation of 1935-1941, the woreda's rugged terrain provided ideal conditions for guerrilla warfare. Local Patriots organized effective resistance cells that harassed Italian garrisons and sabotaged supply lines. Several local leaders emerged as heroic figures, commemorated annually on Patriots' Victory Day, March 12th.</p>
+  1475→          <p className="text-[#0B3D2E]/70 leading-relaxed">Monuments and memorial sites have been established, and oral history traditions ensure stories of courage are transmitted to younger generations. The woreda's contributions to Ethiopia's struggle for freedom remain a source of immense community pride.</p>
+  1476→        </ContentCard>
+  1477→        <ContentCard delay={400}>
+  1478→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><TrendingUp className="w-6 h-6 text-[#EAB308]" /> Modern Development</h2>
+  1479→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">Since 1991, Amhara Sint has embarked on ambitious development. Elected kebele councils, women's associations, youth groups, and farmer cooperatives now play active roles in identifying priorities. Key milestones include: school enrollment from under 20% to over 85%, health facilities from 1 clinic to 23 institutions, 64 clean water points, and 85 km of all-weather roads. The annual budget has grown significantly, reaching ETB 85 million for 2026/27.</p>
+  1480→          <p className="text-[#0B3D2E]/70 leading-relaxed">Despite challenges including climate variability, youth unemployment, and limited infrastructure, Amhara Sint continues steady progress toward a prosperous, equitable, and self-reliant community.</p>
+  1481→        </ContentCard>
+  1482→      </div>
+  1483→    </SubPage>
+  1484→  );
+  1485→}
+  1486→
+  1487→/* ─── ABOUT: Overview ────────────────────────────────────── */
+  1488→function AboutOverviewPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1489→  return (
+  1490→    <SubPage onNavigate={onNavigate} title="Overview" breadcrumb="About / Overview" badge="General Information">
+  1491→      <div className="space-y-8 max-w-4xl mx-auto">
+  1492→        <ContentCard>
+  1493→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Globe className="w-6 h-6 text-[#EAB308]" /> About Amhara Sint Woreda</h2>
+  1494→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">Amhara Sint Woreda is an administrative district in the South Wollo Zone of the Amhara Regional State, Ethiopia. Covering approximately 1,245 square kilometers, it is home to an estimated 142,350 people across 22 kebeles. The administration is headquartered in the town of Amhara Sint.</p>
+  1495→          <p className="text-[#0B3D2E]/70 leading-relaxed">The woreda operates under Ethiopia's federal governance structure, with administrative layers including the woreda council, executive committee, and kebele-level administrations responsible for delivering public services and managing development programs.</p>
+  1496→        </ContentCard>
+  1497→        <div className="grid md:grid-cols-2 gap-6">
+  1498→          <ContentCard delay={100}>
+  1499→            <h3 className="font-bold text-[#0B3D2E] mb-3">Key Facts</h3>
+  1500→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1501→              {[["Zone: South Wollo", "#EAB308"], ["Region: Amhara Regional State", "#EAB308"], ["Population: ~142,350", "#EAB308"], ["Area: ~1,245 km\u00B2", "#EAB308"], ["Kebeles: 22", "#EAB308"], ["Elevation: 1,500 - 3,200m", "#EAB308"], ["Capital Town: Amhara Sint", "#EAB308"], ["Language: Amharic", "#EAB308"]].map(([t, c]) => (
+  1502→                <li key={t} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 mt-0.5 shrink-0" style={{ color: c }} />{t}</li>
+  1503→              ))}
+  1504→            </ul>
+  1505→          </ContentCard>
+  1506→          <ContentCard delay={150}>
+  1507→            <h3 className="font-bold text-[#0B3D2E] mb-3">Economy</h3>
+  1508→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1509→              {[["Primary: Agriculture (75%+)", "#10B981"], ["Crops: Teff, Barley, Wheat, Sorghum", "#10B981"], ["Livestock: Cattle, Sheep, Goats", "#10B981"], ["Growing: Small enterprises & trade", "#10B981"], ["Cooperatives: 120+ registered", "#10B981"], ["Annual Budget: ETB 85 Million", "#10B981"]].map(([t, c]) => (
+  1510→                <li key={t} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 mt-0.5 shrink-0" style={{ color: c }} />{t}</li>
+  1511→              ))}
+  1512→            </ul>
+  1513→          </ContentCard>
+  1514→        </div>
+  1515→        <ContentCard delay={200}>
+  1516→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Target className="w-6 h-6 text-[#EAB308]" /> Vision & Mission</h2>
+  1517→          <div className="space-y-4">
+  1518→            <div className="bg-[#F0FDF4] rounded-xl p-5 border border-[#0B3D2E]/5">
+  1519→              <h3 className="font-bold text-[#0B3D2E] mb-2">Vision</h3>
+  1520→              <p className="text-[#0B3D2E]/70 text-sm leading-relaxed">To see Amhara Sint become a prosperous, equitable, and self-reliant woreda where all citizens enjoy improved livelihoods, quality education, accessible healthcare, and sustainable development within a democratic and transparent governance framework.</p>
+  1521→            </div>
+  1522→            <div className="bg-[#EAB308]/5 rounded-xl p-5 border border-[#EAB308]/10">
+  1523→              <h3 className="font-bold text-[#0B3D2E] mb-2">Mission</h3>
+  1524→              <p className="text-[#0B3D2E]/70 text-sm leading-relaxed">To deliver efficient, transparent, and accountable public services; promote sustainable agricultural and economic development; ensure equitable access to education, health, and clean water; and empower communities to participate actively in their own development through decentralized governance.</p>
+  1525→            </div>
+  1526→          </div>
+  1527→        </ContentCard>
+  1528→      </div>
+  1529→    </SubPage>
+  1530→  );
+  1531→}
+  1532→
+  1533→/* ─── ABOUT: Location ────────────────────────────────────── */
+  1534→function AboutLocationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1535→  return (
+  1536→    <SubPage onNavigate={onNavigate} title="Location & Geography" breadcrumb="About / Location" badge="Geographic Profile">
+  1537→      <div className="space-y-8 max-w-4xl mx-auto">
+  1538→        {/* Interactive Map */}
+  1539→        <ContentCard>
+  1540→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><MapPin className="w-6 h-6 text-[#EAB308]" /> Location on the Map</h2>
+  1541→          <div className="rounded-xl overflow-hidden border-2 border-gray-200 shadow-md mb-4">
+  1542→            <iframe
+  1543→              title="Amhara Sayint Location Map"
+  1544→              src="https://www.openstreetmap.org/export/embed.html?bbox=38.4%2C10.7%2C38.9%2C11.15&layer=mapnik&marker=10.92%2C38.65"
+  1545→              className="w-full h-[400px] md:h-[500px] border-0"
+  1546→              loading="lazy"
+  1547→            />
+  1548→          </div>
+  1549→          <div className="flex flex-wrap gap-4 text-sm">
+  1550→            <a href="https://www.google.com/maps?q=10.92,38.65" target="_blank" rel="noopener noreferrer"
+  1551→              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium transition-colors border border-blue-200">
+  1552→              <ExternalLink className="w-4 h-4" /> Open in Google Maps
+  1553→            </a>
+  1554→            <a href="https://www.openstreetmap.org/#map=12/10.92/38.65" target="_blank" rel="noopener noreferrer"
+  1555→              className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 font-medium transition-colors border border-green-200">
+  1556→              <ExternalLink className="w-4 h-4" /> View Larger on OpenStreetMap
+  1557→            </a>
+  1558→          </div>
+  1559→        </ContentCard>
+  1560→
+  1561→        {/* Coordinates & Key Data */}
+  1562→        <div className="grid md:grid-cols-2 gap-6">
+  1563→          <ContentCard delay={100}>
+  1564→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><MapPin className="w-5 h-5 text-[#EAB308]" /> Coordinates</h3>
+  1565→            <div className="space-y-3 text-sm text-[#0B3D2E]/70">
+  1566→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1567→                <span>Latitude</span><span className="font-bold text-[#0B3D2E]">10.92° N</span>
+  1568→              </div>
+  1569→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1570→                <span>Longitude</span><span className="font-bold text-[#0B3D2E]">38.65° E</span>
+  1571→              </div>
+  1572→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1573→                <span>Elevation Range</span><span className="font-bold text-[#0B3D2E]">500m - 4,247m</span>
+  1574→              </div>
+  1575→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1576→                <span>Town Altitude</span><span className="font-bold text-[#0B3D2E]">~2,443m (8,015 ft)</span>
+  1577→              </div>
+  1578→              <div className="flex justify-between items-center py-2">
+  1579→                <span>Major Town</span><span className="font-bold text-[#EAB308]">Ajibar</span>
+  1580→              </div>
+  1581→            </div>
+  1582→          </ContentCard>
+  1583→          <ContentCard delay={150}>
+  1584→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Globe className="w-5 h-5 text-[#EAB308]" /> Administrative Region</h3>
+  1585→            <div className="space-y-3 text-sm text-[#0B3D2E]/70">
+  1586→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1587→                <span>Country</span><span className="font-bold text-[#0B3D2E]">Ethiopia</span>
+  1588→              </div>
+  1589→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1590→                <span>Region</span><span className="font-bold text-[#0B3D2E]">Amhara Regional State</span>
+  1591→              </div>
+  1592→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1593→                <span>Zone</span><span className="font-bold text-[#0B3D2E]">South Wollo</span>
+  1594→              </div>
+  1595→              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+  1596→                <span>Total Area</span><span className="font-bold text-[#0B3D2E]">1,437.30 km²</span>
+  1597→              </div>
+  1598→              <div className="flex justify-between items-center py-2">
+  1599→                <span>Pop. Density</span><span className="font-bold text-[#0B3D2E]">100.86 / km²</span>
+  1600→              </div>
+  1601→            </div>
+  1602→          </ContentCard>
+  1603→        </div>
+  1604→
+  1605→        {/* Borders */}
+  1606→        <ContentCard delay={200}>
+  1607→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Compass className="w-6 h-6 text-[#EAB308]" /> Borders & Neighboring Districts</h2>
+  1608→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">Sayint (Amharic: ሣይንት), also known as Amhara Sayint (Amharic: አማራ ሣይንት), is bordered by six neighboring districts and two major rivers that form natural boundaries:</p>
+  1609→          <div className="grid sm:grid-cols-2 gap-3">
+  1610→            {[
+  1611→              { dir: "South", neighbor: "Debre Sina & Mehal Sayint", note: "Mehal Sayint was created by separating from the historic Amhara Sayint woreda" },
+  1612→              { dir: "West", neighbor: "East Gojjam Zone", note: "Separated by the Blue Nile (Abay) River" },
+  1613→              { dir: "Northwest", neighbor: "South Gondar Zone", note: "Separated by the Bashilo River" },
+  1614→              { dir: "North", neighbor: "Magdala", note: "Historic site of Emperor Tewodros II's final stronghold" },
+  1615→              { dir: "East", neighbor: "Tenta", note: "Within South Wollo Zone" },
+  1616→              { dir: "Southeast", neighbor: "Legambo", note: "Mount Tabor (4,247m) lies on this border — highest in South Wollo" },
+  1617→            ].map((b) => (
+  1618→              <div key={b.dir} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+  1619→                <div className="flex items-center gap-2 mb-1">
+  1620→                  <span className="text-xs font-bold text-white bg-[#0B3D2E] px-2.5 py-0.5 rounded-full">{b.dir}</span>
+  1621→                  <span className="font-semibold text-[#0B3D2E] text-sm">{b.neighbor}</span>
+  1622→                </div>
+  1623→                <p className="text-xs text-[#0B3D2E]/50 mt-1">{b.note}</p>
+  1624→              </div>
+  1625→            ))}
+  1626→          </div>
+  1627→        </ContentCard>
+  1628→
+  1629→        {/* Terrain & Geography */}
+  1630→        <ContentCard delay={250}>
+  1631→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><TreePine className="w-6 h-6 text-[#EAB308]" /> Terrain & Natural Features</h2>
+  1632→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">The altitude of this district ranges dramatically from 500 metres (1,600 ft) above sea level at the bottom of the canyon of the Abay (Blue Nile) to 4,247 metres (13,934 ft) at Mount Tabor — the highest point in the entire South Wollo Zone. This extreme elevation range creates diverse agro-ecological zones, from tropical lowland gorges to temperate highland plateaus and Afro-alpine peaks.</p>
+  1633→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">The Abay (Blue Nile) forms the western boundary and is crossable at the Daga ford, which connects this woreda with Enbise Sar Midir in Misraq Gojjam. The Bashilo River separates the woreda from the South Gondar Zone to the northwest. Seasonal rivers and streams feed into these major waterways, supporting both rain-fed and irrigated agriculture across the woreda.</p>
+  1634→          <div className="grid sm:grid-cols-3 gap-4 mt-6">
+  1635→            {[
+  1636→              { label: "Lowest Point", value: "500m", desc: "Abay River canyon floor", icon: Droplets, color: "bg-blue-50 text-blue-600" },
+  1637→              { label: "Highest Point", value: "4,247m", desc: "Mount Tabor (South Wollo peak)", icon: TreePine, color: "bg-emerald-50 text-emerald-600" },
+  1638→              { label: "Daga Ford", value: "Crossing", desc: "Abay River crossing to Gojjam", icon: Map, color: "bg-amber-50 text-amber-600" },
+  1639→            ].map((f) => (
+  1640→              <div key={f.label} className={`${f.color} rounded-xl p-4 text-center`}>
+  1641→                <f.icon className="w-8 h-8 mx-auto mb-2 opacity-70" />
+  1642→                <div className="text-lg font-extrabold">{f.value}</div>
+  1643→                <div className="text-xs font-bold opacity-80">{f.label}</div>
+  1644→                <p className="text-[10px] opacity-60 mt-1">{f.desc}</p>
+  1645→              </div>
+  1646→            ))}
+  1647→          </div>
+  1648→        </ContentCard>
+  1649→
+  1650→        {/* Historical Landmarks */}
+  1651→        <ContentCard delay={300}>
+  1652→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Landmark className="w-6 h-6 text-[#EAB308]" /> Notable Historical Landmarks</h2>
+  1653→          <div className="space-y-4">
+  1654→            <div className="bg-gradient-to-br from-amber-50 via-yellow-50/30 to-amber-50 rounded-2xl p-6 border border-amber-200/40 overflow-hidden relative">
+  1655→              <div className="absolute top-0 right-0 w-40 h-40 bg-amber-200/20 rounded-full -translate-y-1/2 translate-x-1/2" />
+  1656→              <div className="relative z-10">
+  1657→                <div className="flex items-center gap-3 mb-4">
+  1658→                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-lg"><Crown className="w-7 h-7 text-white" /></div>
+  1659→                  <div>
+  1660→                    <h3 className="font-black text-[#0B3D2E] text-lg">Tadbaba Maryam Monastery</h3>
+  1661→                    <p className="text-amber-700 text-xs font-bold">The Tabernacle of Zion — ተድባበ ማርያም | Coordinates: 11.114°N, 38.753°E</p>
+  1662→                  </div>
+  1663→                </div>
+  1664→                <p className="text-[#0B3D2E]/70 text-sm leading-relaxed mb-4">Tadbaba Maryam was among the first four temples in Ethiopia where sacrificial offerings were implemented before the birth of Jesus Christ. The name combines two Ge'ez words: <strong>Tadbaba</strong> meaning Tabernacle and <strong>Maryam/Tsion</strong> meaning Zion — <em>"The Tabernacle of Zion."</em> According to the chronicle of Tadbaba Maryam, the Ark arrived in <strong>982 BCE</strong>, coinciding with the disappearance of the Ark of the Covenant during the reign of King Solomon (970-931 BCE). The current spectacular circular church was built by <strong>Emperor Gelawdewos</strong> after his victory at the <strong>Battle of Wayna Daga in 1543</strong>, where he personally cut off the head of Imam Ahmad ibn Ibrahim al-Ghazi — a decisive battle that halted the Adal Sultanate's expansion into the Ethiopian highlands.</p>
+  1665→                <div className="grid sm:grid-cols-4 gap-2 mb-4">
+  1666→                  {[{ l: "Founded", v: "~982 BCE" }, { l: "Church Built", v: "Post-1543" }, { l: "Architecture", v: "Circular" }, { l: "Holy of Holies", v: "24m diameter" }].map(d => (
+  1667→                    <div key={d.l} className="bg-white/60 rounded-xl p-2.5 text-center border border-amber-100/50">
+  1668→                      <div className="text-sm font-black text-amber-700">{d.v}</div>
+  1669→                      <div className="text-[9px] text-[#0B3D2E]/40 font-medium">{d.l}</div>
+  1670→                    </div>
+  1671→                  ))}
+  1672→                </div>
+  1673→                <h4 className="font-bold text-[#0B3D2E] text-sm mb-2 flex items-center gap-2"><Shield className="w-4 h-4 text-amber-500" /> Sacred Treasures (Museum)</h4>
+  1674→                <p className="text-[#0B3D2E]/70 text-sm leading-relaxed mb-3">Tadbaba Maryam possesses a huge collection of treasures, some dating back to Old Testament times, now displayed in a museum inside the church compound. The most notable relics include:</p>
+  1675→                <div className="grid grid-cols-2 gap-2 mb-4">
+  1676→                  {["Ancient cross in the form of a Sheep (Na'wa Bagu — Behold the Lamb)", "Shield of King Kaleb used in defeating rebellious factions in Yemen", "Hebrew Synodus and liturgy in Aramaic language", "Gospel decorated with pure gold", "Hand cross used by St. John the Baptist", "Throne of King Dawit (Unknown King David)"].map((t, ti) => (
+  1677→                    <div key={ti} className="flex items-start gap-1.5 text-xs text-[#0B3D2E]/60"><CheckCircle2 className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />{t}</div>
+  1678→                  ))}
+  1679→                </div>
+  1680→                <div className="grid grid-cols-4 gap-2">
+  1681→                  {["https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/TedbabeMariyam_Church.jpg/300px-TedbabeMariyam_Church.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Thesaurus_of_T%C3%A4dbab%C3%A4_Maryam.jpg/300px-Thesaurus_of_T%C3%A4dbab%C3%A4_Maryam.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Shields_gifted_to_T%C3%A4dbab%C3%A4_Maryam.jpg/300px-Shields_gifted_to_T%C3%A4dbab%C3%A4_Maryam.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Throne_of_King_Dawit_%28Unknown_King_David%29.jpg/300px-Throne_of_King_Dawit_%28Unknown_King_David%29.jpg"].map((img, ii) => (
+  1682→                    <div key={ii} className="rounded-lg overflow-hidden aspect-square border-2 border-white shadow-md"><img src={img} alt={`Tadbaba Maryam ${ii + 1}`} className="w-full h-full object-cover" loading="lazy" /></div>
+  1683→                  ))}
+  1684→                </div>
+  1685→              </div>
+  1686→            </div>
+  1687→            <div className="bg-[#EAB308]/5 rounded-xl p-5 border border-[#EAB308]/10">
+  1688→              <h3 className="font-bold text-[#0B3D2E] mb-2">Mount Tabor</h3>
+  1689→              <p className="text-[#0B3D2E]/70 text-sm leading-relaxed">Standing at 4,247 metres (13,934 ft), Mount Tabor is the highest peak in the South Wollo Zone, located on the border with Legambo. It is a prominent natural landmark visible from much of the woreda and surrounding areas, featuring Afro-alpine vegetation and unique highland biodiversity.</p>
+  1690→            </div>
+  1691→            <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
+  1692→              <h3 className="font-bold text-[#0B3D2E] mb-2">Abay (Blue Nile) Canyon</h3>
+  1693→              <p className="text-[#0B3D2E]/70 text-sm leading-relaxed">The western boundary of Amhara Sayint is defined by the spectacular canyon of the Abay (Blue Nile) River. At just 500 metres above sea level, the canyon floor contrasts dramatically with the highland plateaus above, creating one of the most dramatic elevation gradients in Ethiopia. The historic Daga ford provides a crossing point connecting the woreda to the Gojjam region.</p>
+  1694→            </div>
+  1695→          </div>
+  1696→        </ContentCard>
+  1697→
+  1698→        {/* Demographics Summary */}
+  1699→        <ContentCard delay={350}>
+  1700→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Users className="w-6 h-6 text-[#EAB308]" /> Demographics (2007 Census)</h2>
+  1701→          <div className="grid sm:grid-cols-2 gap-4">
+  1702→            {[
+  1703→              { label: "Total Population", value: "144,972", note: "71,979 men / 72,993 women" },
+  1704→              { label: "Urban Population", value: "5,474 (3.78%)", note: "Concentrated in Ajibar town" },
+  1705→              { label: "Households", value: "34,999", note: "Average 4.14 persons per household" },
+  1706→              { label: "Housing Units", value: "33,604", note: "" },
+  1707→              { label: "Ethnicity (Amhara)", value: "99.96%", note: "Predominantly Amhara" },
+  1708→              { label: "Language (Amharic)", value: "99.97%", note: "Amharic as first language" },
+  1709→              { label: "Religion (Orthodox)", value: "98%", note: "Ethiopian Orthodox Tewahedo" },
+  1710→              { label: "Religion (Muslim)", value: "2%", note: "" },
+  1711→            ].map((d) => (
+  1712→              <div key={d.label} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+  1713→                <div className="text-right min-w-0 flex-1">
+  1714→                  <div className="text-xs text-[#0B3D2E]/50 font-medium">{d.label}</div>
+  1715→                  {d.note && <div className="text-[10px] text-[#0B3D2E]/40">{d.note}</div>}
+  1716→                </div>
+  1717→                <div className="font-bold text-[#0B3D2E] text-sm shrink-0">{d.value}</div>
+  1718→              </div>
+  1719→            ))}
+  1720→          </div>
+  1721→          <p className="text-xs text-[#0B3D2E]/40 mt-4 italic">Source: 2007 National Census, Central Statistical Agency of Ethiopia (CSA)</p>
+  1722→        </ContentCard>
+  1723→      </div>
+  1724→    </SubPage>
+  1725→  );
+  1726→}
+  1727→
+  1728→/* ─── GOVERNMENT: Leadership (ORG CHART STYLE) ────────── */
+  1729→function GovLeadershipPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1730→  const woredaLeader = {
+  1731→    name: "Ato Dereje Getachew", title: "Woreda Administrator",
+  1732→    phone: "+251 33 440 1001", email: "admin@amharasint.gov.et",
+  1733→    avatar: "https://ui-avatars.com/api/?name=Dereje+Getachew&background=0B3D2E&color=fff&size=200&bold=true&font-size=0.35",
+  1734→    desc: "Chief Administrator of Amhara Sint Woreda, leading development initiatives and coordinating all government departments.",
+  1735→    deptLabel: "Woreda Administration", deptColor: "#059669",
+  1736→  };
+  1737→  const deputyLeader = {
+  1738→    name: "Ato Tadesse Abebe", title: "Deputy Administrator",
+  1739→    phone: "+251 33 440 1002", email: "deputy@amharasint.gov.et",
+  1740→    avatar: "https://ui-avatars.com/api/?name=Tadesse+Abebe&background=145A44&color=fff&size=200&bold=true&font-size=0.35",
+  1741→    desc: "Oversees social services, education, and health sectors. Supports the Administrator in day-to-day governance.",
+  1742→    deptLabel: "Woreda Administration", deptColor: "#059669",
+  1743→  };
+  1744→  const councilSpeaker = {
+  1745→    name: "W/ro Almaz Tesfaye", title: "Woreda Council Speaker",
+  1746→    phone: "+251 33 440 1003", email: "council@amharasint.gov.et",
+  1747→    avatar: "https://ui-avatars.com/api/?name=Almaz+Tesfaye&background=0B3D2E&color=fff&size=200&bold=true&font-size=0.35",
+  1748→    desc: "Presides over the Woreda Council, facilitating legislative sessions and ensuring accountability.",
+  1749→    deptLabel: "Woreda Council", deptColor: "#6366F1",
+  1750→  };
+  1751→
+  1752→  const sectorHeads = [
+  1753→    { name: "W/ro Tigist Mekonnen", title: "Head of Education Office", phone: "+251 33 440 1005", email: "education@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Tigist+Mekonnen&background=1D4ED8&color=fff&size=200&bold=true", icon: GraduationCap, deptLabel: "Education Bureau", deptColor: "#1D4ED8", desc: "Leads education reform, manages 100+ schools, and improves learning quality across all kebeles.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintEducation", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintEdu", icon: "telegram" }] },
+  1754→    { name: "Ato Fikadu Hailu", title: "Head of Agriculture Office", phone: "+251 33 440 1007", email: "agriculture@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Fikadu+Hailu&background=16A34A&color=fff&size=200&bold=true", icon: Tractor, deptLabel: "Agriculture Bureau", deptColor: "#16A34A", desc: "Manages agricultural extension, food security programs, and natural resource conservation.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintAgriculture", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintAgri", icon: "telegram" }] },
+  1755→    { name: "Dr. Alemayehu Bekele", title: "Head of Health Office", phone: "+251 33 440 1006", email: "health@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Alemayehu+Bekele&background=DC2626&color=fff&size=200&bold=true", icon: HeartPulse, deptLabel: "Health Bureau", deptColor: "#DC2626", desc: "Oversees public health programs, 16 health facilities, and community health extension workers.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintHealth", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintHealth", icon: "telegram" }] },
+  1756→    { name: "Ato Getachew Worku", title: "Head of Transport", phone: "+251 33 440 1009", email: "transport@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Getachew+Worku&background=0284C7&color=fff&size=200&bold=true", icon: Truck, deptLabel: "Transport Office", deptColor: "#0284C7", desc: "Leads road construction, rural connectivity, and transport infrastructure development.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintTransport", icon: "facebook" }] },
+  1757→    { name: "Ato Nahom Tadesse", title: "Head of ICT & Technology", phone: "+251 33 440 1012", email: "tech@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Nahom+Tadesse&background=0891B2&color=fff&size=200&bold=true", icon: Monitor, deptLabel: "Technology Office", deptColor: "#0891B2", desc: "Manages ICT infrastructure, digital transformation, and computer lab maintenance.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintTech", icon: "facebook" }, { platform: "LinkedIn", url: "https://linkedin.com/company/amharasint-ict", icon: "linkedin" }] },
+  1758→    { name: "Ato Yohannes Girma", title: "Head of Finance", phone: "+251 33 440 1004", email: "finance@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Yohannes+Girma&background=059669&color=fff&size=200&bold=true", icon: Banknote, deptLabel: "Finance & Revenue", deptColor: "#059669", desc: "Oversees budget planning, revenue collection, and economic development initiatives.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintFinance", icon: "facebook" }] },
+  1759→    { name: "Ato Assefa Demeke", title: "Head of Justice", phone: "+251 33 440 1008", email: "justice@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Assefa+Demeke&background=475569&color=fff&size=200&bold=true", icon: Scale, deptLabel: "Justice Bureau", deptColor: "#475569", desc: "Manages legal affairs, conflict resolution, and community justice programs.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintJustice", icon: "facebook" }] },
+  1760→    { name: "Ato Teshome Kebede", title: "Head of Construction", phone: "+251 33 440 1011", email: "construction@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Teshome+Kebede&background=EA580C&color=fff&size=200&bold=true", icon: HardHat, deptLabel: "Construction Office", deptColor: "#EA580C", desc: "Supervises public building projects, road construction, and water infrastructure.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintConstruction", icon: "facebook" }] },
+  1761→  ];
+  1762→
+  1763→  const managementHeads = [
+  1764→    { name: "Ato Girma Ayele", title: "Head of Women & Children Affairs", phone: "+251 33 440 1013", email: "womenchildren@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Girma+Ayele&background=DB2777&color=fff&size=200&bold=true", icon: Heart, deptLabel: "Women & Children Bureau", deptColor: "#DB2777", desc: "Leads gender equality programs, children's rights protection, women's economic empowerment, and anti-violence campaigns across the woreda.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintWomen", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintWomen", icon: "telegram" }] },
+  1765→    { name: "W/ro Hiwot Abebe", title: "Head of Youth & Sports Office", phone: "+251 33 440 1014", email: "youthsports@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Hiwot+Abebe&background=7C3AED&color=fff&size=200&bold=true", icon: Award, deptLabel: "Youth & Sports Bureau", deptColor: "#7C3AED", desc: "Coordinates youth development programs, sports tournaments, talent identification, and entrepreneurship support for young people.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintYouth", icon: "facebook" }] },
+  1766→    { name: "Ato Demeke Zeleke", title: "Head of Trade & Industry", phone: "+251 33 440 1015", email: "trade@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Demeke+Zeleke&background=B45309&color=fff&size=200&bold=true", icon: Store, deptLabel: "Trade & Industry Bureau", deptColor: "#B45309", desc: "Promotes local trade, supports small enterprises, manages market regulations, and attracts investment to the woreda.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintTrade", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintTrade", icon: "telegram" }] },
+  1767→    { name: "W/ro Meselech Assefa", title: "Head of Water & Energy", phone: "+251 33 440 1016", email: "water@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Meselech+Assefa&background=0369A1&color=fff&size=200&bold=true", icon: Droplets, deptLabel: "Water & Energy Bureau", deptColor: "#0369A1", desc: "Manages clean water supply, irrigation systems, rural electrification, and renewable energy initiatives across all kebeles.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintWater", icon: "facebook" }] },
+  1768→    { name: "Ato Bekele Tadesse", title: "Head of Environmental Protection", phone: "+251 33 440 1017", email: "environment@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Bekele+Tadesse&background=15803D&color=fff&size=200&bold=true", icon: Leaf, deptLabel: "Environment Bureau", deptColor: "#15803D", desc: "Leads environmental conservation, climate resilience programs, forest management, and waste disposal regulation.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintEnv", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintEnv", icon: "telegram" }] },
+  1769→    { name: "Ato Solomon Mulugeta", title: "Head of Social Affairs", phone: "+251 33 440 1018", email: "social@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Solomon+Mulugeta&background=9333EA&color=fff&size=200&bold=true", icon: Handshake, deptLabel: "Social Affairs Bureau", deptColor: "#9333EA", desc: "Manages social safety nets, disability inclusion programs, elder care support, and community development initiatives.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintSocial", icon: "facebook" }] },
+  1770→    { name: "W/ro Selamawit Girma", title: "Head of Communication Affairs", phone: "+251 33 440 1019", email: "communication@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Selamawit+Girma&background=DC2626&color=fff&size=200&bold=true", icon: Megaphone, deptLabel: "Communication Bureau", deptColor: "#DC2626", desc: "Leads public relations, government communications, media liaison, community awareness campaigns, and digital content strategy.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintCommunication", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/amharasayintcommunication", icon: "telegram" }, { platform: "YouTube", url: "https://youtube.com/@UC9q-EOZGRREV8kr104kL-Hw", icon: "youtube" }, { platform: "Instagram", url: "https://instagram.com/amharasayintworedacomm", icon: "instagram" }] },
+  1771→    { name: "Ato Zelalem Hailu", title: "Head of Cooperatives Office", phone: "+251 33 440 1020", email: "cooperatives@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Zelalem+Hailu&background=0F766E&color=fff&size=200&bold=true", icon: People, deptLabel: "Cooperatives Bureau", deptColor: "#0F766E", desc: "Supports farmer cooperatives, savings and credit groups, artisan associations, and cooperative union development.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintCoop", icon: "facebook" }] },
+  1772→    { name: "W/ro Tigist Dabi", title: "Head of Labor & Skills", phone: "+251 33 440 1021", email: "labor@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Tigist+Dabi&background=C2410C&color=fff&size=200&bold=true", icon: Briefcase, deptLabel: "Labor & Skills Bureau", deptColor: "#C2410C", desc: "Oversees employment services, vocational skills training, labor rights protection, and workforce development programs.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintLabor", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintLabor", icon: "telegram" }] },
+  1773→    { name: "Ato Kassahun Worku", title: "Head of Urban Development", phone: "+251 33 440 1022", email: "urban@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Kassahun+Worku&background=4338CA&color=fff&size=200&bold=true", icon: Building2, deptLabel: "Urban Dev. Bureau", deptColor: "#4338CA", desc: "Manages urban planning, land administration, housing development, and municipal infrastructure in the town center.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintUrban", icon: "facebook" }] },
+  1774→    { name: "W/ro Alemtsehay Girma", title: "Head of Culture & Tourism", phone: "+251 33 440 1023", email: "culture@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Alemtsehay+Girma&background=B91C1C&color=fff&size=200&bold=true", icon: Landmark, deptLabel: "Culture & Tourism Bureau", deptColor: "#B91C1C", desc: "Promotes cultural heritage, organizes festivals, develops tourism sites, and preserves historical landmarks of the woreda.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintCulture", icon: "facebook" }, { platform: "YouTube", url: "https://youtube.com/@UC9q-EOZGRREV8kr104kL-Hw", icon: "youtube" }] },
+  1775→    { name: "Ato Yared Demissie", title: "Head of Disaster Risk Management", phone: "+251 33 440 1024", email: "disaster@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Yared+Demissie&background=991B1B&color=fff&size=200&bold=true", icon: Siren, deptLabel: "Disaster Mgmt Bureau", deptColor: "#991B1B", desc: "Coordinates disaster preparedness, emergency response, drought mitigation, and community resilience building programs.", socials: [{ platform: "Facebook", url: "https://facebook.com/AmharaSintDRM", icon: "facebook" }, { platform: "Telegram", url: "https://t.me/AmharaSintDRM", icon: "telegram" }] },
+  1776→  ];
+  1777→
+  1778→  const iconMap: Record<string, React.ElementType> = { facebook: Facebook, telegram: Twitter, linkedin: Linkedin, youtube: Youtube, instagram: Instagram };
+  1779→  const colorMap: Record<string, string> = { facebook: "#1877F2", telegram: "#0088CC", linkedin: "#0A66C2", youtube: "#FF0000", instagram: "#E4405F" };
+  1780→
+  1781→  const EthiopianFlagBar = () => (
+  1782→    <div className="flex h-1.5 w-full rounded-t-xl overflow-hidden">
+  1783→      <div className="flex-1 bg-green-600" />
+  1784→      <div className="flex-1 bg-yellow-400" />
+  1785→      <div className="flex-1 bg-red-600" />
+  1786→    </div>
+  1787→  );
+  1788→
+  1789→  const LeaderCard = ({ leader, large }: { leader: any; large?: boolean }) => (
+  1790→    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group hover:-translate-y-1">
+  1791→      <EthiopianFlagBar />
+  1792→      <div className="p-5 flex flex-col items-center text-center">
+  1793→        <div className="relative mb-3">
+  1794→          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-500" style={{ borderColor: leader.deptColor + "40" }}>
+  1795→            <img src={leader.avatar} alt={leader.name} className="w-full h-full object-cover" />
+  1796→          </div>
+  1797→        </div>
+  1798→        <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-0.5">{leader.name}</h3>
+  1799→        <span className="inline-block text-[10px] md:text-xs font-bold px-2.5 py-0.5 rounded-full mb-2 text-white" style={{ backgroundColor: leader.deptColor }}>{leader.title}</span>
+  1800→        {leader.desc && <p className="text-[11px] md:text-xs text-[#0B3D2E]/60 leading-relaxed mb-3 px-1">{leader.desc}</p>}
+  1801→        <div className="space-y-1 w-full text-left mb-3">
+  1802→          <div className="flex items-center gap-2 text-[#0B3D2E]/60 text-xs"><Phone className="w-3 h-3 shrink-0 text-green-600" /><span className="truncate">{leader.phone}</span></div>
+  1803→          <div className="flex items-center gap-2 text-[#0B3D2E]/60 text-xs"><Mail className="w-3 h-3 shrink-0 text-blue-600" /><span className="truncate">{leader.email}</span></div>
+  1804→        </div>
+  1805→        {leader.socials && (
+  1806→          <div className="flex items-center justify-center gap-1.5">
+  1807→            {leader.socials.map((s: any) => {
+  1808→              const Icon = iconMap[s.icon] || Globe;
+  1809→              const color = colorMap[s.icon] || leader.deptColor;
+  1810→              return (
+  1811→                <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer" title={s.platform}
+  1812→                  className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-md"
+  1813→                  style={{ backgroundColor: color + "15", color: color }}>
+  1814→                  <Icon className="w-3 h-3" />
+  1815→                </a>
+  1816→              );
+  1817→            })}
+  1818→          </div>
+  1819→        )}
+  1820→      </div>
+  1821→    </div>
+  1822→  );
+  1823→
+  1824→  const DeptCard = ({ dept }: { dept: typeof sectorHeads[0] }) => (
+  1825→    <AnimatedSection>
+  1826→      <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group hover:-translate-y-1">
+  1827→        <EthiopianFlagBar />
+  1828→        <div className="p-5 flex flex-col items-center text-center">
+  1829→          <div className="relative mb-3">
+  1830→            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-3 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-500" style={{ borderWidth: 3, borderColor: dept.deptColor + "40" }}>
+  1831→              <img src={dept.avatar} alt={dept.name} className="w-full h-full object-cover" />
+  1832→            </div>
+  1833→            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center shadow-md" style={{ backgroundColor: dept.deptColor }}>
+  1834→              <dept.icon className="w-3.5 h-3.5 text-white" />
+  1835→            </div>
+  1836→          </div>
+  1837→          <h3 className="font-bold text-[#0B3D2E] text-sm mb-0.5">{dept.name}</h3>
+  1838→          <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-2 text-white" style={{ backgroundColor: dept.deptColor }}>{dept.title}</span>
+  1839→          <p className="text-[11px] text-[#0B3D2E]/50 leading-relaxed mb-2.5 line-clamp-2">{dept.desc}</p>
+  1840→          <div className="space-y-1 w-full text-left mb-2.5">
+  1841→            <div className="flex items-center gap-2 text-[#0B3D2E]/50 text-[11px]"><Phone className="w-3 h-3 shrink-0 text-green-500" /><span className="truncate">{dept.phone}</span></div>
+  1842→            <div className="flex items-center gap-2 text-[#0B3D2E]/50 text-[11px]"><Mail className="w-3 h-3 shrink-0 text-blue-500" /><span className="truncate">{dept.email}</span></div>
+  1843→          </div>
+  1844→          <div className="flex items-center justify-center gap-1.5">
+  1845→            {dept.socials.map((s: any) => {
+  1846→              const Icon = iconMap[s.icon] || Globe;
+  1847→              const color = colorMap[s.icon] || dept.deptColor;
+  1848→              return (
+  1849→                <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer" title={s.platform}
+  1850→                  className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+  1851→                  style={{ backgroundColor: color + "15", color: color }}>
+  1852→                  <Icon className="w-2.5 h-2.5" />
+  1853→                </a>
+  1854→              );
+  1855→            })}
+  1856→          </div>
+  1857→        </div>
+  1858→      </div>
+  1859→    </AnimatedSection>
+  1860→  );
+  1861→
+  1862→  return (
+  1863→    <SubPage onNavigate={onNavigate} title="Leadership" breadcrumb="Government / Leadership" badge="Woreda Leadership">
+  1864→      <div className="space-y-10 max-w-7xl mx-auto">
+  1865→        {/* Section 1: Executive Leadership */}
+  1866→        <AnimatedSection>
+  1867→          <div className="flex items-center gap-3 mb-2">
+  1868→            <Crown className="w-6 h-6 text-[#EAB308]" />
+  1869→            <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E]">Amhara Sint Woreda Executive Leadership</h2>
+  1870→          </div>
+  1871→          <p className="text-[#0B3D2E]/60 text-sm mb-6">Woreda Administration &amp; Cabinet Members</p>
+  1872→          <div className="grid sm:grid-cols-3 gap-6">
+  1873→            <LeaderCard leader={woredaLeader} large />
+  1874→            <LeaderCard leader={deputyLeader} large />
+  1875→            <LeaderCard leader={councilSpeaker} large />
+  1876→          </div>
+  1877→        </AnimatedSection>
+  1878→
+  1879→        {/* Connector line */}
+  1880→        <div className="flex justify-center">
+  1881→          <div className="w-0.5 h-10 bg-gradient-to-b from-[#0B3D2E]/30 to-[#EAB308]/50 rounded-full" />
+  1882→        </div>
+  1883→
+  1884→        {/* Section 2: Sector Heads & Department Leaders */}
+  1885→        <AnimatedSection delay={100}>
+  1886→          <div className="flex items-center gap-3 mb-2">
+  1887→            <Building className="w-6 h-6 text-[#EAB308]" />
+  1888→            <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E]">Sector Heads &amp; Department Leaders</h2>
+  1889→          </div>
+  1890→          <p className="text-[#0B3D2E]/60 text-sm mb-6">Bureau Heads &amp; Office Leaders</p>
+  1891→          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  1892→            {sectorHeads.map((dept) => (
+  1893→              <DeptCard key={dept.name} dept={dept} />
+  1894→            ))}
+  1895→          </div>
+  1896→        </AnimatedSection>
+  1897→
+  1898→        {/* Section 3: Management & Support Services */}
+  1899→        <div className="flex justify-center my-6">
+  1900→          <div className="w-0.5 h-10 bg-gradient-to-b from-[#EAB308]/50 to-[#7C3AED]/50 rounded-full" />
+  1901→        </div>
+  1902→        <AnimatedSection delay={200}>
+  1903→          <div className="flex items-center gap-3 mb-2">
+  1904→            <Crown className="w-6 h-6 text-[#7C3AED]" />
+  1905→            <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E]">Management &amp; Support Services</h2>
+  1906→          </div>
+  1907→          <p className="text-[#0B3D2E]/60 text-sm mb-6">Bureau Heads for Social Services, Development &amp; Support</p>
+  1908→          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  1909→            {managementHeads.map((dept) => (
+  1910→              <DeptCard key={dept.name} dept={dept} />
+  1911→            ))}
+  1912→          </div>
+  1913→        </AnimatedSection>
+  1914→      </div>
+  1915→    </SubPage>
+  1916→  );
+  1917→}
+  1918→
+  1919→/* ─── GOVERNMENT: Structure ─────────────────────────────── */
+  1920→function GovStructurePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1921→  return (
+  1922→    <SubPage onNavigate={onNavigate} title="Administrative Structure" breadcrumb="Government / Structure" badge="Governance">
+  1923→      <div className="space-y-8 max-w-4xl mx-auto">
+  1924→        <ContentCard>
+  1925→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Building className="w-6 h-6 text-[#EAB308]" /> Organizational Hierarchy</h2>
+  1926→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-6">Amhara Sint Woreda follows a three-tier administrative structure as defined by Ethiopia's federal system. This ensures governance reaches every community while maintaining accountability at each level.</p>
+  1927→          <div className="space-y-4">
+  1928→            {[
+  1929→              { level: "Woreda Council", desc: "The supreme legislative body with 45 elected representatives from all 22 kebeles. Responsible for approving budgets, development plans, and policies. Meets quarterly for regular sessions and as needed for extraordinary matters.", color: "#0B3D2E" },
+  1930→              { level: "Executive Committee", desc: "Chaired by the Woreda Administrator with 9 members including heads of key departments. Implements council decisions, manages day-to-day administration, and coordinates inter-departmental activities.", color: "#145A44" },
+  1931→              { level: "Judicial Bodies", desc: "Social courts (3) handling civil disputes, and the Woreda Court handling criminal and major civil cases. Traditional dispute resolution through Shimagile (elders) operates alongside formal courts.", color: "#1D4ED8" },
+  1932→              { level: "Kebele Administration", desc: "22 kebele councils, each with 7-9 elected members. Responsible for local service delivery, community mobilization, and grassroots development planning. Each kebele has dedicated development agents for agriculture and health.", color: "#EAB308" },
+  1933→              { level: "Kebele Service Centers", desc: "One-stop service centers in each kebele providing birth/marriage certificates, land certificates, tax payments, and referral services. These centers bring government closer to the people.", color: "#10B981" },
+  1934→            ].map((item) => (
+  1935→              <div key={item.level} className="relative pl-8">
+  1936→                <div className="absolute left-0 top-1 w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: item.color }}><ChevronRight className="w-3 h-3 text-white" /></div>
+  1937→                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+  1938→                  <h3 className="font-bold text-[#0B3D2E] text-sm mb-1">{item.level}</h3>
+  1939→                  <p className="text-[#0B3D2E]/60 text-xs leading-relaxed">{item.desc}</p>
+  1940→                </div>
+  1941→              </div>
+  1942→            ))}
+  1943→          </div>
+  1944→        </ContentCard>
+  1945→      </div>
+  1946→    </SubPage>
+  1947→  );
+  1948→}
+  1949→
+  1950→/* ─── GOVERNMENT: Offices ───────────────────────────────── */
+  1951→function GovOfficesPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1952→  const offices = [
+  1953→    { name: "Woreda Administrator's Office", head: "Ato Dereje Getachew", staff: 12, icon: UserCheck, color: "#0B3D2E" },
+  1954→    { name: "Education Office", head: "W/ro Tigist Mekonnen", staff: 45, icon: GraduationCap, color: "#1D4ED8" },
+  1955→    { name: "Health Office", head: "Dr. Alemayehu Bekele", staff: 38, icon: HeartPulse, color: "#DC2626" },
+  1956→    { name: "Agriculture Office", head: "Ato Fikadu Hailu", staff: 52, icon: Tractor, color: "#16A34A" },
+  1957→    { name: "Finance & Revenue Office", head: "Ato Yohannes Girma", staff: 18, icon: Banknote, color: "#059669" },
+  1958→    { name: "Justice Office", head: "Ato Assefa Demeke", staff: 15, icon: Scale, color: "#475569" },
+  1959→    { name: "Transport & Roads Office", head: "Ato Getachew Worku", staff: 22, icon: Truck, color: "#0284C7" },
+  1960→    { name: "ICT & Technology Office", head: "Ato Nahom Tadesse", staff: 8, icon: Monitor, color: "#7C3AED" },
+  1961→    { name: "Construction Office", head: "Ato Teshome Kebede", staff: 16, icon: HardHat, color: "#EA580C" },
+  1962→    { name: "Women & Children Affairs", head: "Ato Girma Ayele", staff: 8, icon: Heart, color: "#DB2777" },
+  1963→    { name: "Youth & Sports Office", head: "W/ro Hiwot Abebe", staff: 6, icon: Award, color: "#7C3AED" },
+  1964→    { name: "Trade & Industry Office", head: "Ato Demeke Zeleke", staff: 10, icon: Store, color: "#B45309" },
+  1965→    { name: "Water & Energy Office", head: "W/ro Meselech Assefa", staff: 20, icon: Droplets, color: "#0369A1" },
+  1966→    { name: "Environmental Protection Office", head: "Ato Bekele Tadesse", staff: 7, icon: Leaf, color: "#15803D" },
+  1967→    { name: "Social Affairs Office", head: "Ato Solomon Mulugeta", staff: 9, icon: Handshake, color: "#9333EA" },
+  1968→    { name: "Communication Affairs Office", head: "W/ro Selamawit Girma", staff: 5, icon: Megaphone, color: "#DC2626" },
+  1969→    { name: "Cooperatives Office", head: "Ato Zelalem Hailu", staff: 11, icon: People, color: "#0F766E" },
+  1970→    { name: "Labor & Skills Office", head: "W/ro Tigist Dabi", staff: 8, icon: Briefcase, color: "#C2410C" },
+  1971→    { name: "Urban Development Office", head: "Ato Kassahun Worku", staff: 14, icon: Building2, color: "#4338CA" },
+  1972→    { name: "Culture & Tourism Office", head: "W/ro Alemtsehay Girma", staff: 6, icon: Landmark, color: "#B91C1C" },
+  1973→    { name: "Disaster Risk Management Office", head: "Ato Yared Demissie", staff: 10, icon: Siren, color: "#991B1B" },
+  1974→  ];
+  1975→  return (
+  1976→    <SubPage onNavigate={onNavigate} title="Offices & Departments" breadcrumb="Government / Offices" badge="All Departments">
+  1977→      <div className="space-y-8 max-w-5xl mx-auto">
+  1978→        <ContentCard>
+  1979→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2"><Shield className="w-6 h-6 text-[#EAB308]" /> All Offices & Departments</h2>
+  1980→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-6">Amhara Sint Woreda has 21 departmental offices, each led by experienced professionals. Together they employ over 330 civil servants dedicated to public service delivery.</p>
+  1981→          <div className="grid sm:grid-cols-2 gap-4">
+  1982→            {offices.map((office) => (
+  1983→              <div key={office.name} className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:shadow-md transition-all">
+  1984→                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: office.color + "15" }}>
+  1985→                  <office.icon className="w-5 h-5" style={{ color: office.color }} />
+  1986→                </div>
+  1987→                <div className="min-w-0">
+  1988→                  <h3 className="font-bold text-[#0B3D2E] text-sm">{office.name}</h3>
+  1989→                  <p className="text-[#0B3D2E]/50 text-xs">{office.head} • {office.staff} staff</p>
+  1990→                </div>
+  1991→              </div>
+  1992→            ))}
+  1993→          </div>
+  1994→        </ContentCard>
+  1995→      </div>
+  1996→    </SubPage>
+  1997→  );
+  1998→}
+  1999→
+  2000→/* ─── SERVICE PAGE TEMPLATE ────────────────────────────── */
+
+[showing lines 1-2000 of 3401; use offset=2001 with limit to continue reading]

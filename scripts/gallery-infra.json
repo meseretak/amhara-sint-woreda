@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "query": "African town market road infrastructure development",
+  "count": 2,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/6710c8032383.jpeg",
+      "caption": "",
+      "source": "Center for Global Development",
+      "original_width": "1500px",
+      "original_height": "1105px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/7f04de62e14f.jpg",
+      "caption": "",
+      "source": "Center for Global Development",
+      "original_width": "1500px",
+      "original_height": "1000px"
+    }
+  ]
+}

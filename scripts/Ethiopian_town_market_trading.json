@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian town market trading"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian town market trading",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/395da4df6bb6.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "956px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/7959536e1b2a.jpg",
+      "caption": "",
+      "source": "Shutterstock",
+      "original_width": "1500px",
+      "original_height": "1100px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/876ea09a5ed8.jpg",
+      "caption": "",
+      "source": "Tripadvisor",
+      "original_width": "1200px",
+      "original_height": "983px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/3c6163d0f3b0.jpg",
+      "caption": "",
+      "source": "A BUS TO NOWHERE",
+      "original_width": "768px",
+      "original_height": "1024px"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "African school children classroom learning"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "African school children classroom learning",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/b60b21cb0921.jpg",
+      "caption": "",
+      "source": "World Bank Blogs",
+      "original_width": "2048px",
+      "original_height": "1050px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/754201fd27ed.jpg",
+      "caption": "",
+      "source": "Dreamstime.com",
+      "original_width": "1600px",
+      "original_height": "1157px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/2a737bb4abd7.jpg",
+      "caption": "",
+      "source": "PR Newswire",
+      "original_width": "2700px",
+      "original_height": "1413px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/a6f8f6946dae.png",
+      "caption": "",
+      "source": "TRT Afrika",
+      "original_width": "1280px",
+      "original_height": "852px"
+    }
+  ]
+}

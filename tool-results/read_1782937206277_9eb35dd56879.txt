@@ -1,0 +1,502 @@
+  1050→    { name: "Ato Tadesse Abebe", title: "Deputy Administrator", phone: "+251 33 440 1002", email: "deputy@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Tadesse+Abebe&background=145A44&color=fff&size=200" },
+  1051→    { name: "W/ro Almaz Tesfaye", title: "Woreda Council Speaker", phone: "+251 33 440 1003", email: "council@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Almaz+Tesfaye&background=0B3D2E&color=fff&size=200" },
+  1052→    { name: "Ato Yohannes Girma", title: "Head of Finance", phone: "+251 33 440 1004", email: "finance@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Yohannes+Girma&background=145A44&color=fff&size=200" },
+  1053→    { name: "W/ro Tigist Mekonnen", title: "Head of Education", phone: "+251 33 440 1005", email: "education@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Tigist+Mekonnen&background=0B3D2E&color=fff&size=200" },
+  1054→    { name: "Dr. Alemayehu Bekele", title: "Head of Health", phone: "+251 33 440 1006", email: "health@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Alemayehu+Bekele&background=145A44&color=fff&size=200" },
+  1055→    { name: "Ato Fikadu Hailu", title: "Head of Agriculture", phone: "+251 33 440 1007", email: "agriculture@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Fikadu+Hailu&background=0B3D2E&color=fff&size=200" },
+  1056→    { name: "Ato Assefa Demeke", title: "Head of Justice", phone: "+251 33 440 1008", email: "justice@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Assefa+Demeke&background=145A44&color=fff&size=200" },
+  1057→  ];
+  1058→
+  1059→  return (
+  1060→    <SubPage onNavigate={onNavigate} title="Leadership" breadcrumb="Government / Leadership" badge="Woreda Leadership">
+  1061→      <div className="space-y-8 max-w-5xl mx-auto">
+  1062→        <ContentCard>
+  1063→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1064→            <UserCheck className="w-6 h-6 text-[#EAB308]" /> Woreda Administration Leadership
+  1065→          </h2>
+  1066→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1067→            Amhara Sint Woreda is led by a dedicated team of elected and appointed officials committed to delivering transparent, accountable, and effective governance. The Woreda Administrator serves as the Chief Executive, supported by a Deputy Administrator and the heads of all major sectoral offices. Together, they form the Executive Committee, which implements policies and programs approved by the 45-member elected Woreda Council.
+  1068→          </p>
+  1069→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1070→            The leadership team operates under the principles of democratic governance, community participation, and equitable service delivery. Regular council sessions, public consultations, and community forums ensure that the voices of all 142,350 residents are heard in the decision-making process.
+  1071→          </p>
+  1072→        </ContentCard>
+  1073→        <style>{`
+  1074→          @keyframes pulse-ring {
+  1075→            0% { transform: scale(0.9); opacity: 0.7; }
+  1076→            50% { transform: scale(1.05); opacity: 0.3; }
+  1077→            100% { transform: scale(0.9); opacity: 0.7; }
+  1078→          }
+  1079→          @keyframes float {
+  1080→            0%, 100% { transform: translateY(0); }
+  1081→            50% { transform: translateY(-6px); }
+  1082→          }
+  1083→          .leader-card { animation: float 4s ease-in-out infinite; }
+  1084→          .leader-card:nth-child(2) { animation-delay: 0.5s; }
+  1085→          .leader-card:nth-child(3) { animation-delay: 1s; }
+  1086→          .leader-card:nth-child(4) { animation-delay: 1.5s; }
+  1087→          .leader-card:nth-child(5) { animation-delay: 0.3s; }
+  1088→          .leader-card:nth-child(6) { animation-delay: 0.8s; }
+  1089→          .leader-card:nth-child(7) { animation-delay: 1.3s; }
+  1090→          .leader-card:nth-child(8) { animation-delay: 1.8s; }
+  1091→          .pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }
+  1092→        `}</style>
+  1093→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+  1094→          {leaders.map((leader, i) => (
+  1095→            <AnimatedSection key={leader.name} delay={i * 80}>
+  1096→              <Card className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 h-full group">
+  1097→                <CardContent className="p-5 md:p-6 flex flex-col items-center text-center leader-card">
+  1098→                  <div className="relative mb-4">
+  1099→                    <div className="absolute inset-0 w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#EAB308] to-[#CA8A04] opacity-40 pulse-ring"></div>
+  1100→                    <div className="absolute inset-0 w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#0B3D2E] to-[#10B981] p-[3px]">
+  1101→                      <img
+  1102→                        src={leader.avatar}
+  1103→                        alt={leader.name}
+  1104→                        className="w-full h-full rounded-full object-cover border-2 border-white"
+  1105→                      />
+  1106→                    </div>
+  1107→                  </div>
+  1108→                  <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base mb-1">{leader.name}</h3>
+  1109→                  <p className="text-[#EAB308] text-xs font-semibold mb-3">{leader.title}</p>
+  1110→                  <div className="space-y-1.5 w-full text-left">
+  1111→                    <div className="flex items-center gap-2 text-[#0B3D2E]/60 text-xs">
+  1112→                      <Phone className="w-3.5 h-3.5 text-[#0B3D2E]/40 shrink-0" />
+  1113→                      <span className="truncate">{leader.phone}</span>
+  1114→                    </div>
+  1115→                    <div className="flex items-center gap-2 text-[#0B3D2E]/60 text-xs">
+  1116→                      <Mail className="w-3.5 h-3.5 text-[#0B3D2E]/40 shrink-0" />
+  1117→                      <span className="truncate">{leader.email}</span>
+  1118→                    </div>
+  1119→                  </div>
+  1120→                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100 w-full justify-center">
+  1121→                    <a href="https://facebook.com/AmharaSint" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-[#1877F2]/10 text-[#1877F2] flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all">
+  1122→                      <Facebook className="w-3.5 h-3.5" />
+  1123→                    </a>
+  1124→                    <a href="https://t.me/AmharaSint" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-[#0088CC]/10 text-[#0088CC] flex items-center justify-center hover:bg-[#0088CC] hover:text-white transition-all">
+  1125→                      <ExternalLink className="w-3.5 h-3.5" />
+  1126→                    </a>
+  1127→                    <a href="https://linkedin.com/company/AmharaSint" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all">
+  1128→                      <Linkedin className="w-3.5 h-3.5" />
+  1129→                    </a>
+  1130→                  </div>
+  1131→                </CardContent>
+  1132→              </Card>
+  1133→            </AnimatedSection>
+  1134→          ))}
+  1135→        </div>
+  1136→      </div>
+  1137→    </SubPage>
+  1138→  );
+  1139→}
+  1140→
+  1141→/* ─── GOVERNMENT: Structure ─────────────────────────────────── */
+  1142→function GovStructurePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1143→  const sectoralOffices = [
+  1144→    { icon: GraduationCap, name: "Education Office", staff: 28, desc: "Oversees all formal and non-formal education programs across 55 schools.", responsibilities: ["Manage 47 primary and 8 secondary schools", "Recruit, train, and support 600+ teachers", "Implement curriculum and quality assurance standards", "Coordinate adult literacy and special needs education programs"] },
+  1145→    { icon: HeartPulse, name: "Health Office", staff: 65, desc: "Delivers comprehensive primary healthcare through a three-tier health system.", responsibilities: ["Manage 1 hospital, 4 health centers, and 18 health posts", "Coordinate Health Extension Program with 40+ workers", "Implement maternal and child health programs", "Manage community-based health insurance (CBHI)"] },
+  1146→    { icon: Tractor, name: "Agriculture & Natural Resources Office", staff: 42, desc: "Supports the agricultural livelihoods of 75% of the population.", responsibilities: ["Provide crop production and livestock extension services", "Distribute improved seeds, fertilizer, and veterinary inputs", "Implement soil conservation and watershed management", "Promote climate-smart agriculture and irrigation"] },
+  1147→    { icon: Truck, name: "Road & Transport Office", staff: 15, desc: "Plans, constructs, and maintains the woreda road network.", responsibilities: ["Construct and maintain 85 km of all-weather roads", "Build and repair bridges and drainage structures", "Coordinate with regional transport authorities", "Ensure rural accessibility for all 22 kebeles"] },
+  1148→    { icon: Droplets, name: "Water, Mines & Energy Office", staff: 18, desc: "Manages water supply, sanitation, and energy access programs.", responsibilities: ["Operate and maintain 64 clean water access points", "Drill new boreholes and protect spring sources", "Promote sanitation and hygiene (WASH) programs", "Support off-grid solar energy initiatives"] },
+  1149→    { icon: Banknote, name: "Finance & Revenue Office", staff: 22, desc: "Manages budget, revenue collection, and economic development planning.", responsibilities: ["Prepare and manage annual woreda budget (ETB 85M)", "Collect local taxes, fees, and duties", "Support micro-enterprises and cooperatives", "Conduct financial audits and public reporting"] },
+  1150→    { icon: Scale, name: "Justice Office", staff: 12, desc: "Ensures rule of law, judicial services, and public safety coordination.", responsibilities: ["Administer the woreda court system", "Support social courts at kebele level", "Coordinate with the local police department", "Provide legal aid for vulnerable residents"] },
+  1151→    { icon: Briefcase, name: "Trade & Industry Office", staff: 10, desc: "Promotes local trade, supports enterprises, and facilitates market access.", responsibilities: ["Register and license local businesses", "Support micro and small enterprises (MSEs)", "Organize market days and trade fairs", "Facilitate linkages to regional supply chains"] },
+  1152→    { icon: Globe, name: "Technology & Innovation Office", staff: 8, desc: "Drives digital transformation, ICT services, and modern governance tools.", responsibilities: ["Manage government ICT infrastructure", "Implement e-governance and digital services", "Support computer labs in secondary schools", "Coordinate with regional ICT initiatives"] },
+  1153→    { icon: Users, name: "Women & Children Affairs Office", staff: 10, desc: "Promotes gender equality, women's empowerment, and child protection.", responsibilities: ["Implement women's economic empowerment programs", "Coordinate gender-based violence prevention", "Support early childhood development initiatives", "Ensure women's participation in governance"] },
+  1154→    { icon: Award, name: "Youth & Sports Office", staff: 8, desc: "Engages youth in development and promotes sports and recreation.", responsibilities: ["Organize youth entrepreneurship and skills training", "Support youth associations and clubs", "Facilitate sports tournaments and recreation programs", "Coordinate with youth employment initiatives"] },
+  1155→    { icon: Landmark, name: "Culture & Tourism Office", staff: 6, desc: "Preserves cultural heritage and promotes tourism potential.", responsibilities: ["Document and preserve local cultural traditions", "Manage historical sites and monuments", "Promote tourism attractions and events", "Support cultural associations and artisans"] },
+  1156→  ];
+  1157→
+  1158→  return (
+  1159→    <SubPage onNavigate={onNavigate} title="Administrative Structure" breadcrumb="Government / Structure" badge="Governance">
+  1160→      <div className="space-y-8 max-w-5xl mx-auto">
+  1161→        {/* Top-Level Governance */}
+  1162→        <ContentCard>
+  1163→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1164→            <Building className="w-6 h-6 text-[#EAB308]" /> Organizational Hierarchy
+  1165→          </h2>
+  1166→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-6">
+  1167→            Amhara Sint Woreda follows Ethiopia&apos;s three-tier governance structure, ensuring that decision-making authority flows from the elected council to sectoral offices and down to kebele-level administrations that serve communities directly.
+  1168→          </p>
+  1169→          <div className="space-y-4">
+  1170→            {[
+  1171→              { level: "Tier 1: Woreda Council", desc: "Supreme decision-making body with 45 elected representatives from all 22 kebeles. Meets quarterly to approve development plans, annual budgets, policies, and review progress reports. Council committees oversee specific sectors.", highlight: true },
+  1172→              { level: "Tier 2: Executive Committee", desc: "Implements council decisions. Chaired by the Woreda Administrator (Chief Executive) with the Deputy Administrator, Council Speaker, and 5 sectoral office heads. Meets weekly to coordinate cross-sectoral programs and address emerging issues." },
+  1173→              { level: "Tier 3: Sectoral Offices", desc: "12 specialized departments responsible for delivering services in education, health, agriculture, finance, justice, infrastructure, water, trade, technology, women & children, youth & sports, and culture & tourism." },
+  1174→              { level: "Tier 4: Kebele Administrations", desc: "22 local government units delivering services directly to communities. Each kebele has an elected council of 7-9 members, a kebele manager, and dedicated development agents for agriculture and health." },
+  1175→            ].map((tier, i) => (
+  1176→              <div key={tier.level} className="flex items-start gap-4 p-4 rounded-xl bg-[#F0FDF4] border border-[#0B3D2E]/5">
+  1177→                <div className={`w-10 h-10 rounded-lg ${tier.highlight ? "bg-gradient-to-br from-[#EAB308] to-[#CA8A04]" : "bg-[#0B3D2E]"} text-white flex items-center justify-center text-sm font-bold shrink-0`}>{i + 1}</div>
+  1178→                <div>
+  1179→                  <h4 className="font-bold text-[#0B3D2E] mb-1">{tier.level}</h4>
+  1180→                  <p className="text-[#0B3D2E]/60 text-sm leading-relaxed">{tier.desc}</p>
+  1181→                </div>
+  1182→              </div>
+  1183→            ))}
+  1184→          </div>
+  1185→        </ContentCard>
+  1186→
+  1187→        {/* Sectoral Offices Grid */}
+  1188→        <AnimatedSection delay={200}>
+  1189→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-6 flex items-center gap-2">
+  1190→            <Shield className="w-6 h-6 text-[#EAB308]" /> Sectoral Offices
+  1191→          </h2>
+  1192→          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+  1193→            {sectoralOffices.map((office, i) => (
+  1194→              <AnimatedSection key={office.name} delay={i * 60}>
+  1195→                <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all duration-300 h-full">
+  1196→                  <CardContent className="p-5">
+  1197→                    <div className="flex items-center gap-3 mb-3">
+  1198→                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow">
+  1199→                        <office.icon className="w-5 h-5 text-white" />
+  1200→                      </div>
+  1201→                      <div className="min-w-0">
+  1202→                        <h3 className="font-bold text-[#0B3D2E] text-sm truncate">{office.name}</h3>
+  1203→                        <p className="text-[#EAB308] text-xs font-semibold">{office.staff} Staff Members</p>
+  1204→                      </div>
+  1205→                    </div>
+  1206→                    <p className="text-[#0B3D2E]/60 text-xs leading-relaxed mb-3">{office.desc}</p>
+  1207→                    <ul className="space-y-1.5">
+  1208→                      {office.responsibilities.map((r, j) => (
+  1209→                        <li key={j} className="flex items-start gap-1.5 text-[#0B3D2E]/55 text-xs">
+  1210→                          <ChevronRight className="w-3 h-3 text-[#10B981] mt-0.5 shrink-0" />
+  1211→                          <span>{r}</span>
+  1212→                        </li>
+  1213→                      ))}
+  1214→                    </ul>
+  1215→                  </CardContent>
+  1216→                </Card>
+  1217→              </AnimatedSection>
+  1218→            ))}
+  1219→          </div>
+  1220→        </AnimatedSection>
+  1221→      </div>
+  1222→    </SubPage>
+  1223→  );
+  1224→}
+  1225→
+  1226→/* ─── GOVERNMENT: Offices ──────────────────────────────────── */
+  1227→function GovOfficesPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1228→  const offices = [
+  1229→    { name: "Woreda Administrator's Office", head: "Ato Dereje Getachew", phone: "+251 33 440 1001", email: "admin@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Main Administration Building, Amhara Sint Town", icon: Shield },
+  1230→    { name: "Education Office", head: "W/ro Tigist Mekonnen", phone: "+251 33 440 1005", email: "education@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Education Compound, Near Woreda Council Hall", icon: GraduationCap },
+  1231→    { name: "Health Office", head: "Dr. Alemayehu Bekele", phone: "+251 33 440 1006", email: "health@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM; Emergency: 24/7", location: "Health Compound, Next to Primary Hospital", icon: HeartPulse },
+  1232→    { name: "Agriculture & Natural Resources Office", head: "Ato Fikadu Hailu", phone: "+251 33 440 1007", email: "agriculture@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM; Sat: 8:00-12:00", location: "Agriculture Center, South of Town", icon: Tractor },
+  1233→    { name: "Finance & Revenue Office", head: "Ato Yohannes Girma", phone: "+251 33 440 1004", email: "finance@amharasint.gov.et", hours: "Mon-Fri, 8:30 AM - 4:30 PM", location: "Finance Building, Main Administration Block", icon: Banknote },
+  1234→    { name: "Road & Transport Office", head: "Ato Getachew Worku", phone: "+251 33 440 1009", email: "roads@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Infrastructure Compound, West of Town", icon: Truck },
+  1235→    { name: "Water, Mines & Energy Office", head: "Ato Mulugeta Tadesse", phone: "+251 33 440 1010", email: "water@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Water Office Building, East of Town", icon: Droplets },
+  1236→    { name: "Justice Office", head: "Ato Assefa Demeke", phone: "+251 33 440 1008", email: "justice@amharasint.gov.et", hours: "Mon-Fri, 8:30 AM - 4:30 PM", location: "Court Building, Near Main Road", icon: Scale },
+  1237→    { name: "Women & Children Affairs Office", head: "W/ro Meselech Assefa", phone: "+251 33 440 1011", email: "women@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Social Affairs Building, Near Market", icon: Users },
+  1238→    { name: "Youth & Sports Office", head: "Ato Yared Haile", phone: "+251 33 440 1012", email: "youth@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Youth Center, North of Town", icon: Award },
+  1239→    { name: "Trade & Industry Office", head: "Ato Habtamu Dagne", phone: "+251 33 440 1013", email: "trade@amharasint.gov.et", hours: "Mon-Fri, 8:30 AM - 4:30 PM", location: "Market Area, Main Street", icon: Briefcase },
+  1240→    { name: "Technology & Innovation Office", head: "Ato Nahom Seyoum", phone: "+251 33 440 1014", email: "ict@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Administration Block, 2nd Floor", icon: Globe },
+  1241→    { name: "Culture & Tourism Office", head: "Ato Teshome Kebede", phone: "+251 33 440 1015", email: "culture@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Cultural Center, Near Church Road", icon: Landmark },
+  1242→    { name: "Information & Communication Office", head: "Ato Samuel Girma", phone: "+251 33 440 1016", email: "info@amharasint.gov.et", hours: "Mon-Fri, 8:00 AM - 5:00 PM", location: "Main Administration Building, Ground Floor", icon: Newspaper },
+  1243→  ];
+  1244→  return (
+  1245→    <SubPage onNavigate={onNavigate} title="Offices & Departments" breadcrumb="Government / Offices" badge="Government Offices">
+  1246→      <div className="max-w-5xl mx-auto">
+  1247→        <ContentCard>
+  1248→          <p className="text-[#0B3D2E]/70 leading-relaxed text-sm mb-2">
+  1249→            Amhara Sint Woreda has 14 operational offices and departments, each led by a designated head and staffed with qualified personnel. Below is the complete directory with office hours, locations, and contact information.
+  1250→          </p>
+  1251→        </ContentCard>
+  1252→        <div className="overflow-x-auto mt-6">
+  1253→          <table className="w-full text-sm">
+  1254→            <thead>
+  1255→              <tr className="bg-[#0B3D2E] text-white">
+  1256→                <th className="text-left py-3 px-4 font-semibold rounded-tl-xl">Office</th>
+  1257→                <th className="text-left py-3 px-4 font-semibold hidden md:table-cell">Head</th>
+  1258→                <th className="text-left py-3 px-4 font-semibold hidden lg:table-cell">Location</th>
+  1259→                <th className="text-left py-3 px-4 font-semibold hidden sm:table-cell">Hours</th>
+  1260→                <th className="text-left py-3 px-4 font-semibold rounded-tr-xl">Phone</th>
+  1261→              </tr>
+  1262→            </thead>
+  1263→            <tbody className="divide-y divide-[#0B3D2E]/5">
+  1264→              {offices.map((office, i) => (
+  1265→                <tr key={office.name} className="hover:bg-[#F0FDF4] transition-colors">
+  1266→                  <td className="py-3 px-4">
+  1267→                    <div className="flex items-center gap-2.5">
+  1268→                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0B3D2E] to-[#10B981] flex items-center justify-center shrink-0 shadow-sm">
+  1269→                        <office.icon className="w-4 h-4 text-white" />
+  1270→                      </div>
+  1271→                      <span className="font-semibold text-[#0B3D2E] text-xs md:text-sm">{office.name}</span>
+  1272→                    </div>
+  1273→                  </td>
+  1274→                  <td className="py-3 px-4 text-[#0B3D2E]/60 text-xs hidden md:table-cell">{office.head}</td>
+  1275→                  <td className="py-3 px-4 text-[#0B3D2E]/50 text-xs hidden lg:table-cell max-w-[200px] truncate">{office.location}</td>
+  1276→                  <td className="py-3 px-4 text-[#0B3D2E]/50 text-xs hidden sm:table-cell whitespace-nowrap">{office.hours}</td>
+  1277→                  <td className="py-3 px-4 text-[#0B3D2E]/60 text-xs font-mono">{office.phone}</td>
+  1278→                </tr>
+  1279→              ))}
+  1280→            </tbody>
+  1281→          </table>
+  1282→        </div>
+  1283→      </div>
+  1284→    </SubPage>
+  1285→  );
+  1286→}
+  1287→
+  1288→/* ─── SERVICE: Education ────────────────────────────────────── */
+  1289→function ServiceEducationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1290→  return (
+  1291→    <SubPage onNavigate={onNavigate} title="Education Services" breadcrumb="Services / Education" badge="Education Sector">
+  1292→      <div className="space-y-8 max-w-4xl mx-auto">
+  1293→        {/* Photo Banner */}
+  1294→        <ContentCard>
+  1295→          <div className="grid grid-cols-3 gap-2 mb-6 rounded-xl overflow-hidden">
+  1296→            <img src="https://sfile.chatglm.cn/images-ppt/634822b7ff39.jpg" alt="Education Activities" className="w-full h-28 md:h-36 object-cover rounded-lg" />
+  1297→            <img src="https://sfile.chatglm.cn/images-ppt/5f0a9b467c16.png" alt="Students Learning" className="w-full h-28 md:h-36 object-cover rounded-lg" />
+  1298→            <img src="https://sfile.chatglm.cn/images-ppt/93701603d414.png" alt="School Facilities" className="w-full h-28 md:h-36 object-cover rounded-lg" />
+  1299→          </div>
+  1300→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1301→            <GraduationCap className="w-6 h-6 text-[#EAB308]" /> Education in Amhara Sint
+  1302→          </h2>
+  1303→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1304→            The Amhara Sint Woreda Education Office oversees a comprehensive network of 55 educational institutions serving over 28,000 students across the community. This includes 47 primary schools (grades 1-8) and 8 secondary schools (grades 9-12), making education the largest sector in the woreda with over 600 teachers and administrative staff. The sector represents the woreda&apos;s most significant investment in human capital development, with the education budget accounting for approximately 28% of the total annual woreda budget.
+  1305→          </p>
+  1306→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1307→            The woreda is deeply committed to achieving universal primary education and dramatically improving transition rates to secondary education. Current initiatives include an ambitious school construction program targeting 12 new classrooms this fiscal year, continuous professional development for teachers, curriculum improvement aligned with national standards, and community awareness campaigns to increase enrollment and reduce dropout rates, particularly for girls and children in remote pastoral and highland kebeles.
+  1308→          </p>
+  1309→        </ContentCard>
+  1310→
+  1311→        {/* Comprehensive Stats */}
+  1312→        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+  1313→          {[
+  1314→            { stat: "47", label: "Primary Schools (Gr. 1-8)", color: "from-emerald-500 to-green-500" },
+  1315→            { stat: "8", label: "Secondary Schools (Gr. 9-12)", color: "from-teal-500 to-cyan-500" },
+  1316→            { stat: "600+", label: "Qualified Teachers", color: "from-amber-500 to-yellow-500" },
+  1317→            { stat: "28,000+", label: "Students Enrolled", color: "from-red-500 to-rose-500" },
+  1318→            { stat: "85%", label: "Primary Enrollment Rate", color: "from-violet-500 to-purple-500" },
+  1319→            { stat: "62%", label: "Secondary Enrollment Rate", color: "from-orange-500 to-red-500" },
+  1320→            { stat: "12", label: "New Classrooms (This Year)", color: "from-sky-500 to-blue-500" },
+  1321→            { stat: "28%", label: "Budget Allocation (Education)", color: "from-pink-500 to-rose-500" },
+  1322→            { stat: "92%", label: "Primary Completion Rate", color: "from-lime-500 to-green-500" },
+  1323→          ].map((s, i) => (
+  1324→            <AnimatedSection key={s.label} delay={i * 60}>
+  1325→              <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all h-full">
+  1326→                <CardContent className="p-4 md:p-5 text-center">
+  1327→                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mx-auto mb-3 shadow`}>
+  1328→                    <span className="text-white text-xs font-bold">📊</span>
+  1329→                  </div>
+  1330→                  <div className="text-2xl md:text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1331→                  <p className="text-[#0B3D2E]/55 text-xs font-medium">{s.label}</p>
+  1332→                </CardContent>
+  1333→              </Card>
+  1334→            </AnimatedSection>
+  1335→          ))}
+  1336→        </div>
+  1337→
+  1338→        {/* Programs and Initiatives */}
+  1339→        <ContentCard delay={200}>
+  1340→          <h3 className="font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1341→            <BookOpen className="w-5 h-5 text-[#EAB308]" /> Educational Programs
+  1342→          </h3>
+  1343→          <div className="grid md:grid-cols-2 gap-4">
+  1344→            {[
+  1345→              { title: "General Education (Gr. 1-12)", desc: "Comprehensive formal education following the national curriculum framework, with emphasis on literacy, numeracy, science, and civic education. Includes continuous assessment and national examinations at grades 8 and 12." },
+  1346→              { title: "TVET & Vocational Training", desc: "Technical and Vocational Education and Training programs preparing youth for employment in construction, agriculture, ICT, and service sectors. Partnerships with regional TVET colleges for advanced training." },
+  1347→              { title: "Adult Literacy Program", desc: "Community-based functional literacy programs targeting adults who missed formal education. Over 2,500 adults participate annually in reading, writing, and numeracy classes across all 22 kebeles." },
+  1348→              { title: "Special Needs & Inclusive Education", desc: "Inclusive education initiatives ensuring children with disabilities have access to quality learning. Special resource rooms, trained special needs educators, and assistive devices are being progressively introduced." },
+  1349→              { title: "School Feeding Program", desc: "Nutritional support program providing daily meals to students in 15 rural schools with high poverty rates. This program has been instrumental in improving attendance, reducing dropout rates, and enhancing learning outcomes." },
+  1350→              { title: "Girls' Education Initiative", desc: "Targeted program addressing gender disparities through community awareness, scholarship support, mentorship, and the provision of sanitary materials. Girls' enrollment has increased by 18% over the past three years." },
+  1351→            ].map((prog) => (
+  1352→              <div key={prog.title} className="bg-[#F0FDF4] rounded-xl p-4 border border-[#0B3D2E]/5">
+  1353→                <h4 className="font-bold text-[#0B3D2E] text-sm mb-1.5">{prog.title}</h4>
+  1354→                <p className="text-[#0B3D2E]/55 text-xs leading-relaxed">{prog.desc}</p>
+  1355→              </div>
+  1356→            ))}
+  1357→          </div>
+  1358→        </ContentCard>
+  1359→
+  1360→        {/* Student Achievement */}
+  1361→        <ContentCard delay={300}>
+  1362→          <h3 className="font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1363→            <TrendingUp className="w-5 h-5 text-[#EAB308]" /> Student Achievement & Performance
+  1364→          </h3>
+  1365→          <p className="text-[#0B3D2E]/70 text-sm leading-relaxed mb-4">
+  1366→            Student achievement in Amhara Sint has shown consistent improvement over the past five years. The grade 8 national examination pass rate has risen from 68% to 82%, while the grade 12 university entrance exam pass rate has improved from 45% to 58%. These gains are attributed to improved teacher quality, expanded school facilities, and targeted support for struggling students through after-school tutoring programs. The woreda has produced several regional and zonal top-performing students, with increasing numbers qualifying for admission to prestigious federal universities.
+  1367→          </p>
+  1368→          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  1369→            {[
+  1370→              { label: "Grade 8 Pass Rate", value: "82%", trend: "+14% in 5 years" },
+  1371→              { label: "Grade 12 Pass Rate", value: "58%", trend: "+13% in 5 years" },
+  1372→              { label: "Dropout Rate", value: "8%", trend: "Down from 18%" },
+  1373→              { label: "Student:Teacher Ratio", value: "46:1", trend: "Improving" },
+  1374→            ].map((item) => (
+  1375→              <div key={item.label} className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+  1376→                <div className="text-xl font-extrabold text-[#0B3D2E]">{item.value}</div>
+  1377→                <p className="text-[#0B3D2E]/60 text-xs font-medium mt-1">{item.label}</p>
+  1378→                <p className="text-[#10B981] text-[10px] font-semibold mt-0.5">{item.trend}</p>
+  1379→              </div>
+  1380→            ))}
+  1381→          </div>
+  1382→        </ContentCard>
+  1383→
+  1384→        {/* School Improvement Projects */}
+  1385→        <ContentCard delay={400}>
+  1386→          <h3 className="font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1387→            <Building className="w-5 h-5 text-[#EAB308]" /> School Improvement Projects
+  1388→          </h3>
+  1389→          <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1390→            {[
+  1391→              "Construction of 12 new classrooms in 4 schools (Budget: ETB 12 million, completion: Dec 2026)",
+  1392→              "Furnishing and equipping 3 newly built secondary school science laboratories",
+  1393→              "Installation of solar power systems in 8 off-grid rural schools for lighting and ICT",
+  1394→              "Establishment of 5 school libraries with over 15,000 books procured",
+  1395→              "Construction of gender-segregated latrine blocks in 18 schools",
+  1396→              "Fencing and playground development for 10 primary schools",
+  1397→              "Provision of 200 desktop computers and 50 tablets for secondary school ICT labs",
+  1398→            ].map((item) => (
+  1399→              <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+  1400→            ))}
+  1401→          </ul>
+  1402→        </ContentCard>
+  1403→      </div>
+  1404→    </SubPage>
+  1405→  );
+  1406→}
+  1407→
+  1408→/* ─── SERVICE: Health ───────────────────────────────────────── */
+  1409→function ServiceHealthPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1410→  return (
+  1411→    <SubPage onNavigate={onNavigate} title="Health Services" breadcrumb="Services / Health" badge="Health Sector">
+  1412→      <div className="space-y-8 max-w-4xl mx-auto">
+  1413→        <ContentCard>
+  1414→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1415→            <HeartPulse className="w-6 h-6 text-[#EAB308]" /> Healthcare in Amhara Sint
+  1416→          </h2>
+  1417→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1418→            The woreda&apos;s health system consists of 1 primary hospital, 4 health centers, and 18 health posts strategically distributed across all 22 kebeles. The Health Extension Program (HEP) forms the backbone of community health delivery, with over 40 health extension workers providing preventive and basic curative services at the kebele level.
+  1419→          </p>
+  1420→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1421→            Key health indicators have shown improvement in recent years, including reductions in maternal and child mortality, increased immunization coverage, and expanded access to antenatal care. The woreda is working towards universal health coverage through community-based health insurance schemes.
+  1422→          </p>
+  1423→        </ContentCard>
+  1424→        <div className="grid md:grid-cols-3 gap-6">
+  1425→          {[
+  1426→            { stat: "1", label: "Primary Hospital" },
+  1427→            { stat: "4", label: "Health Centers" },
+  1428→            { stat: "18", label: "Health Posts" },
+  1429→            { stat: "40+", label: "Health Workers" },
+  1430→            { stat: "92%", label: "Immunization Rate" },
+  1431→            { stat: "78%", label: "ANC Coverage" },
+  1432→          ].map((s, i) => (
+  1433→            <ContentCard key={s.label} delay={i * 80}>
+  1434→              <div className="text-center">
+  1435→                <div className="text-3xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1436→                <p className="text-[#0B3D2E]/60 text-sm">{s.label}</p>
+  1437→              </div>
+  1438→            </ContentCard>
+  1439→          ))}
+  1440→        </div>
+  1441→        <ContentCard delay={200}>
+  1442→          <h3 className="font-bold text-[#0B3D2E] mb-3">Health Programs</h3>
+  1443→          <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1444→            {["Health Extension Program (HEP)", "Maternal & child health services", "Immunization & vaccination campaigns", "Malaria prevention & control", "HIV/AIDS awareness & testing", "Community-based health insurance (CBHI)", "Nutrition screening & supplementation"].map((item) => (
+  1445→              <li key={item} className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />{item}</li>
+  1446→            ))}
+  1447→          </ul>
+  1448→        </ContentCard>
+  1449→      </div>
+  1450→    </SubPage>
+  1451→  );
+  1452→}
+  1453→
+  1454→/* ─── SERVICE: Agriculture ─────────────────────────────────── */
+  1455→function ServiceAgriculturePage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1456→  return (
+  1457→    <SubPage onNavigate={onNavigate} title="Agriculture Services" breadcrumb="Services / Agriculture" badge="Agriculture Sector">
+  1458→      <div className="space-y-8 max-w-4xl mx-auto">
+  1459→        {/* Photo Banner */}
+  1460→        <ContentCard>
+  1461→          <div className="grid grid-cols-3 gap-2 mb-6 rounded-xl overflow-hidden">
+  1462→            <img src="https://sfile.chatglm.cn/images-ppt/30fee1e622be.jpg" alt="Agricultural Fields" className="w-full h-28 md:h-36 object-cover rounded-lg" />
+  1463→            <img src="https://sfile.chatglm.cn/images-ppt/e31dc4b12d41.jpg" alt="Farmland" className="w-full h-28 md:h-36 object-cover rounded-lg" />
+  1464→            <img src="https://sfile.chatglm.cn/images-ppt/8f5a14b48d88.jpg" alt="Harvest Season" className="w-full h-28 md:h-36 object-cover rounded-lg" />
+  1465→          </div>
+  1466→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1467→            <Tractor className="w-6 h-6 text-[#EAB308]" /> Agriculture in Amhara Sint
+  1468→          </h2>
+  1469→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1470→            Agriculture is the backbone of Amhara Sint&apos;s economy, employing over 75% of the population and contributing approximately 65% of the woreda&apos;s GDP. The woreda supports a diverse farming system that includes cereal crop production, livestock rearing, horticulture, and increasingly, apiculture (beekeeping) and spice cultivation. The diverse agro-ecological zones—ranging from highland (Dega) to midland (Woina Dega) and lowland (Kolla)—allow for a wide variety of crops and agricultural practices suited to each altitude and climate band.
+  1471→          </p>
+  1472→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1473→            The Agriculture and Natural Resources Office, staffed with 42 professionals including crop experts, livestock officers, and natural resource specialists, provides comprehensive extension services to farming households across all 22 kebeles. These services include the distribution of improved seeds and fertilizer, veterinary services, soil conservation training, irrigation support, and market linkage facilitation. Climate-smart agriculture practices are being actively promoted to build resilience against increasing weather variability and ensure food security for the growing population.
+  1474→          </p>
+  1475→        </ContentCard>
+  1476→
+  1477→        {/* Agriculture Stats */}
+  1478→        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  1479→          {[
+  1480→            { stat: "75%+", label: "Population in Farming", color: "from-amber-500 to-yellow-500" },
+  1481→            { stat: "65%", label: "GDP Contribution", color: "from-green-500 to-emerald-500" },
+  1482→            { stat: "85,000", label: "Hectares Cultivated", color: "from-lime-500 to-green-500" },
+  1483→            { stat: "120+", label: "Registered Cooperatives", color: "from-teal-500 to-cyan-500" },
+  1484→            { stat: "42", label: "Extension Workers", color: "from-orange-500 to-amber-500" },
+  1485→            { stat: "10,000+", label: "Farming Households", color: "from-red-500 to-rose-500" },
+  1486→            { stat: "1,200", label: "Hectares Irrigated", color: "from-sky-500 to-blue-500" },
+  1487→            { stat: "3,500", label: "Bee Colonies (Apiculture)", color: "from-yellow-500 to-amber-500" },
+  1488→          ].map((s, i) => (
+  1489→            <AnimatedSection key={s.label} delay={i * 60}>
+  1490→              <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all h-full">
+  1491→                <CardContent className="p-4 text-center">
+  1492→                  <div className="text-2xl font-extrabold text-[#0B3D2E] mb-1">{s.stat}</div>
+  1493→                  <p className="text-[#0B3D2E]/55 text-xs font-medium">{s.label}</p>
+  1494→                </CardContent>
+  1495→              </Card>
+  1496→            </AnimatedSection>
+  1497→          ))}
+  1498→        </div>
+  1499→
+  1500→        {/* Crop Production & Livestock */}
+  1501→        <div className="grid md:grid-cols-2 gap-6">
+  1502→          <ContentCard delay={100}>
+  1503→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Wheat className="w-5 h-5 text-[#EAB308]" /> Major Crops & Production Statistics</h3>
+  1504→            <div className="space-y-3">
+  1505→              {[
+  1506→                { crop: "Teff (Staple)", area: "28,000 ha", yield: "1.2 t/ha", total: "33,600 tons" },
+  1507→                { crop: "Barley (Highland)", area: "18,000 ha", yield: "1.8 t/ha", total: "32,400 tons" },
+  1508→                { crop: "Wheat", area: "15,000 ha", yield: "2.0 t/ha", total: "30,000 tons" },
+  1509→                { crop: "Sorghum & Maize", area: "12,000 ha", yield: "2.2 t/ha", total: "26,400 tons" },
+  1510→                { crop: "Fava Beans & Peas", area: "8,000 ha", yield: "1.5 t/ha", total: "12,000 tons" },
+  1511→                { crop: "Potatoes & Vegetables", area: "4,000 ha", yield: "15 t/ha", total: "60,000 tons" },
+  1512→              ].map((item) => (
+  1513→                <div key={item.crop} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F0FDF4] border border-[#0B3D2E]/5">
+  1514→                  <span className="font-semibold text-[#0B3D2E] text-xs">{item.crop}</span>
+  1515→                  <div className="flex items-center gap-3 text-[10px] text-[#0B3D2E]/50">
+  1516→                    <span>{item.area}</span>
+  1517→                    <span className="text-[#10B981] font-semibold">{item.total}</span>
+  1518→                  </div>
+  1519→                </div>
+  1520→              ))}
+  1521→            </div>
+  1522→          </ContentCard>
+  1523→          <ContentCard delay={150}>
+  1524→            <h3 className="font-bold text-[#0B3D2E] mb-3 flex items-center gap-2"><Baby className="w-5 h-5 text-[#EAB308]" /> Livestock Population</h3>
+  1525→            <div className="space-y-3">
+  1526→              {[
+  1527→                { animal: "Cattle (Oxen & Cows)", count: "68,000", icon: "🐄" },
+  1528→                { animal: "Sheep", count: "45,000", icon: "🐑" },
+  1529→                { animal: "Goats", count: "32,000", icon: "🐐" },
+  1530→                { animal: "Poultry", count: "125,000", icon: "🐔" },
+  1531→                { animal: "Donkeys & Mules", count: "8,500", icon: "🫏" },
+  1532→                { animal: "Bee Colonies (Modern)", count: "3,500", icon: "🐝" },
+  1533→              ].map((item) => (
+  1534→                <div key={item.animal} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F0FDF4] border border-[#0B3D2E]/5">
+  1535→                  <span className="font-semibold text-[#0B3D2E] text-xs">{item.animal}</span>
+  1536→                  <span className="text-sm font-bold text-[#EAB308]">{item.count}</span>
+  1537→                </div>
+  1538→              ))}
+  1539→            </div>
+  1540→          </ContentCard>
+  1541→        </div>
+  1542→
+  1543→        {/* Extension Services & Programs */}
+  1544→        <ContentCard delay={200}>
+  1545→          <h3 className="font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1546→            <TrendingUp className="w-5 h-5 text-[#EAB308]" /> Extension Services & Development Programs
+  1547→          </h3>
+  1548→          <div className="grid md:grid-cols-2 gap-4">
+  1549→            {[
+
+[showing lines 1050-1549 of 2633; use offset=1550 with limit to continue reading]

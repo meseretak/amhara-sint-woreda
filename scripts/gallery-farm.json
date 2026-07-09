@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "query": "Ethiopian farmland agriculture harvest",
+  "count": 2,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/e31dc4b12d41.jpg",
+      "caption": "",
+      "source": "Mongabay",
+      "original_width": "1365px",
+      "original_height": "1024px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/8f5a14b48d88.jpg",
+      "caption": "",
+      "source": "Cordaid",
+      "original_width": "2048px",
+      "original_height": "1363px"
+    }
+  ]
+}

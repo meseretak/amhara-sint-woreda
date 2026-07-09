@@ -1,0 +1,502 @@
+   601→          <h2 className="text-3xl md:text-5xl font-extrabold text-[#0B3D2E] mb-4">
+   602→            Woreda by the <span className="text-[#EAB308]">Numbers</span>
+   603→          </h2>
+   604→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-base md:text-lg">
+   605→            A comprehensive overview of Amhara Sint Woreda&apos;s key development indicators
+   606→          </p>
+   607→        </AnimatedSection>
+   608→        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+   609→          {KEY_STATS.map((stat, i) => (
+   610→            <AnimatedSection key={stat.label} delay={i * 80}>
+   611→              <Card className={`${stat.bg} border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full`}>
+   612→                <CardContent className="p-5 md:p-6 text-center">
+   613→                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+   614→                    <stat.icon className="w-6 h-6 md:w-7 md:h-7 text-white" />
+   615→                  </div>
+   616→                  <div className="text-3xl md:text-4xl font-extrabold text-[#0B3D2E] mb-1">
+   617→                    <AnimatedCounter target={stat.value} suffix={stat.suffix || ""} duration={2200} />
+   618→                  </div>
+   619→                  <p className="text-[#0B3D2E]/60 text-xs md:text-sm font-medium">{stat.label}</p>
+   620→                </CardContent>
+   621→              </Card>
+   622→            </AnimatedSection>
+   623→          ))}
+   624→        </div>
+   625→      </div>
+   626→    </section>
+   627→  );
+   628→}
+   629→
+   630→/* ─── SERVICES OVERVIEW (Home) ──────────────────────────────── */
+   631→const SERVICE_CARDS = [
+   632→  { icon: GraduationCap, title: "Education", desc: "55 schools, 600+ teachers, and 28,000+ students across the woreda", color: "from-emerald-500 to-green-500", href: "svc-education" as PageId },
+   633→  { icon: HeartPulse, title: "Health", desc: "23 health facilities delivering quality care to all communities", color: "from-red-500 to-rose-500", href: "svc-health" as PageId },
+   634→  { icon: Tractor, title: "Agriculture", desc: "Supporting 75% of the population with modern farming practices", color: "from-amber-500 to-yellow-500", href: "svc-agriculture" as PageId },
+   635→  { icon: Truck, title: "Transport", desc: "Expanding road infrastructure to connect all 22 kebeles", color: "from-violet-500 to-purple-500", href: "svc-transport" as PageId },
+   636→  { icon: Droplets, title: "Water & Sanitation", desc: "64 clean water access points serving thousands of families", color: "from-sky-500 to-cyan-500", href: "svc-water" as PageId },
+   637→  { icon: Scale, title: "Justice & Security", desc: "Ensuring safety, rule of law, and accessible justice for all", color: "from-orange-500 to-red-500", href: "svc-justice" as PageId },
+   638→  { icon: Banknote, title: "Finance & Revenue", desc: "Transparent budgeting, revenue collection, and economic planning", color: "from-teal-500 to-emerald-500", href: "svc-finance" as PageId },
+   639→  { icon: Briefcase, title: "Trade & Industry", desc: "Promoting local enterprises, markets, and investment opportunities", color: "from-pink-500 to-rose-500", href: "news-bids" as PageId },
+   640→  { icon: Award, title: "Women & Children Affairs", desc: "Empowering women, protecting children, and advancing equality", color: "from-fuchsia-500 to-pink-500", href: "news-announcements" as PageId },
+   641→  { icon: Globe, title: "Technology & Innovation", desc: "Digital transformation, ICT services, and modern governance", color: "from-indigo-500 to-violet-500", href: "news-announcements" as PageId },
+   642→];
+   643→
+   644→function ServicesOverview({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   645→  return (
+   646→    <section id="services-section" className="py-20 md:py-28 bg-white">
+   647→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   648→        <AnimatedSection className="text-center mb-14">
+   649→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#EAB308]/10 text-[#A16207]">
+   650→            <Building2 className="w-4 h-4 mr-1.5" />
+   651→            Our Services
+   652→          </Badge>
+   653→          <h2 className="text-3xl md:text-5xl font-extrabold text-[#0B3D2E] mb-4">
+   654→            What We <span className="text-[#EAB308]">Deliver</span>
+   655→          </h2>
+   656→          <p className="text-[#0B3D2E]/60 max-w-2xl mx-auto text-base md:text-lg">
+   657→            Key services and development programs driving progress in Amhara Sint Woreda
+   658→          </p>
+   659→        </AnimatedSection>
+   660→        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+   661→          {SERVICE_CARDS.map((svc, i) => (
+   662→            <AnimatedSection key={svc.title} delay={i * 100}>
+   663→              <Card
+   664→                className="border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full group cursor-pointer"
+   665→                onClick={() => {
+   666→                  onNavigate(svc.href);
+   667→                  window.scrollTo({ top: 0, behavior: "smooth" });
+   668→                }}
+   669→              >
+   670→                <CardContent className="p-6 md:p-7">
+   671→                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${svc.color} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+   672→                    <svc.icon className="w-7 h-7 text-white" />
+   673→                  </div>
+   674→                  <h3 className="text-lg font-bold text-[#0B3D2E] mb-2">{svc.title}</h3>
+   675→                  <p className="text-[#0B3D2E]/55 text-sm leading-relaxed">{svc.desc}</p>
+   676→                  <div className="mt-4 flex items-center gap-1 text-[#EAB308] text-sm font-semibold group-hover:gap-2 transition-all">
+   677→                    Learn More <ChevronRight className="w-4 h-4" />
+   678→                  </div>
+   679→                </CardContent>
+   680→              </Card>
+   681→            </AnimatedSection>
+   682→          ))}
+   683→        </div>
+   684→      </div>
+   685→    </section>
+   686→  );
+   687→}
+   688→
+   689→/* ─── DEMOGRAPHICS (Home) ────────────────────────────────────── */
+   690→function DemographicsSection() {
+   691→  const demographics = [
+   692→    { label: "Male Population", value: 71, total: "71,230" },
+   693→    { label: "Female Population", value: 71, total: "71,120" },
+   694→    { label: "Urban Population", value: 12, total: "17,082" },
+   695→    { label: "Rural Population", value: 88, total: "125,268" },
+   696→    { label: "Youth (15-29)", value: 34, total: "48,399" },
+   697→    { label: "Literacy Rate", value: 72, total: "" },
+   698→  ];
+   699→  return (
+   700→    <section className="py-20 md:py-28 bg-[#F0FDF4]">
+   701→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   702→        <AnimatedSection className="text-center mb-14">
+   703→          <Badge variant="secondary" className="mb-4 px-4 py-1.5 text-sm font-medium bg-[#EAB308]/10 text-[#A16207]">
+   704→            <Users className="w-4 h-4 mr-1.5" />
+   705→            Demographics
+   706→          </Badge>
+   707→          <h2 className="text-3xl md:text-5xl font-extrabold text-[#0B3D2E] mb-4">
+   708→            Population <span className="text-[#EAB308]">Breakdown</span>
+   709→          </h2>
+   710→        </AnimatedSection>
+   711→        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+   712→          {demographics.map((item, i) => (
+   713→            <AnimatedSection key={item.label} delay={i * 100}>
+   714→              <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-all">
+   715→                <CardContent className="p-5 md:p-6">
+   716→                  <div className="flex items-center justify-between mb-3">
+   717→                    <h3 className="font-semibold text-[#0B3D2E] text-sm md:text-base">{item.label}</h3>
+   718→                    <span className="text-[#0B3D2E] font-bold text-lg md:text-xl">{item.value}%</span>
+   719→                  </div>
+   720→                  <Progress value={item.value} className="h-3 bg-[#0B3D2E]/10" />
+   721→                  {item.total && <p className="text-[#0B3D2E]/50 text-xs mt-2">Approximately {item.total} people</p>}
+   722→                </CardContent>
+   723→              </Card>
+   724→            </AnimatedSection>
+   725→          ))}
+   726→        </div>
+   727→      </div>
+   728→    </section>
+   729→  );
+   730→}
+   731→
+   732→/* ─── QUICK STATS (Home) ─────────────────────────────────────── */
+   733→function QuickStats() {
+   734→  return (
+   735→    <section className="py-16 bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] relative">
+   736→      <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+   737→        {[
+   738→          { label: "Population", value: 142350, suffix: "" },
+   739→          { label: "Area", value: 1245, suffix: " km2" },
+   740→          { label: "Growth Rate", value: 2.8, suffix: "%" },
+   741→          { label: "Kebeles", value: 22, suffix: "" },
+   742→        ].map((s, i) => (
+   743→          <div key={s.label} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
+   744→            <div className="text-3xl md:text-4xl font-extrabold text-[#EAB308] mb-1">
+   745→              <AnimatedCounter target={s.value} suffix={s.suffix} duration={2000} />
+   746→            </div>
+   747→            <p className="text-white/60 text-sm">{s.label}</p>
+   748→          </div>
+   749→        ))}
+   750→      </div>
+   751→    </section>
+   752→  );
+   753→}
+   754→
+   755→/* ═══════════════════════════════════════════════════════════════
+   756→   SUB-PAGES
+   757→   ═══════════════════════════════════════════════════════════════ */
+   758→
+   759→/* ─── Page Wrapper ──────────────────────────────────────────── */
+   760→function Sidebar({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   761→  const goPage = (p: PageId) => {
+   762→    onNavigate(p);
+   763→    window.scrollTo({ top: 0, behavior: "smooth" });
+   764→  };
+   765→  const socialLinks = [
+   766→    { label: "Facebook", icon: Facebook, url: "https://facebook.com/AmharaSint", color: "hover:bg-[#1877F2] hover:text-white" },
+   767→    { label: "YouTube", icon: Youtube, url: "https://youtube.com/@AmharaSint", color: "hover:bg-[#FF0000] hover:text-white" },
+   768→    { label: "LinkedIn", icon: Linkedin, url: "https://linkedin.com/company/AmharaSint", color: "hover:bg-[#0A66C2] hover:text-white" },
+   769→    { label: "GitHub", icon: Github, url: "https://github.com/AmharaSint", color: "hover:bg-[#333] hover:text-white" },
+   770→    { label: "Instagram", icon: Instagram, url: "https://instagram.com/AmharaSint", color: "hover:bg-[#E4405F] hover:text-white" },
+   771→    { label: "Twitter / X", icon: Twitter, url: "https://twitter.com/AmharaSint", color: "hover:bg-[#1DA1F2] hover:text-white" },
+   772→    { label: "Telegram", icon: ExternalLink, url: "https://t.me/AmharaSint", color: "hover:bg-[#0088CC] hover:text-white" },
+   773→  ];
+   774→  return (
+   775→    <aside className="space-y-6">
+   776→      {/* Quick Links */}
+   777→      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+   778→        <div className="bg-gradient-to-r from-[#0B3D2E] to-[#145A44] px-5 py-3.5">
+   779→          <h4 className="text-white font-bold text-sm uppercase tracking-wider">Quick Links</h4>
+   780→        </div>
+   781→        <div className="p-4 space-y-1.5">
+   782→          <button onClick={() => goPage("bids")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   783→            <Briefcase className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   784→            Bids & Tenders
+   785→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   786→          </button>
+   787→          <button onClick={() => goPage("vacancy")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   788→            <ClipboardList className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   789→            Vacancy
+   790→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   791→          </button>
+   792→          <button onClick={() => goPage("news-news")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   793→            <Newspaper className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   794→            Latest News
+   795→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   796→          </button>
+   797→          <button onClick={() => goPage("gallery")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#0B3D2E]/70 hover:text-[#0B3D2E] hover:bg-[#EAB308]/10 hover:text-[#A16207] transition-all duration-200 group">
+   798→            <ImageIcon className="w-4 h-4 text-[#EAB308] group-hover:scale-110 transition-transform" />
+   799→            Photo Gallery
+   800→            <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B3D2E]/30" />
+   801→          </button>
+   802→        </div>
+   803→      </div>
+   804→      {/* Social Media */}
+   805→      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+   806→        <div className="bg-gradient-to-r from-[#EAB308] to-[#CA8A04] px-5 py-3.5">
+   807→          <h4 className="text-[#0B3D2E] font-bold text-sm uppercase tracking-wider">Follow Us</h4>
+   808→        </div>
+   809→        <div className="p-4 grid grid-cols-2 gap-2.5">
+   810→          {socialLinks.map((social) => (
+   811→            <a
+   812→              key={social.label}
+   813→              href={social.url}
+   814→              target="_blank"
+   815→              rel="noopener noreferrer"
+   816→              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 text-[#0B3D2E]/60 text-xs font-medium transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${social.color}`}
+   817→            >
+   818→              <social.icon className="w-4 h-4 shrink-0" />
+   819→              <span className="truncate">{social.label}</span>
+   820→            </a>
+   821→          ))}
+   822→        </div>
+   823→      </div>
+   824→    </aside>
+   825→  );
+   826→}
+   827→
+   828→function SubPage({
+   829→  title,
+   830→  breadcrumb,
+   831→  badge,
+   832→  badgeColor,
+   833→  onNavigate,
+   834→  children,
+   835→}: {
+   836→  title: string;
+   837→  breadcrumb: string;
+   838→  badge: string;
+   839→  badgeColor?: string;
+   840→  onNavigate: (p: PageId) => void;
+   841→  children: React.ReactNode;
+   842→}) {
+   843→  return (
+   844→    <div className="pt-24 pb-16">
+   845→      {/* Page Header */}
+   846→      <div className="bg-gradient-to-r from-[#0B3D2E] via-[#145A44] to-[#0B3D2E] py-12 md:py-16">
+   847→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   848→          <p className="text-white/50 text-sm mb-2">Home / {breadcrumb}</p>
+   849→          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">{title}</h1>
+   850→          <Badge className={`${badgeColor || "bg-[#EAB308]/20 text-[#EAB308] border-[#EAB308]/30"} text-sm font-medium`}>{badge}</Badge>
+   851→        </div>
+   852→      </div>
+   853→      {/* Content with Sidebar */}
+   854→      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col lg:flex-row gap-8">
+   855→        <div className="flex-1 min-w-0">{children}</div>
+   856→        <div className="w-full lg:w-72 shrink-0">
+   857→          <Sidebar onNavigate={onNavigate} />
+   858→        </div>
+   859→      </div>
+   860→    </div>
+   861→  );
+   862→}
+   863→
+   864→/* ─── Content Card ──────────────────────────────────────────── */
+   865→function ContentCard({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+   866→  return (
+   867→    <AnimatedSection delay={delay}>
+   868→      <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-all duration-300">
+   869→        <CardContent className="p-6 md:p-8">{children}</CardContent>
+   870→      </Card>
+   871→    </AnimatedSection>
+   872→  );
+   873→}
+   874→
+   875→/* ─── ABOUT: History & Background ───────────────────────────── */
+   876→function AboutHistoryPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   877→  const timeline = [
+   878→    { era: "Medieval Period (Pre-1900)", year: "Before 1900", desc: "The area that is now Amhara Sint was part of the medieval Amhara kingdom, strategically positioned along ancient trade routes connecting the northern highlands to the Shewa region. The woreda gained renown for its exceptional horse breeding, supplying cavalry mounts to regional lords and serving as a vital waypoint for merchants transporting salt, gold, and textiles. Ancient rock-hewn churches and archaeological sites in the area bear testimony to a civilization that dates back centuries, with local oral traditions preserving epic tales of warriors and saints who shaped the region's identity." },
+   879→    { era: "Imperial Era (1900-1935)", year: "1900 - 1935", desc: "During the reign of Emperor Menelik II and later Emperor Haile Selassie I, Amhara Sint was formally established as an administrative district within the Wollo province. The imperial government constructed the first formal government offices, introduced modern tax collection systems, and established the first primary school. The town of Amhara Sint grew into a modest administrative center, attracting merchants, artisans, and civil servants. Ethiopian Orthodox Tewahedo Church influence deepened during this period, with the construction of several churches that remain active today." },
+   880→    { era: "Italian Occupation (1935-1941)", year: "1935 - 1941", desc: "The five-year Italian occupation brought profound disruption to Amhara Sint, as it did to the rest of Ethiopia. However, the people of the woreda earned a distinguished reputation for their fierce resistance against the fascist invaders. Local guerrilla fighters, known as 'Patriots' (Arbegnoch), operated from the rugged highland terrain, ambushing Italian patrols and maintaining communication with the broader Ethiopian resistance movement led by Emperor Haile Selassie from exile. Several local resistance leaders became celebrated figures, and their sacrifices are commemorated annually during patriotic celebrations." },
+   881→    { era: "Post-Liberation & Imperial Restoration (1941-1974)", year: "1941 - 1974", desc: "Following liberation, Amhara Sint experienced significant modernization. The imperial government expanded educational facilities, established agricultural extension services, and improved road connections to Dessie and other major towns. The woreda participated in Ethiopia's first limited parliamentary elections, sending representatives to the national assembly. During this period, the community's renowned horse breeding traditions received official recognition, with annual horse fairs attracting traders from across the Amhara Region. Infrastructure development, including the construction of the first health clinic and additional schools, laid the groundwork for future progress." },
+   882→    { era: "Derg Era (1974-1991)", year: "1974 - 1991", desc: "The 1974 Ethiopian Revolution brought radical transformation to Amhara Sint under the military Derg government. sweeping land reform abolished the feudal landholding system, redistributing land to tenant farmers and establishing producer cooperatives. While these reforms addressed historical inequities, the subsequent 'villagization' program and collectivization campaigns caused significant social disruption. The woreda suffered during the devastating 1984-85 famine, with loss of life and mass displacement. Civil conflict in the late 1980s, including operations by armed opposition groups, further challenged the community. Despite these hardships, the resilience of the people endured, with community institutions like the Idir (burial society) and traditional mutual support networks playing crucial roles in survival and social cohesion." },
+   883→    { era: "Federal Era (1991-Present)", year: "1991 - Present", desc: "The establishment of the Federal Democratic Republic of Ethiopia in 1991 marked a new chapter for Amhara Sint. The woreda was reorganized under the South Wollo Zone of the Amhara National Regional State, with an elected Woreda Council and Executive Committee replacing the previously appointed administration. Since 1991, the woreda has seen remarkable progress: school enrollment has increased from under 20% to over 85% at the primary level, health facilities have expanded from a single clinic to 23 health institutions, and road connectivity has reached 14 of 22 kebeles. Development programs in agriculture, water supply, and micro-enterprise have transformed livelihoods. The woreda has embraced decentralization, with kebele-level governance empowering local communities to participate directly in planning and development decisions." },
+   884→  ];
+   885→
+   886→  return (
+   887→    <SubPage onNavigate={onNavigate} title="History & Background" breadcrumb="About / History" badge="About the Woreda">
+   888→      <div className="space-y-8 max-w-4xl mx-auto">
+   889→        <ContentCard>
+   890→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   891→            <BookOpen className="w-6 h-6 text-[#EAB308]" /> Origins of Amhara Sint
+   892→          </h2>
+   893→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   894→            Amhara Sint (also known as Sayint) is one of the most historic woredas in the South Wollo Zone of the Amhara Region, Ethiopia. The name &ldquo;Sayint&rdquo; carries deep historical significance in the local Amharic context, referring to a place of gathering, administration, and strategic importance. Nestled in the rugged highlands of northern Ethiopia, the woreda has been a crossroads of civilizations for centuries, serving as a vital link between the ancient trade routes that connected the Red Sea coast to the interior highlands.
+   895→          </p>
+   896→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   897→            Throughout its long and storied history, Amhara Sint has been known for its strategic location along trade routes connecting the highlands to the lowlands. From its origins as a medieval settlement renowned for horse breeding, through the trials of foreign occupation and revolutionary upheaval, to its current position as a developing administrative district in Ethiopia&apos;s federal system, the woreda has demonstrated remarkable resilience and an enduring commitment to community and progress.
+   898→          </p>
+   899→        </ContentCard>
+   900→
+   901→        {/* Historical Timeline */}
+   902→        <ContentCard delay={100}>
+   903→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-6 flex items-center gap-2">
+   904→            <Clock className="w-6 h-6 text-[#EAB308]" /> Historical Timeline
+   905→          </h2>
+   906→          <div className="relative">
+   907→            {/* Vertical line */}
+   908→            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#0B3D2E] via-[#EAB308] to-[#0B3D2E]"></div>
+   909→            <div className="space-y-8">
+   910→              {timeline.map((item, i) => (
+   911→                <div key={item.era} className="relative pl-12 md:pl-16">
+   912→                  {/* Dot marker */}
+   913→                  <div className="absolute left-2.5 md:left-4.5 top-1.5 w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#EAB308] border-4 border-[#F0FDF4] shadow-md z-10"></div>
+   914→                  <div className="bg-[#F0FDF4] rounded-xl p-5 border border-[#0B3D2E]/5">
+   915→                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
+   916→                      <span className="text-xs font-bold text-[#EAB308] bg-[#EAB308]/10 px-3 py-1 rounded-full w-fit">{item.year}</span>
+   917→                      <h3 className="font-bold text-[#0B3D2E] text-sm md:text-base">{item.era}</h3>
+   918→                    </div>
+   919→                    <p className="text-[#0B3D2E]/65 text-sm leading-relaxed">{item.desc}</p>
+   920→                  </div>
+   921→                </div>
+   922→              ))}
+   923→            </div>
+   924→          </div>
+   925→        </ContentCard>
+   926→
+   927→        <ContentCard delay={200}>
+   928→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   929→            <Landmark className="w-6 h-6 text-[#EAB308]" /> Cultural Heritage
+   930→          </h2>
+   931→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   932→            The woreda is home to a rich and vibrant cultural heritage that reflects the deep traditions of the Amhara people. Ethiopian Orthodox Tewahedo Christianity forms the spiritual foundation of the community, with ancient rock-hewn and medieval churches dotting the landscape, serving as centers of worship, education, and communal gathering. The annual Meskel (Finding of the True Cross) and Demera (bonfire) celebrations are major cultural events that bring together thousands of residents in colorful processions featuring traditional hymns, priests in ceremonial vestments, and the iconic large bonfire. Timkat (Epiphany) is another spectacular celebration where the Tabot (replica of the Ark of the Covenant) is carried in procession to nearby water bodies.
+   933→          </p>
+   934→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   935→            Local crafts, including pottery, weaving (particularly the distinctive handwoven cotton garments known as netela and gabi), and blacksmithing, continue to be practiced and passed down through generations. The community maintains strong ties to customary dispute resolution mechanisms led by respected elders (Shimagile), and communal labor traditions such as Debo (communal farming assistance) and Idir (burial society) remain vital social safety nets that strengthen community bonds. Traditional musical instruments like the masinko (one-stringed fiddle), krar (lyre), and washint (flute) accompany songs that tell stories of love, heroism, and faith.
+   936→          </p>
+   937→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   938→            The woreda&apos;s cultural identity is further enriched by its distinctive cuisine, including the preparation of injera from locally grown teff, doro wot (spicy chicken stew), and various traditional dishes prepared during holidays and festivals. Coffee ceremonies, an integral part of Ethiopian social life, are performed with great care and are central to community gatherings, conflict resolution, and welcoming guests. The woreda&apos;s famous horse breeding tradition continues to this day, with annual horse fairs showcasing the finest breeds and attracting visitors from across the region.
+   939→          </p>
+   940→        </ContentCard>
+   941→
+   942→        <ContentCard delay={300}>
+   943→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   944→            <Flag className="w-6 h-6 text-[#EAB308]" /> Resistance & Patriotism
+   945→          </h2>
+   946→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   947→            Amhara Sint holds a special place in Ethiopia&apos;s history of resistance against foreign invasion. During the Italian occupation of 1935-1941, the woreda&apos;s rugged highland terrain provided ideal conditions for guerrilla warfare. Local Patriots (Arbegnoch) organized effective resistance cells that harassed Italian garrisons, sabotaged supply lines, and provided intelligence to the broader Ethiopian resistance movement. Several local leaders emerged as heroic figures, their names still invoked with reverence by the community during annual Patriots&apos; Victory Day celebrations on March 12th.
+   948→          </p>
+   949→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   950→            The spirit of patriotism and sacrifice continues to inspire the woreda&apos;s residents today. Monuments and memorial sites dedicated to the Patriots have been established, and oral history traditions ensure that the stories of courage and resilience are transmitted to younger generations. The woreda&apos;s contributions to Ethiopia&apos;s struggle for freedom and dignity are a source of immense community pride and form an essential part of local identity.
+   951→          </p>
+   952→        </ContentCard>
+   953→
+   954→        <ContentCard delay={400}>
+   955→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   956→            <TrendingUp className="w-6 h-6 text-[#EAB308]" /> Modern Development Journey
+   957→          </h2>
+   958→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   959→            Since the establishment of the federal system in 1991, Amhara Sint has embarked on an ambitious development trajectory. The transition from centralized rule to decentralized governance has empowered local communities to participate directly in planning their own development. Elected kebele councils, women&apos;s associations, youth groups, and farmer cooperatives now play active roles in identifying priorities and implementing projects. The woreda has developed successive five-year development plans that guide investments in education, health, agriculture, water supply, and infrastructure.
+   960→          </p>
+   961→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   962→            Key development milestones include the construction of dozens of new schools that have boosted primary enrollment from under 20% to over 85%, the expansion of health facilities to 23 institutions providing comprehensive primary healthcare, the drilling of 64 clean water points, and the construction of 85 km of all-weather roads. The woreda&apos;s annual budget has grown significantly, with the 2026/27 fiscal year budget reaching ETB 85 million. Despite ongoing challenges including climate variability, youth unemployment, and limited infrastructure, Amhara Sint continues to make steady progress toward its vision of a prosperous, equitable, and self-reliant community.
+   963→          </p>
+   964→        </ContentCard>
+   965→      </div>
+   966→    </SubPage>
+   967→  );
+   968→}
+   969→
+   970→/* ─── ABOUT: Overview ──────────────────────────────────────── */
+   971→function AboutOverviewPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+   972→  return (
+   973→    <SubPage onNavigate={onNavigate} title="Overview" breadcrumb="About / Overview" badge="General Information">
+   974→      <div className="space-y-8 max-w-4xl mx-auto">
+   975→        <ContentCard>
+   976→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+   977→            <Globe className="w-6 h-6 text-[#EAB308]" /> About Amhara Sint Woreda
+   978→          </h2>
+   979→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+   980→            Amhara Sint Woreda is an administrative district located in the South Wollo Zone of the Amhara Regional State, Ethiopia. Covering an area of approximately 1,245 square kilometers, the woreda is home to an estimated population of 142,350 people spread across 22 kebeles (local administrative units). The woreda administration is headquartered in the town of Amhara Sint.
+   981→          </p>
+   982→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+   983→            The woreda operates under the federal governance structure of Ethiopia, with administrative layers including the woreda council, executive committee, and kebele-level administrations. The local government is responsible for delivering public services, managing development programs, and maintaining law and order within its jurisdiction.
+   984→          </p>
+   985→        </ContentCard>
+   986→        <div className="grid md:grid-cols-2 gap-6">
+   987→          <ContentCard delay={100}>
+   988→            <h3 className="font-bold text-[#0B3D2E] mb-3">Key Facts</h3>
+   989→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+   990→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Zone: South Wollo</li>
+   991→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Region: Amhara Regional State</li>
+   992→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Population: ~142,350</li>
+   993→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Area: ~1,245 km&sup2;</li>
+   994→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Kebeles: 22</li>
+   995→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#EAB308] mt-0.5 shrink-0" />Elevation: 1,500 - 3,200m</li>
+   996→            </ul>
+   997→          </ContentCard>
+   998→          <ContentCard delay={150}>
+   999→            <h3 className="font-bold text-[#0B3D2E] mb-3">Economy</h3>
+  1000→            <ul className="space-y-2 text-sm text-[#0B3D2E]/70">
+  1001→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Primary: Agriculture (75%+)</li>
+  1002→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Crops: Teff, Barley, Wheat, Sorghum</li>
+  1003→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Livestock: Cattle, Sheep, Goats</li>
+  1004→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Growing: Small enterprises & trade</li>
+  1005→              <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />Cooperatives: 120+ registered</li>
+  1006→            </ul>
+  1007→          </ContentCard>
+  1008→        </div>
+  1009→      </div>
+  1010→    </SubPage>
+  1011→  );
+  1012→}
+  1013→
+  1014→/* ─── ABOUT: Location ─────────────────────────────────────── */
+  1015→function AboutLocationPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1016→  return (
+  1017→    <SubPage onNavigate={onNavigate} title="Location & Geography" breadcrumb="About / Location" badge="Geographic Profile">
+  1018→      <div className="space-y-8 max-w-4xl mx-auto">
+  1019→        <ContentCard>
+  1020→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1021→            <MapPin className="w-6 h-6 text-[#EAB308]" /> Geographic Location
+  1022→          </h2>
+  1023→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1024→            Amhara Sint Woreda is situated in the South Wollo Zone of the Amhara Regional State, in the northern highlands of Ethiopia. The woreda is characterized by its diverse topography, featuring deep river gorges, rolling highland plateaus, and fertile agricultural valleys that drain into the Blue Nile basin.
+  1025→          </p>
+  1026→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1027→            The landscape ranges from 1,500 meters in the lowland river valleys to over 3,200 meters in the highland peaks, creating distinct agro-ecological zones that support diverse agricultural activities. The area is fed by several seasonal rivers and streams, making it a critical watershed for the larger region.
+  1028→          </p>
+  1029→        </ContentCard>
+  1030→        <ContentCard delay={100}>
+  1031→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1032→            <TreePine className="w-6 h-6 text-[#EAB308]" /> Climate & Environment
+  1033→          </h2>
+  1034→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1035→            The woreda experiences a tropical highland climate with two main rainy seasons. The &ldquo;Kiremt&rdquo; (main rainy season) runs from June to September, while the &ldquo;Belg&rdquo; (short rains) occur from February to April. Average annual rainfall ranges from 800 to 1,200 mm, supporting both rain-fed and irrigated agriculture.
+  1036→          </p>
+  1037→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1038→            Forest coverage stands at approximately 18%, with ongoing reforestation and soil conservation efforts aimed at reversing historical deforestation. The woreda is home to several endemic plant species and serves as a habitat for diverse wildlife, including birds and small mammals unique to the Ethiopian highland ecosystem.
+  1039→          </p>
+  1040→        </ContentCard>
+  1041→      </div>
+  1042→    </SubPage>
+  1043→  );
+  1044→}
+  1045→
+  1046→/* ─── GOVERNMENT: Leadership ───────────────────────────────── */
+  1047→function GovLeadershipPage({ onNavigate }: { onNavigate: (p: PageId) => void }) {
+  1048→  const leaders = [
+  1049→    { name: "Ato Dereje Getachew", title: "Woreda Administrator", phone: "+251 33 440 1001", email: "admin@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Dereje+Getachew&background=0B3D2E&color=fff&size=200" },
+  1050→    { name: "Ato Tadesse Abebe", title: "Deputy Administrator", phone: "+251 33 440 1002", email: "deputy@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Tadesse+Abebe&background=145A44&color=fff&size=200" },
+  1051→    { name: "W/ro Almaz Tesfaye", title: "Woreda Council Speaker", phone: "+251 33 440 1003", email: "council@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Almaz+Tesfaye&background=0B3D2E&color=fff&size=200" },
+  1052→    { name: "Ato Yohannes Girma", title: "Head of Finance", phone: "+251 33 440 1004", email: "finance@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Yohannes+Girma&background=145A44&color=fff&size=200" },
+  1053→    { name: "W/ro Tigist Mekonnen", title: "Head of Education", phone: "+251 33 440 1005", email: "education@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Tigist+Mekonnen&background=0B3D2E&color=fff&size=200" },
+  1054→    { name: "Dr. Alemayehu Bekele", title: "Head of Health", phone: "+251 33 440 1006", email: "health@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Alemayehu+Bekele&background=145A44&color=fff&size=200" },
+  1055→    { name: "Ato Fikadu Hailu", title: "Head of Agriculture", phone: "+251 33 440 1007", email: "agriculture@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Fikadu+Hailu&background=0B3D2E&color=fff&size=200" },
+  1056→    { name: "Ato Assefa Demeke", title: "Head of Justice", phone: "+251 33 440 1008", email: "justice@amharasint.gov.et", avatar: "https://ui-avatars.com/api/?name=Assefa+Demeke&background=145A44&color=fff&size=200" },
+  1057→  ];
+  1058→
+  1059→  return (
+  1060→    <SubPage onNavigate={onNavigate} title="Leadership" breadcrumb="Government / Leadership" badge="Woreda Leadership">
+  1061→      <div className="space-y-8 max-w-5xl mx-auto">
+  1062→        <ContentCard>
+  1063→          <h2 className="text-xl md:text-2xl font-bold text-[#0B3D2E] mb-4 flex items-center gap-2">
+  1064→            <UserCheck className="w-6 h-6 text-[#EAB308]" /> Woreda Administration Leadership
+  1065→          </h2>
+  1066→          <p className="text-[#0B3D2E]/70 leading-relaxed mb-4">
+  1067→            Amhara Sint Woreda is led by a dedicated team of elected and appointed officials committed to delivering transparent, accountable, and effective governance. The Woreda Administrator serves as the Chief Executive, supported by a Deputy Administrator and the heads of all major sectoral offices. Together, they form the Executive Committee, which implements policies and programs approved by the 45-member elected Woreda Council.
+  1068→          </p>
+  1069→          <p className="text-[#0B3D2E]/70 leading-relaxed">
+  1070→            The leadership team operates under the principles of democratic governance, community participation, and equitable service delivery. Regular council sessions, public consultations, and community forums ensure that the voices of all 142,350 residents are heard in the decision-making process.
+  1071→          </p>
+  1072→        </ContentCard>
+  1073→        <style>{`
+  1074→          @keyframes pulse-ring {
+  1075→            0% { transform: scale(0.9); opacity: 0.7; }
+  1076→            50% { transform: scale(1.05); opacity: 0.3; }
+  1077→            100% { transform: scale(0.9); opacity: 0.7; }
+  1078→          }
+  1079→          @keyframes float {
+  1080→            0%, 100% { transform: translateY(0); }
+  1081→            50% { transform: translateY(-6px); }
+  1082→          }
+  1083→          .leader-card { animation: float 4s ease-in-out infinite; }
+  1084→          .leader-card:nth-child(2) { animation-delay: 0.5s; }
+  1085→          .leader-card:nth-child(3) { animation-delay: 1s; }
+  1086→          .leader-card:nth-child(4) { animation-delay: 1.5s; }
+  1087→          .leader-card:nth-child(5) { animation-delay: 0.3s; }
+  1088→          .leader-card:nth-child(6) { animation-delay: 0.8s; }
+  1089→          .leader-card:nth-child(7) { animation-delay: 1.3s; }
+  1090→          .leader-card:nth-child(8) { animation-delay: 1.8s; }
+  1091→          .pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }
+  1092→        `}</style>
+  1093→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+  1094→          {leaders.map((leader, i) => (
+  1095→            <AnimatedSection key={leader.name} delay={i * 80}>
+  1096→              <Card className="bg-white border-0 shadow-md hover:shadow-xl transition-all duration-300 h-full group">
+  1097→                <CardContent className="p-5 md:p-6 flex flex-col items-center text-center leader-card">
+  1098→                  <div className="relative mb-4">
+  1099→                    <div className="absolute inset-0 w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#EAB308] to-[#CA8A04] opacity-40 pulse-ring"></div>
+  1100→                    <div className="absolute inset-0 w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#0B3D2E] to-[#10B981] p-[3px]">
+
+[showing lines 601-1100 of 2633; use offset=1101 with limit to continue reading]

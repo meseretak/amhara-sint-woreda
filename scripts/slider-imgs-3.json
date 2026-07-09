@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "query": "African government administration building official",
+  "count": 2,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/56336ff1a645.jpg",
+      "caption": "",
+      "source": "Southeast Missourian",
+      "original_width": "3840px",
+      "original_height": "2160px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/ba8313230e3e.jpg",
+      "caption": "",
+      "source": "Boston Herald",
+      "original_width": "2000px",
+      "original_height": "1333px"
+    }
+  ]
+}

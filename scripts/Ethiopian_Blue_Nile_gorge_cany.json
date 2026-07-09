@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian Blue Nile gorge canyon river"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian Blue Nile gorge canyon river",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/2c0bd22da89e.jpg",
+      "caption": "",
+      "source": "Divingmore",
+      "original_width": "2560px",
+      "original_height": "735px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/5d19c0f98d58.jpg",
+      "caption": "",
+      "source": "A Bushsnob out of Africa",
+      "original_width": "1568px",
+      "original_height": "1041px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/161ce1fdeb45.jpg",
+      "caption": "",
+      "source": "Pelago",
+      "original_width": "1920px",
+      "original_height": "1280px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/d33c0b5d881c.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "867px",
+      "original_height": "1390px"
+    }
+  ]
+}

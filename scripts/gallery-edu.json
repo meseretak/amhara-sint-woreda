@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "query": "Ethiopian school classroom students learning",
+  "count": 2,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/634822b7ff39.jpg",
+      "caption": "",
+      "source": "Broken Chalk",
+      "original_width": "2048px",
+      "original_height": "819px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/5f0a9b467c16.png",
+      "caption": "",
+      "source": "East African Review",
+      "original_width": "1772px",
+      "original_height": "1246px"
+    }
+  ]
+}

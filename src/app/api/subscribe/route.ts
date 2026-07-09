@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+
+export async function POST(request: Request) {
+  try {
+    const { email } = await request.json();
+    if (!email || !email.includes("@")) {
+      return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+    }
+    return NextResponse.json(
+      { message: "Subscribed successfully", email },
+      { status: 201 }
+    );
+  } catch {
+    return NextResponse.json({ error: "Failed to subscribe" }, { status: 500 });
+  }
+}

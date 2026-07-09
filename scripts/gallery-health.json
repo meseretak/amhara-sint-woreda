@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "query": "Ethiopian hospital clinic health care Africa",
+  "count": 2,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/93701603d414.png",
+      "caption": "",
+      "source": "Springer Nature",
+      "original_width": "1200px",
+      "original_height": "836px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/c452da5a0fb8.png",
+      "caption": "",
+      "source": "Springer Nature",
+      "original_width": "1200px",
+      "original_height": "688px"
+    }
+  ]
+}

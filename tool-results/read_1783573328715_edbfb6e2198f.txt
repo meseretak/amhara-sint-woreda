@@ -1,0 +1,1325 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState, useCallback } from "react";
+     4→
+     5→/* ─── types ─── */
+     6→type AdminPage = "dashboard" | "news" | "news-new" | "news-edit" | "bids" | "bids-new" | "bids-edit" | "vacancy" | "vacancy-new" | "vacancy-edit" | "menus" | "applications" | "subscribers" | "settings" | "content" | "pages" | "pages-new" | "pages-edit" | "contact-messages";
+     7→
+     8→interface DashboardStats {
+     9→  totalNews: number;
+    10→  totalBids: number;
+    11→  totalVacancies: number;
+    12→  totalSubscribers: number;
+    13→  totalApplications: number;
+    14→  totalMessages: number;
+    15→  openBids: number;
+    16→  publishedNews: number;
+    17→  newsByMonth: Record<string, number>;
+    18→  recentActivity: { type: string; message: string; date: string }[];
+    19→}
+    20→
+    21→interface NewsItem { id: string; title: string; summary: string; category: string; author: string; status: string; featured: boolean; date: string; content?: string; imageUrl?: string; }
+    22→interface BidItem { id: string; title: string; description: string; budget: string; budgetAmount: number; deadline: string; status: string; }
+    23→interface VacancyItem { id: string; title: string; department: string; type: string; deadline: string; description?: string; requirements?: string; }
+    24→interface Subscriber { id: string; email: string; subscribedAt: string; }
+    25→
+    26→const CATEGORIES = ["Education", "Health", "Agriculture", "Infrastructure", "Governance", "Water", "Finance", "Transport", "Other"];
+    27→const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    28→
+    29→/* ─── spinner ─── */
+    30→function Spinner() {
+    31→  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-[3px] border-[#0B3D2E]/20 border-t-[#0B3D2E] rounded-full animate-spin" /></div>;
+    32→}
+    33→
+    34→/* ─── SIDEBAR ─── */
+    35→function Sidebar({ page, nav, onLogout }: { page: AdminPage; nav: (p: AdminPage) => void; onLogout: () => void }) {
+    36→  const items: { label: string; key: AdminPage; icon: string }[] = [
+    37→    { label: "Dashboard", key: "dashboard", icon: "📊" },
+    38→    { label: "News", key: "news", icon: "📰" },
+    39→    { label: "Bids & Tenders", key: "bids", icon: "💼" },
+    40→    { label: "Vacancies", key: "vacancy", icon: "📋" },
+    41→    { label: "Menu Manager", key: "menus", icon: "📑" },
+    42→    { label: "Applications", key: "applications", icon: "📋" },
+    43→    { label: "Content", key: "content", icon: "📝" },
+    44→    { label: "Custom Pages", key: "pages", icon: "📄" },
+    45→    { label: "Messages", key: "contact-messages", icon: "💬" },
+    46→    { label: "Subscribers", key: "subscribers", icon: "✉️" },
+    47→    { label: "Settings", key: "settings", icon: "⚙️" },
+    48→  ];
+    49→
+    50→  const active = (key: AdminPage) => {
+    51→    if (key === "dashboard") return page === "dashboard";
+    52→    return page === key || page === (key + "-new" as AdminPage) || page === (key + "-edit" as AdminPage);
+    53→  };
+    54→
+    55→  return (
+    56→    <>
+    57→      <div id="sidebar-overlay" className="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} />
+    58→      <aside id="admin-sidebar" className="fixed top-0 left-0 z-50 w-64 h-screen bg-[#0B3D2E] flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    59→        <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+    60→          <button onClick={() => nav("dashboard")} className="flex items-center gap-3">
+    61→            <img src="/logo.png" alt="AS" className="w-9 h-9 rounded-lg shadow-md ring-1 ring-white/20 object-contain" />
+    62→            <div>
+    63→              <div className="text-white font-bold text-sm leading-tight">Admin Panel</div>
+    64→              <div className="text-[#86EFAC] text-[10px] font-medium">Amhara Sint</div>
+    65→            </div>
+    66→          </button>
+    67→          <button onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} className="lg:hidden text-white/60 hover:text-white p-1">✕</button>
+    68→        </div>
+    69→        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    70→          {items.map((item) => (
+    71→            <button key={item.key} onClick={() => nav(item.key)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active(item.key) ? "bg-[#EAB308]/15 text-[#EAB308]" : "text-white/60 hover:text-white hover:bg-white/8"}`}>
+    72→              <span className="w-[18px] text-center shrink-0">{item.icon}</span>
+    73→              {item.label}
+    74→            </button>
+    75→          ))}
+    76→        </nav>
+    77→        <div className="px-3 pb-4 space-y-1 border-t border-white/10 pt-3">
+    78→          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all duration-200">
+    79→            <span className="w-[18px] text-center">↗</span> Back to Website
+    80→          </a>
+    81→          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200">
+    82→            <span className="w-[18px] text-center">↩</span> Logout
+    83→          </button>
+    84→        </div>
+    85→      </aside>
+    86→    </>
+    87→  );
+    88→}
+    89→
+    90→/* ─── DASHBOARD ─── */
+    91→function DashboardPage({ nav }: { nav: (p: AdminPage) => void }) {
+    92→  const [stats, setStats] = useState<DashboardStats | null>(null);
+    93→  useEffect(() => { fetch("/admin/api/stats").then(r => r.json()).then(setStats); }, []);
+    94→  if (!stats) return <Spinner />;
+    95→
+    96→  const maxCount = Math.max(...Object.values(stats.newsByMonth), 1);
+    97→  const barData = MONTHS.map((m, i) => { const key = `2026-${String(i + 1).padStart(2, "0")}`; return { month: m, count: stats.newsByMonth[key] || 0 }; });
+    98→
+    99→  const cards = [
+   100→    { label: "Total News", value: stats.totalNews, icon: "📰", bg: "bg-[#0B3D2E]", click: () => nav("news") },
+   101→    { label: "Applications", value: stats.totalApplications || 0, icon: "📋", bg: "bg-blue-50", click: () => nav("applications") },
+   102→    { label: "Messages", value: stats.totalMessages || 0, icon: "💬", bg: "bg-rose-50", click: () => nav("contact-messages") },
+   103→    { label: "Open Bids", value: stats.openBids || 0, icon: "💼", bg: "bg-amber-50", click: () => nav("bids") },
+   104→  ];
+   105→
+   106→  const actions = [
+   107→    { label: "Add News", desc: "Create a new news article", page: "news-new" as AdminPage },
+   108→    { label: "Add Bid", desc: "Post a new tender", page: "bids-new" as AdminPage },
+   109→    { label: "Add Vacancy", desc: "Post a job opening", page: "vacancy-new" as AdminPage },
+   110→    { label: "View Subscribers", desc: "Manage email list", page: "subscribers" as AdminPage },
+   111→  ];
+   112→
+   113→  return (
+   114→    <div className="space-y-6">
+   115→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   116→        <div>
+   117→          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+   118→          <p className="text-sm text-gray-500 mt-1">Overview of your woreda administration</p>
+   119→        </div>
+   120→        <div className="flex gap-2">
+   121→          <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ New Post</button>
+   122→          <button onClick={() => nav("bids-new")} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">＋ New Bid</button>
+   123→        </div>
+   124→      </div>
+   125→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   126→        {cards.map((c) => (
+   127→          <button key={c.label} onClick={c.click} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 text-left">
+   128→            <div className="flex items-center justify-between">
+   129→              <div>
+   130→                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{c.label}</p>
+   131→                <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
+   132→              </div>
+   133→              <div className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center text-lg`}>{c.icon}</div>
+   134→            </div>
+   135→          </button>
+   136→        ))}
+   137→      </div>
+   138→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   139→        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+   140→          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">📈 Posts Over Time</h3>
+   141→          <div className="flex items-end gap-2 h-48 mt-4">
+   142→            {barData.map((d) => (
+   143→              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+   144→                <span className="text-[10px] text-gray-400 font-medium">{d.count > 0 ? d.count : ""}</span>
+   145→                <div className="w-full rounded-t-md transition-all duration-500 min-h-[4px]" style={{ height: `${Math.max((d.count / maxCount) * 100, 4)}%`, backgroundColor: d.count > 0 ? "#0B3D2E" : "#f3f4f6" }} />
+   146→                <span className="text-[10px] text-gray-400">{d.month}</span>
+   147→              </div>
+   148→            ))}
+   149→          </div>
+   150→        </div>
+   151→        <div className="bg-white rounded-xl shadow-sm p-6">
+   152→          <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
+   153→          <div className="space-y-2">
+   154→            {actions.map((a) => (
+   155→              <button key={a.page} onClick={() => nav(a.page)} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group text-left">
+   156→                <div>
+   157→                  <p className="text-sm font-medium text-gray-900">{a.label}</p>
+   158→                  <p className="text-xs text-gray-400">{a.desc}</p>
+   159→                </div>
+   160→                <span className="text-gray-300 group-hover:text-[#0B3D2E] transition-colors">→</span>
+   161→              </button>
+   162→            ))}
+   163→          </div>
+   164→        </div>
+   165→      </div>
+   166→      <div className="bg-white rounded-xl shadow-sm p-6">
+   167→        <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h3>
+   168→        <div className="space-y-3">
+   169→          {stats.recentActivity.length === 0 && <p className="text-sm text-gray-400 text-center py-6">No recent activity</p>}
+   170→          {stats.recentActivity.map((a, i) => (
+   171→            <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+   172→              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${a.type === "news" ? "bg-blue-50 text-blue-600" : a.type === "bid" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>{a.type}</span>
+   173→              <p className="text-sm text-gray-600 flex-1 truncate">{a.message}</p>
+   174→              <span className="text-xs text-gray-400 shrink-0">{new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+   175→            </div>
+   176→          ))}
+   177→        </div>
+   178→      </div>
+   179→    </div>
+   180→  );
+   181→}
+   182→
+   183→/* ─── NEWS LIST ─── */
+   184→function NewsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   185→  const [news, setNews] = useState<NewsItem[]>([]);
+   186→  const [search, setSearch] = useState("");
+   187→  const [loading, setLoading] = useState(true);
+   188→  const load = () => { fetch("/admin/api/news").then(r => r.json()).then(setNews).finally(() => setLoading(false)); };
+   189→  useEffect(() => { load(); }, []);
+   190→  const handleDelete = async (id: string) => { if (!confirm("Delete this article?")) return; await fetch(`/admin/api/news?id=${id}`, { method: "DELETE" }); load(); };
+   191→  const filtered = news.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+   192→  if (loading) return <Spinner />;
+   193→  return (
+   194→    <div className="space-y-6">
+   195→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   196→        <div><h1 className="text-2xl font-bold text-gray-900">News Management</h1><p className="text-sm text-gray-500 mt-1">{news.length} articles total</p></div>
+   197→        <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add News</button>
+   198→      </div>
+   199→      <div className="relative max-w-sm">
+   200→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   201→        <input placeholder="Search news..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   202→      </div>
+   203→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   204→        <div className="overflow-x-auto">
+   205→          <table className="w-full text-sm">
+   206→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   207→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   208→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Category</th>
+   209→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Date</th>
+   210→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   211→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   212→            </tr></thead>
+   213→            <tbody className="divide-y divide-gray-50">
+   214→              {filtered.map(item => (
+   215→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   216→                  <td className="py-3 px-4">
+   217→                    <div className="flex items-center gap-2">
+   218→                      {item.featured && <span className="bg-[#EAB308]/10 text-[#A16207] text-[10px] px-1.5 py-0.5 rounded font-medium">Featured</span>}
+   219→                      <span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span>
+   220→                    </div>
+   221→                  </td>
+   222→                  <td className="py-3 px-4 hidden md:table-cell"><span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{item.category}</span></td>
+   223→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.date}</td>
+   224→                  <td className="py-3 px-4">
+   225→                    <span className={`text-xs px-2 py-0.5 rounded ${item.status === "published" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>{item.status === "published" ? "👁 Published" : "🚫 Draft"}</span>
+   226→                  </td>
+   227→                  <td className="py-3 px-4">
+   228→                    <div className="flex items-center justify-end gap-1">
+   229→                      <button onClick={() => { nav("news-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   230→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   231→                    </div>
+   232→                  </td>
+   233→                </tr>
+   234→              ))}
+   235→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No news articles found.</td></tr>}
+   236→            </tbody>
+   237→          </table>
+   238→        </div>
+   239→      </div>
+   240→    </div>
+   241→  );
+   242→}
+   243→
+   244→/* ─── NEWS FORM (new + edit) ─── */
+   245→function NewsForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   246→  const [loading, setLoading] = useState(!!editId);
+   247→  const [saving, setSaving] = useState(false);
+   248→  const [form, setForm] = useState({ title: "", summary: "", content: "", category: "Education", author: "", imageUrl: "", featured: false, status: "draft" as "published" | "draft", date: new Date().toISOString().split("T")[0] });
+   249→
+   250→  useEffect(() => {
+   251→    if (!editId) return;
+   252→    fetch("/admin/api/news").then(r => r.json()).then((items: NewsItem[]) => {
+   253→      const item = items.find(n => n.id === editId);
+   254→      if (item) setForm({ title: item.title || "", summary: item.summary || "", content: item.content || "", category: item.category || "Education", author: item.author || "", imageUrl: item.imageUrl || "", featured: item.featured || false, status: item.status || "draft", date: item.date || "" });
+   255→    }).finally(() => setLoading(false));
+   256→  }, [editId]);
+   257→
+   258→  const handleSubmit = async (e: React.FormEvent) => {
+   259→    e.preventDefault();
+   260→    if (!form.title.trim()) return;
+   261→    setSaving(true);
+   262→    try {
+   263→      await fetch("/admin/api/news", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   264→      onBack();
+   265→    } catch { alert("Failed to save article"); } finally { setSaving(false); }
+   266→  };
+   267→
+   268→  if (loading) return <Spinner />;
+   269→  const u = (k: string, v: string | boolean) => setForm({ ...form, [k]: v });
+   270→
+   271→  return (
+   272→    <div className="max-w-3xl mx-auto space-y-6">
+   273→      <div className="flex items-center gap-3">
+   274→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   275→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} News Article</h1>
+   276→      </div>
+   277→      <div className="bg-white rounded-xl shadow-sm p-6">
+   278→        <h3 className="text-base font-semibold text-gray-900 mb-4">Article Details</h3>
+   279→        <form onSubmit={handleSubmit} className="space-y-5">
+   280→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter article title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   281→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   282→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Category</label><select value={form.category} onChange={e => u("category", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+   283→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Author</label><input value={form.author} onChange={e => u("author", e.target.value)} placeholder="e.g. Communication Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   284→          </div>
+   285→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   286→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Publish Date</label><input type="date" value={form.date} onChange={e => u("date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   287→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Image URL</label><input value={form.imageUrl} onChange={e => u("imageUrl", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   288→          </div>
+   289→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Summary</label><textarea value={form.summary} onChange={e => u("summary", e.target.value)} placeholder="Brief summary" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   290→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Full Content</label><textarea value={form.content} onChange={e => u("content", e.target.value)} placeholder="Full article content..." rows={8} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-y" /></div>
+   291→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   292→            <div><p className="text-sm font-medium text-gray-700">Featured Article</p><p className="text-xs text-gray-400">Featured articles appear on the homepage</p></div>
+   293→            <button type="button" onClick={() => u("featured", !form.featured)} className={`relative w-11 h-6 rounded-full transition-colors ${form.featured ? "bg-[#0B3D2E]" : "bg-gray-300"}`}><span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${form.featured ? "translate-x-5" : ""}`} /></button>
+   294→          </div>
+   295→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   296→            <div><p className="text-sm font-medium text-gray-700">Status</p><p className="text-xs text-gray-400">Draft articles are not public</p></div>
+   297→            <select value={form.status} onChange={e => u("status", e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
+   298→          </div>
+   299→          <div className="flex gap-3 pt-2">
+   300→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Article"}</button>
+   301→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   302→          </div>
+   303→        </form>
+   304→      </div>
+   305→    </div>
+   306→  );
+   307→}
+   308→
+   309→/* ─── BIDS LIST ─── */
+   310→function BidsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   311→  const [bids, setBids] = useState<BidItem[]>([]);
+   312→  const [search, setSearch] = useState("");
+   313→  const [loading, setLoading] = useState(true);
+   314→  const load = () => { fetch("/admin/api/bids").then(r => r.json()).then(setBids).finally(() => setLoading(false)); };
+   315→  useEffect(() => { load(); }, []);
+   316→  const handleDelete = async (id: string) => { if (!confirm("Delete this bid?")) return; await fetch(`/admin/api/bids?id=${id}`, { method: "DELETE" }); load(); };
+   317→  const filtered = bids.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+   318→  const statusColor = (s: string) => s === "Open" ? "bg-green-50 text-green-600" : s === "Closed" ? "bg-gray-100 text-gray-500" : "bg-amber-50 text-amber-600";
+   319→  if (loading) return <Spinner />;
+   320→  return (
+   321→    <div className="space-y-6">
+   322→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   323→        <div><h1 className="text-2xl font-bold text-gray-900">Bids & Tenders</h1><p className="text-sm text-gray-500 mt-1">{bids.length} total bids</p></div>
+   324→        <button onClick={() => nav("bids-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Bid</button>
+   325→      </div>
+   326→      <div className="relative max-w-sm">
+   327→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   328→        <input placeholder="Search bids..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   329→      </div>
+   330→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   331→        <div className="overflow-x-auto">
+   332→          <table className="w-full text-sm">
+   333→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   334→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   335→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Budget</th>
+   336→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   337→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   338→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   339→            </tr></thead>
+   340→            <tbody className="divide-y divide-gray-50">
+   341→              {filtered.map(item => (
+   342→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   343→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   344→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell font-medium">{item.budget}</td>
+   345→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   346→                  <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded ${statusColor(item.status)}`}>{item.status}</span></td>
+   347→                  <td className="py-3 px-4">
+   348→                    <div className="flex items-center justify-end gap-1">
+   349→                      <button onClick={() => { nav("bids-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   350→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   351→                    </div>
+   352→                  </td>
+   353→                </tr>
+   354→              ))}
+   355→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No bids found.</td></tr>}
+   356→            </tbody>
+   357→          </table>
+   358→        </div>
+   359→      </div>
+   360→    </div>
+   361→  );
+   362→}
+   363→
+   364→/* ─── BID FORM (new + edit) ─── */
+   365→function BidForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   366→  const [loading, setLoading] = useState(!!editId);
+   367→  const [saving, setSaving] = useState(false);
+   368→  const [form, setForm] = useState({ title: "", description: "", budget: "", budgetAmount: 0, deadline: "", status: "Open" as "Open" | "Closed" | "Awarded" });
+   369→
+   370→  useEffect(() => {
+   371→    if (!editId) return;
+   372→    fetch("/admin/api/bids").then(r => r.json()).then((items: BidItem[]) => {
+   373→      const item = items.find(b => b.id === editId);
+   374→      if (item) setForm({ title: item.title || "", description: item.description || "", budget: item.budget || "", budgetAmount: item.budgetAmount || 0, deadline: item.deadline || "", status: item.status || "Open" });
+   375→    }).finally(() => setLoading(false));
+   376→  }, [editId]);
+   377→
+   378→  const handleSubmit = async (e: React.FormEvent) => {
+   379→    e.preventDefault();
+   380→    if (!form.title.trim()) return;
+   381→    setSaving(true);
+   382→    try {
+   383→      await fetch("/admin/api/bids", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   384→      onBack();
+   385→    } catch { alert("Failed to save bid"); } finally { setSaving(false); }
+   386→  };
+   387→  const u = (k: string, v: string | number) => setForm({ ...form, [k]: v });
+   388→  if (loading) return <Spinner />;
+   389→
+   390→  return (
+   391→    <div className="max-w-3xl mx-auto space-y-6">
+   392→      <div className="flex items-center gap-3">
+   393→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   394→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Bid / Tender</h1>
+   395→      </div>
+   396→      <div className="bg-white rounded-xl shadow-sm p-6">
+   397→        <h3 className="text-base font-semibold text-gray-900 mb-4">Bid Details</h3>
+   398→        <form onSubmit={handleSubmit} className="space-y-5">
+   399→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter bid title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   400→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Describe the bid..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   401→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   402→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Label</label><input value={form.budget} onChange={e => u("budget", e.target.value)} placeholder="e.g. ETB 5 Million" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   403→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Amount (ETB)</label><input type="number" value={form.budgetAmount || ""} onChange={e => u("budgetAmount", Number(e.target.value))} placeholder="e.g. 5000000" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   404→          </div>
+   405→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   406→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   407→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Status</label><select value={form.status} onChange={e => u("status", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Open">Open</option><option value="Closed">Closed</option><option value="Awarded">Awarded</option></select></div>
+   408→          </div>
+   409→          <div className="flex gap-3 pt-2">
+   410→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Bid"}</button>
+   411→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   412→          </div>
+   413→        </form>
+   414→      </div>
+   415→    </div>
+   416→  );
+   417→}
+   418→
+   419→/* ─── VACANCY LIST ─── */
+   420→function VacancyListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   421→  const [vacancies, setVacancies] = useState<VacancyItem[]>([]);
+   422→  const [search, setSearch] = useState("");
+   423→  const [loading, setLoading] = useState(true);
+   424→  const load = () => { fetch("/admin/api/vacancies").then(r => r.json()).then(setVacancies).finally(() => setLoading(false)); };
+   425→  useEffect(() => { load(); }, []);
+   426→  const handleDelete = async (id: string) => { if (!confirm("Delete this vacancy?")) return; await fetch(`/admin/api/vacancies?id=${id}`, { method: "DELETE" }); load(); };
+   427→  const filtered = vacancies.filter(v => v.title.toLowerCase().includes(search.toLowerCase()) || v.department.toLowerCase().includes(search.toLowerCase()));
+   428→  if (loading) return <Spinner />;
+   429→  return (
+   430→    <div className="space-y-6">
+   431→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   432→        <div><h1 className="text-2xl font-bold text-gray-900">Vacancies</h1><p className="text-sm text-gray-500 mt-1">{vacancies.length} total vacancies</p></div>
+   433→        <button onClick={() => nav("vacancy-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Vacancy</button>
+   434→      </div>
+   435→      <div className="relative max-w-sm">
+   436→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   437→        <input placeholder="Search vacancies..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   438→      </div>
+   439→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   440→        <div className="overflow-x-auto">
+   441→          <table className="w-full text-sm">
+   442→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   443→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   444→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Department</th>
+   445→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Type</th>
+   446→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   447→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   448→            </tr></thead>
+   449→            <tbody className="divide-y divide-gray-50">
+   450→              {filtered.map(item => (
+   451→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   452→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   453→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{item.department}</td>
+   454→                  <td className="py-3 px-4 hidden sm:table-cell"><span className="bg-[#0B3D2E] text-white text-xs px-2 py-0.5 rounded">{item.type}</span></td>
+   455→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   456→                  <td className="py-3 px-4">
+   457→                    <div className="flex items-center justify-end gap-1">
+   458→                      <button onClick={() => { nav("vacancy-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   459→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   460→                    </div>
+   461→                  </td>
+   462→                </tr>
+   463→              ))}
+   464→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No vacancies found.</td></tr>}
+   465→            </tbody>
+   466→          </table>
+   467→        </div>
+   468→      </div>
+   469→    </div>
+   470→  );
+   471→}
+   472→
+   473→/* ─── VACANCY FORM (new + edit) ─── */
+   474→function VacancyForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   475→  const [loading, setLoading] = useState(!!editId);
+   476→  const [saving, setSaving] = useState(false);
+   477→  const [form, setForm] = useState({ title: "", department: "", type: "Full-Time" as "Full-Time" | "Part-Time" | "Contract", deadline: "", description: "", requirements: "" });
+   478→
+   479→  useEffect(() => {
+   480→    if (!editId) return;
+   481→    fetch("/admin/api/vacancies").then(r => r.json()).then((items: VacancyItem[]) => {
+   482→      const item = items.find(v => v.id === editId);
+   483→      if (item) setForm({ title: item.title || "", department: item.department || "", type: item.type || "Full-Time", deadline: item.deadline || "", description: item.description || "", requirements: item.requirements || "" });
+   484→    }).finally(() => setLoading(false));
+   485→  }, [editId]);
+   486→
+   487→  const handleSubmit = async (e: React.FormEvent) => {
+   488→    e.preventDefault();
+   489→    if (!form.title.trim()) return;
+   490→    setSaving(true);
+   491→    try {
+   492→      await fetch("/admin/api/vacancies", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   493→      onBack();
+   494→    } catch { alert("Failed to save vacancy"); } finally { setSaving(false); }
+   495→  };
+   496→  const u = (k: string, v: string) => setForm({ ...form, [k]: v });
+   497→  if (loading) return <Spinner />;
+   498→
+   499→  return (
+   500→    <div className="max-w-3xl mx-auto space-y-6">
+   501→      <div className="flex items-center gap-3">
+   502→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   503→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Vacancy</h1>
+   504→      </div>
+   505→      <div className="bg-white rounded-xl shadow-sm p-6">
+   506→        <h3 className="text-base font-semibold text-gray-900 mb-4">Vacancy Details</h3>
+   507→        <form onSubmit={handleSubmit} className="space-y-5">
+   508→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="e.g. Health Extension Workers" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   509→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   510→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Department</label><input value={form.department} onChange={e => u("department", e.target.value)} placeholder="e.g. Health Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   511→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Type</label><select value={form.type} onChange={e => u("type", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Full-Time">Full-Time</option><option value="Part-Time">Part-Time</option><option value="Contract">Contract</option></select></div>
+   512→          </div>
+   513→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Application Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   514→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Job description..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   515→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Requirements</label><textarea value={form.requirements} onChange={e => u("requirements", e.target.value)} placeholder="Required qualifications..." rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   516→          <div className="flex gap-3 pt-2">
+   517→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Vacancy"}</button>
+   518→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   519→          </div>
+   520→        </form>
+   521→      </div>
+   522→    </div>
+   523→  );
+   524→}
+   525→
+   526→/* ─── SUBSCRIBERS ─── */
+   527→function SubscribersPage() {
+   528→  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+   529→  const [search, setSearch] = useState("");
+   530→  const [loading, setLoading] = useState(true);
+   531→  const load = () => { fetch("/admin/api/subscribers").then(r => r.json()).then(setSubscribers).finally(() => setLoading(false)); };
+   532→  useEffect(() => { load(); }, []);
+   533→  const handleDelete = async (id: string) => { if (!confirm("Delete this subscriber?")) return; await fetch(`/admin/api/subscribers?id=${id}`, { method: "DELETE" }); load(); };
+   534→  const handleExport = () => {
+   535→    const csv = ["Email,Subscribed At", ...subscribers.map(s => `${s.email},${s.subscribedAt}`)].join("\n");
+   536→    const blob = new Blob([csv], { type: "text/csv" });
+   537→    const url = URL.createObjectURL(blob);
+   538→    const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
+   539→    URL.revokeObjectURL(url);
+   540→  };
+   541→  const filtered = subscribers.filter(s => s.email.toLowerCase().includes(search.toLowerCase()));
+   542→  if (loading) return <Spinner />;
+   543→  return (
+   544→    <div className="space-y-6">
+   545→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   546→        <div><h1 className="text-2xl font-bold text-gray-900">Subscribers</h1><p className="text-sm text-gray-500 mt-1">{subscribers.length} email subscribers</p></div>
+   547→        <button onClick={handleExport} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">📥 Export CSV</button>
+   548→      </div>
+   549→      <div className="relative max-w-sm">
+   550→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   551→        <input placeholder="Search subscribers..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   552→      </div>
+   553→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   554→        <div className="overflow-x-auto">
+   555→          <table className="w-full text-sm">
+   556→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   557→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Email</th>
+   558→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Subscribed At</th>
+   559→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   560→            </tr></thead>
+   561→            <tbody className="divide-y divide-gray-50">
+   562→              {filtered.map(sub => (
+   563→                <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+   564→                  <td className="py-3 px-4">
+   565→                    <div className="flex items-center gap-2">
+   566→                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-xs">✉️</div>
+   567→                      <span className="font-medium text-gray-900">{sub.email}</span>
+   568→                    </div>
+   569→                  </td>
+   570→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(sub.subscribedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+   571→                  <td className="py-3 px-4"><div className="flex items-center justify-end"><button onClick={() => handleDelete(sub.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></div></td>
+   572→                </tr>
+   573→              ))}
+   574→              {filtered.length === 0 && <tr><td colSpan={3} className="py-12 text-center text-gray-400">No subscribers found.</td></tr>}
+   575→            </tbody>
+   576→          </table>
+   577→        </div>
+   578→      </div>
+   579→    </div>
+   580→  );
+   581→}
+   582→
+   583→/* ─── MENU MANAGER ─── */
+   584→interface MenuItem { id: string; label: string; href: string; order: number; children?: { id: string; label: string; href: string; order: number }[]; }
+   585→
+   586→function MenusPage() {
+   587→  const [menus, setMenus] = useState<MenuItem[]>([]);
+   588→  const [loading, setLoading] = useState(true);
+   589→  const [saving, setSaving] = useState(false);
+   590→  const [saved, setSaved] = useState(false);
+   591→
+   592→  useEffect(() => { fetch("/admin/api/menu").then(r => r.json()).then(d => { setMenus(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+   593→
+   594→  const updateMenu = (idx: number, field: string, value: string | number) => {
+   595→    const m = [...menus];
+   596→    (m[idx] as any)[field] = value;
+   597→    setMenus(m); setSaved(false);
+   598→  };
+   599→  const updateChild = (pIdx: number, cIdx: number, field: string, value: string | number) => {
+   600→    const m = [...menus];
+   601→    if (m[pIdx].children) { (m[pIdx].children![cIdx] as any)[field] = value; }
+   602→    setMenus(m); setSaved(false);
+   603→  };
+   604→  const addChild = (pIdx: number) => {
+   605→    const m = [...menus];
+   606→    if (!m[pIdx].children) m[pIdx].children = [];
+   607→    m[pIdx].children!.push({ id: Date.now().toString(), label: "New Item", href: "", order: m[pIdx].children!.length });
+   608→    setMenus(m); setSaved(false);
+   609→  };
+   610→  const removeChild = (pIdx: number, cIdx: number) => {
+   611→    const m = [...menus];
+   612→    m[pIdx].children?.splice(cIdx, 1);
+   613→    setMenus(m); setSaved(false);
+   614→  };
+   615→  const addMenu = () => {
+   616→    setMenus([...menus, { id: Date.now().toString(), label: "New Menu", href: "", order: menus.length, children: [] }]);
+   617→    setSaved(false);
+   618→  };
+   619→  const removeMenu = (idx: number) => {
+   620→    const m = [...menus]; m.splice(idx, 1);
+   621→    setMenus(m); setSaved(false);
+   622→  };
+   623→  const moveMenu = (idx: number, dir: -1 | 1) => {
+   624→    const target = idx + dir;
+   625→    if (target < 0 || target >= menus.length) return;
+   626→    const m = [...menus];
+   627→    [m[idx], m[target]] = [m[target], m[idx]];
+   628→    m.forEach((item, i) => item.order = i);
+   629→    setMenus(m); setSaved(false);
+   630→  };
+   631→  const save = async () => {
+   632→    setSaving(true);
+   633→    try {
+   634→      const res = await fetch("/admin/api/menu", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(menus) });
+   635→      if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+   636→    } finally { setSaving(false); }
+   637→  };
+   638→
+   639→  if (loading) return <Spinner />;
+   640→
+   641→  return (
+   642→    <div>
+   643→      <div className="flex items-center justify-between mb-6">
+   644→        <div><h1 className="text-2xl font-bold text-gray-900">Menu Manager</h1><p className="text-sm text-gray-500 mt-1">Manage navigation menus and sub-menus</p></div>
+   645→        <div className="flex gap-2">
+   646→          <button onClick={addMenu} className="px-4 py-2 bg-[#0B3D2E] text-white text-sm font-medium rounded-lg hover:bg-[#145A44] transition-colors">+ Add Menu</button>
+   647→          <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#EAB308] text-[#0B3D2E] text-sm font-bold rounded-lg hover:bg-[#CA8A04] transition-colors disabled:opacity-60 flex items-center gap-2">
+   648→            {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save All"}
+   649→          </button>
+   650→        </div>
+   651→      </div>
+   652→      <div className="space-y-4">
+   653→        {menus.map((menu, idx) => (
+   654→          <div key={menu.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+   655→            <div className="p-4 border-b border-gray-50 flex items-center gap-3 flex-wrap">
+   656→              <div className="flex flex-col gap-1">
+   657→                <input type="text" value={menu.label} onChange={e => updateMenu(idx, "label", e.target.value)} className="text-sm font-bold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" />
+   658→                <input type="text" value={menu.href} onChange={e => updateMenu(idx, "href", e.target.value)} className="text-xs text-gray-400 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" placeholder="Page ID (href)" />
+   659→              </div>
+   660→              <div className="ml-auto flex items-center gap-1">
+   661→                <span className="text-[10px] text-gray-400 mr-1">Order: {idx}</span>
+   662→                <button onClick={() => moveMenu(idx, -1)} disabled={idx === 0} className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-30 text-xs">↑</button>
+   663→                <button onClick={() => moveMenu(idx, 1)} disabled={idx === menus.length - 1} className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-30 text-xs">↓</button>
+   664→                <button onClick={() => addChild(idx)} className="ml-1 px-2.5 py-1 text-xs font-medium text-[#0B3D2E] bg-[#F0FDF4] rounded-lg hover:bg-[#dcfce7] transition-colors">+ Sub</button>
+   665→                <button onClick={() => removeMenu(idx)} className="ml-1 px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">Delete</button>
+   666→              </div>
+   667→            </div>
+   668→            {menu.children && menu.children.length > 0 && (
+   669→              <div className="divide-y divide-gray-50">
+   670→                {menu.children.map((child, cIdx) => (
+   671→                  <div key={child.id} className="px-4 py-3 ml-8 flex items-center gap-3">
+   672→                    <span className="text-gray-300 text-xs">↳</span>
+   673→                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+   674→                      <input type="text" value={child.label} onChange={e => updateChild(idx, cIdx, "label", e.target.value)} className="text-sm text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors" />
+   675→                      <input type="text" value={child.href} onChange={e => updateChild(idx, cIdx, "href", e.target.value)} className="text-xs text-gray-400 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" placeholder="Page ID (href)" />
+   676→                    </div>
+   677→                    <button onClick={() => removeChild(idx, cIdx)} className="px-2 py-0.5 text-xs text-red-500 hover:bg-red-50 rounded transition-colors">Remove</button>
+   678→                  </div>
+   679→                ))}
+   680→              </div>
+   681→            )}
+   682→          </div>
+   683→        ))}
+   684→      </div>
+   685→    </div>
+   686→  );
+   687→}
+   688→
+   689→/* ─── APPLICATIONS PAGE ─── */
+   690→interface ApplicationItem { id: string; fullName: string; email: string; phone: string; gender: string; education: string; institution: string; experienceYears: string; currentEmployer: string; currentPosition: string; keyQualifications: string; cvName: string; coverLetterName: string; vacancyTitle: string; vacancyId: string; appliedAt: string; status: string; }
+   691→
+   692→function ApplicationsPage() {
+   693→  const [apps, setApps] = useState<ApplicationItem[]>([]);
+   694→  const [selected, setSelected] = useState<ApplicationItem | null>(null);
+   695→  const [loading, setLoading] = useState(true);
+   696→  const [search, setSearch] = useState("");
+   697→
+   698→  useEffect(() => {
+   699→    try {
+   700→      const d = localStorage.getItem("amharasint_applications");
+   701→      setApps(d ? JSON.parse(d) : []);
+   702→    } catch { setApps([]); }
+   703→    setLoading(false);
+   704→  }, []);
+   705→
+   706→  const updateStatus = (id: string, status: string) => {
+   707→    const updated = apps.map(a => a.id === id ? { ...a, status } : a);
+   708→    setApps(updated);
+   709→    localStorage.setItem("amharasint_applications", JSON.stringify(updated));
+   710→  };
+   711→
+   712→  const deleteApp = (id: string) => {
+   713→    if (!confirm("Delete this application?")) return;
+   714→    const updated = apps.filter(a => a.id !== id);
+   715→    setApps(updated);
+   716→    localStorage.setItem("amharasint_applications", JSON.stringify(updated));
+   717→    if (selected?.id === id) setSelected(null);
+   718→  };
+   719→
+   720→  const filtered = apps.filter(a =>
+   721→    a.fullName.toLowerCase().includes(search.toLowerCase()) ||
+   722→    a.email.toLowerCase().includes(search.toLowerCase()) ||
+   723→    a.vacancyTitle.toLowerCase().includes(search.toLowerCase())
+   724→  );
+   725→
+   726→  if (loading) return <Spinner />;
+   727→
+   728→  return (
+   729→    <div className="space-y-6">
+   730→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   731→        <div><h1 className="text-2xl font-bold text-gray-900">Applications Management</h1><p className="text-sm text-gray-500 mt-1">{apps.length} total applications received</p></div>
+   732→        <div className="flex gap-2">
+   733→          {["Under Review", "Shortlisted", "Interviewed", "Rejected"].map(s => (
+   734→            <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">{s}: {apps.filter(a => a.status === s).length}</span>
+   735→          ))}
+   736→        </div>
+   737→      </div>
+   738→      <div className="relative max-w-sm">
+   739→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   740→        <input placeholder="Search by name, email, or position..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   741→      </div>
+   742→
+   743→      {selected ? (
+   744→        <div className="bg-white rounded-xl shadow-sm p-6">
+   745→          <button onClick={() => setSelected(null)} className="text-sm text-gray-500 hover:text-gray-900 mb-4 flex items-center gap-1">← Back to list</button>
+   746→          <div className="grid md:grid-cols-2 gap-6">
+   747→            <div className="space-y-4">
+   748→              <h3 className="text-lg font-bold text-gray-900">{selected.fullName}</h3>
+   749→              <div className="space-y-2">
+   750→                {[
+   751→                  ["Email", selected.email], ["Phone", selected.phone], ["Gender", selected.gender],
+   752→                  ["Education", selected.education], ["Institution", selected.institution],
+   753→                  ["Experience", selected.experienceYears], ["Current Employer", selected.currentEmployer || "N/A"],
+   754→                  ["Current Position", selected.currentPosition || "N/A"],
+   755→                ].map(([k, v]) => (
+   756→                  <div key={k} className="flex justify-between py-1.5 border-b border-gray-50 last:border-0">
+   757→                    <span className="text-sm text-gray-500">{k}</span><span className="text-sm font-medium text-gray-900">{v || "N/A"}</span>
+   758→                  </div>
+   759→                ))}
+   760→              </div>
+   761→            </div>
+   762→            <div className="space-y-4">
+   763→              <div className="bg-gray-50 rounded-xl p-4">
+   764→                <h4 className="text-sm font-bold text-gray-700 mb-2">Applied For</h4>
+   765→                <p className="text-base font-bold text-[#0B3D2E]">{selected.vacancyTitle}</p>
+   766→                <p className="text-xs text-gray-500 mt-1">Applied: {new Date(selected.appliedAt).toLocaleString()}</p>
+   767→              </div>
+   768→              <div className="bg-gray-50 rounded-xl p-4">
+   769→                <h4 className="text-sm font-bold text-gray-700 mb-2">Key Qualifications</h4>
+   770→                <p className="text-sm text-gray-600">{selected.keyQualifications}</p>
+   771→              </div>
+   772→              <div className="bg-gray-50 rounded-xl p-4">
+   773→                <h4 className="text-sm font-bold text-gray-700 mb-2">Documents</h4>
+   774→                <p className="text-sm text-gray-600">CV: {selected.cvName}</p>
+   775→                <p className="text-sm text-gray-600">Cover Letter: {selected.coverLetterName}</p>
+   776→              </div>
+   777→              <div className="flex gap-2">
+   778→                {["Under Review", "Shortlisted", "Interviewed", "Rejected"].map(s => (
+   779→                  <button key={s} onClick={() => updateStatus(selected.id, s)}
+   780→                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${selected.status === s ? (s === "Rejected" ? "bg-red-100 text-red-700" : "bg-[#0B3D2E] text-white") : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+   781→                    {s}
+   782→                  </button>
+   783→                ))}
+   784→              </div>
+   785→            </div>
+   786→          </div>
+   787→        </div>
+   788→      ) : (
+   789→        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   790→          <div className="overflow-x-auto">
+   791→            <table className="w-full text-sm">
+   792→              <thead className="bg-gray-50 border-b border-gray-100">
+   793→                <tr>
+   794→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">Applicant</th>
+   795→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Position</th>
+   796→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden lg:table-cell">Education</th>
+   797→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider">Status</th>
+   798→                  <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden sm:table-cell">Date</th>
+   799→                  <th className="py-3 px-4"></th>
+   800→                </tr>
+   801→              </thead>
+   802→              <tbody className="divide-y divide-gray-50">
+   803→                {filtered.map(app => (
+   804→                  <tr key={app.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setSelected(app)}>
+   805→                    <td className="py-3 px-4">
+   806→                      <div className="flex items-center gap-3">
+   807→                        <div className="w-8 h-8 rounded-full bg-[#0B3D2E] text-white flex items-center justify-center shrink-0 text-xs font-bold">{app.fullName.split(" ").map(n => n[0]).join("")}</div>
+   808→                        <div><span className="font-medium text-gray-900">{app.fullName}</span><div className="text-xs text-gray-400">{app.email}</div></div>
+   809→                      </div>
+   810→                    </td>
+   811→                    <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{app.vacancyTitle}</td>
+   812→                    <td className="py-3 px-4 text-gray-500 hidden lg:table-cell">{app.education}</td>
+   813→                    <td className="py-3 px-4">
+   814→                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${app.status === "Shortlisted" || app.status === "Interviewed" ? "bg-green-50 text-green-700" : app.status === "Rejected" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-700"}`}>{app.status}</span>
+   815→                    </td>
+   816→                    <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(app.appliedAt).toLocaleDateString()}</td>
+   817→                    <td className="py-3 px-4"><button onClick={(e) => { e.stopPropagation(); deleteApp(app.id); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></td>
+   818→                  </tr>
+   819→                ))}
+   820→                {filtered.length === 0 && <tr><td colSpan={6} className="py-12 text-center text-gray-400">No applications found.</td></tr>}
+   821→              </tbody>
+   822→            </table>
+   823→          </div>
+   824→        </div>
+   825→      )}
+   826→    </div>
+   827→  );
+   828→}
+   829→
+   830→/* ─── SETTINGS ─── */
+   831→function SettingsPage() {
+   832→  return (
+   833→    <div className="space-y-6 max-w-2xl">
+   834→      <div><h1 className="text-2xl font-bold text-gray-900">Settings</h1><p className="text-sm text-gray-500 mt-1">Admin panel configuration</p></div>
+   835→      <div className="bg-white rounded-xl shadow-sm p-6">
+   836→        <h3 className="text-base font-semibold text-gray-900 mb-4">System Information</h3>
+   837→        <div className="space-y-4">
+   838→          {[["Application", "Amhara Sint Woreda Portal"], ["Version", "1.0.0"], ["Framework", "Next.js 16"], ["Storage", "JSON File Storage"]].map(([k, v]) => (
+   839→            <div key={k} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+   840→              <span className="text-sm text-gray-600">{k}</span>
+   841→              <span className="text-sm font-medium text-gray-900">{v}</span>
+   842→            </div>
+   843→          ))}
+   844→        </div>
+   845→      </div>
+   846→      <div className="bg-white rounded-xl shadow-sm p-6">
+   847→        <h3 className="text-base font-semibold text-gray-900 mb-2">Admin Access</h3>
+   848→        <p className="text-sm text-gray-500">Admin authentication is password-based. The password is configured via the <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-xs mx-1">ADMIN_PASSWORD</code> environment variable.</p>
+   849→      </div>
+   850→    </div>
+   851→  );
+   852→}
+   853→
+   854→/* ─── CONTACT MESSAGES ─── */
+   855→function ContactMessagesPage() {
+   856→  const [messages, setMessages] = useState<any[]>([]);
+   857→  const [loading, setLoading] = useState(true);
+   858→  const [expanded, setExpanded] = useState<string | null>(null);
+   859→
+   860→  useEffect(() => { fetch("/admin/api/contact-messages").then(r => r.json()).then(setMessages).finally(() => setLoading(false)); }, []);
+   861→
+   862→  const handleDelete = async (id: string) => {
+   863→    if (!confirm("Delete this message?")) return;
+   864→    await fetch(`/admin/api/contact-messages?id=${id}`, { method: "DELETE" });
+   865→    setMessages(messages.filter(m => m.id !== id));
+   866→  };
+   867→
+   868→  if (loading) return <Spinner />;
+   869→
+   870→  return (
+   871→    <div className="space-y-6">
+   872→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   873→        <div><h1 className="text-2xl font-bold text-gray-900">Contact Messages</h1><p className="text-sm text-gray-500 mt-1">{messages.length} messages received</p></div>
+   874→      </div>
+   875→      {messages.length === 0 ? <div className="bg-white rounded-xl shadow-sm p-12 text-center text-gray-400">No messages yet. Messages from the contact form will appear here.</div> : (
+   876→        <div className="space-y-3">
+   877→          {messages.map((msg) => (
+   878→            <div key={msg.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+   879→              <div className="p-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setExpanded(expanded === msg.id ? null : msg.id)}>
+   880→                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${msg.read ? "bg-gray-100 text-gray-500" : "bg-[#0B3D2E] text-white"}`}>
+   881→                  {msg.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+   882→                </div>
+   883→                <div className="flex-1 min-w-0">
+   884→                  <div className="flex items-center gap-2">
+   885→                    <span className="font-medium text-gray-900 text-sm">{msg.name}</span>
+   886→                    {!msg.read && <span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">NEW</span>}
+   887→                  </div>
+   888→                  <p className="text-xs text-gray-500 truncate">{msg.subject} — {msg.email}</p>
+   889→                </div>
+   890→                <span className="text-xs text-gray-400 shrink-0">{new Date(msg.createdAt).toLocaleDateString()}</span>
+   891→                <button onClick={(e) => { e.stopPropagation(); handleDelete(msg.id); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm shrink-0">🗑️</button>
+   892→              </div>
+   893→              {expanded === msg.id && (
+   894→                <div className="px-4 pb-4 border-t border-gray-50 pt-3 space-y-2">
+   895→                  <div className="flex gap-4 text-xs text-gray-500">
+   896→                    <span>📧 {msg.email}</span>
+   897→                    <span>📅 {new Date(msg.createdAt).toLocaleString()}</span>
+   898→                  </div>
+   899→                  <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{msg.message}</p>
+   900→                </div>
+   901→              )}
+   902→            </div>
+   903→          ))}
+   904→        </div>
+   905→      )}
+   906→    </div>
+   907→  );
+   908→}
+   909→
+   910→/* ─── CONTENT MANAGER ─── */
+   911→function ContentManagerPage() {
+   912→  const [content, setContent] = useState<any>(null);
+   913→  const [saving, setSaving] = useState(false);
+   914→  const [saved, setSaved] = useState(false);
+   915→  const [openSection, setOpenSection] = useState<string>("slides");
+   916→
+   917→  useEffect(() => { fetch("/admin/api/content").then(r => r.json()).then(setContent); }, []);
+   918→
+   919→  const save = async () => {
+   920→    setSaving(true);
+   921→    try {
+   922→      await fetch("/admin/api/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) });
+   923→      setSaved(true);
+   924→      setTimeout(() => setSaved(false), 3000);
+   925→    } finally { setSaving(false); }
+   926→  };
+   927→
+   928→  if (!content) return <Spinner />;
+   929→
+   930→  const uSlide = (i: number, k: string, v: string) => {
+   931→    const s = [...content.heroSlides];
+   932→    (s[i] as any)[k] = v;
+   933→    setContent({ ...content, heroSlides: s });
+   934→    setSaved(false);
+   935→  };
+   936→  const addSlide = () => setContent({ ...content, heroSlides: [...content.heroSlides, { image: "", title: "New Slide", subtitle: "Description" }] });
+   937→  const removeSlide = (i: number) => setContent({ ...content, heroSlides: content.heroSlides.filter((_: any, idx: number) => idx !== i) });
+   938→
+   939→  const uSetting = (k: string, v: string) => {
+   940→    const s = { ...content.siteSettings };
+   941→    (s as any)[k] = v;
+   942→    setContent({ ...content, siteSettings: s });
+   943→    setSaved(false);
+   944→  };
+   945→  const uSocial = (k: string, v: string) => {
+   946→    const sl = { ...content.siteSettings.socialLinks };
+   947→    (sl as any)[k] = v;
+   948→    setContent({ ...content, siteSettings: { ...content.siteSettings, socialLinks: sl } });
+   949→    setSaved(false);
+   950→  };
+   951→
+   952→  const sections = [
+   953→    { key: "slides", label: "Hero Slider Images", count: content.heroSlides?.length || 0 },
+   954→    { key: "settings", label: "Site Settings & Social Links", count: null },
+   955→  ];
+   956→
+   957→  return (
+   958→    <div className="space-y-6">
+   959→      <div className="flex items-center justify-between">
+   960→        <div><h1 className="text-2xl font-bold text-gray-900">Content Manager</h1><p className="text-sm text-gray-500 mt-1">Edit homepage content and site settings</p></div>
+   961→        <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#EAB308] text-[#0B3D2E] text-sm font-bold rounded-lg hover:bg-[#CA8A04] transition-colors disabled:opacity-60">
+   962→          {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save All Changes"}
+   963→        </button>
+   964→      </div>
+   965→
+   966→      <div className="space-y-3">
+   967→        {sections.map((sec) => (
+   968→          <div key={sec.key} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+   969→            <button onClick={() => setOpenSection(openSection === sec.key ? "" : sec.key)} className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+   970→              <div className="flex items-center gap-3">
+   971→                <span className="text-base">{sec.key === "slides" ? "🖼️" : "⚙️"}</span>
+   972→                <span className="font-semibold text-gray-900 text-sm">{sec.label}</span>
+   973→                {sec.count !== null && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{sec.count} items</span>}
+   974→              </div>
+   975→              <span className={`text-gray-400 transition-transform ${openSection === sec.key ? "rotate-180" : ""}`}>▼</span>
+   976→            </button>
+   977→            {openSection === sec.key && (
+   978→              <div className="px-4 pb-4 border-t border-gray-50">
+   979→                {sec.key === "slides" && (
+   980→                  <div className="space-y-4 mt-4">
+   981→                    {content.heroSlides?.map((slide: any, i: number) => (
+   982→                      <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+   983→                        <div className="flex items-center justify-between mb-3">
+   984→                          <span className="text-xs font-bold text-gray-500">Slide {i + 1}</span>
+   985→                          <button onClick={() => removeSlide(i)} className="text-xs text-red-500 hover:text-red-700">Remove</button>
+   986→                        </div>
+   987→                        <div className="space-y-2">
+   988→                          <input value={slide.image} onChange={e => uSlide(i, "image", e.target.value)} placeholder="Image URL" className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   989→                          <input value={slide.title} onChange={e => uSlide(i, "title", e.target.value)} placeholder="Title" className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   990→                          <input value={slide.subtitle} onChange={e => uSlide(i, "subtitle", e.target.value)} placeholder="Subtitle" className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   991→                        </div>
+   992→                      </div>
+   993→                    ))}
+   994→                    <button onClick={addSlide} className="w-full py-2 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:text-[#0B3D2E] hover:border-[#0B3D2E] transition-colors">+ Add Slide</button>
+   995→                  </div>
+   996→                )}
+   997→                {sec.key === "settings" && (
+   998→                  <div className="space-y-4 mt-4">
+   999→                    <h4 className="text-sm font-bold text-gray-700">General Settings</h4>
+  1000→                    <div className="grid sm:grid-cols-2 gap-3">
+  1001→                      <div className="space-y-1"><label className="text-xs text-gray-500">Site Name</label><input value={content.siteSettings.siteName} onChange={e => uSetting("siteName", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+  1002→                      <div className="space-y-1"><label className="text-xs text-gray-500">Tagline</label><input value={content.siteSettings.tagline} onChange={e => uSetting("tagline", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+  1003→                      <div className="space-y-1"><label className="text-xs text-gray-500">Developer Name</label><input value={content.siteSettings.developerName} onChange={e => uSetting("developerName", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+  1004→                      <div className="space-y-1"><label className="text-xs text-gray-500">Developer Phone</label><input value={content.siteSettings.developerPhone} onChange={e => uSetting("developerPhone", e.target.value)} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+  1005→                    </div>
+  1006→                    <h4 className="text-sm font-bold text-gray-700 mt-4">Social Media Links</h4>
+  1007→                    <div className="grid sm:grid-cols-2 gap-3">
+  1008→                      {Object.entries(content.siteSettings.socialLinks).map(([k, v]) => (
+  1009→                        <div key={k} className="space-y-1">
+  1010→                          <label className="text-xs text-gray-500 capitalize">{k}</label>
+  1011→                          <input value={v} onChange={e => uSocial(k, e.target.value)} className="w-full h-9 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+  1012→                        </div>
+  1013→                      ))}
+  1014→                    </div>
+  1015→                  </div>
+  1016→                )}
+  1017→              </div>
+  1018→            )}
+  1019→          </div>
+  1020→        ))}
+  1021→      </div>
+  1022→    </div>
+  1023→  );
+  1024→}
+  1025→
+  1026→/* ─── CUSTOM PAGES ─── */
+  1027→interface CustomPage { id: string; title: string; slug: string; content: string; status: string; createdAt: string; }
+  1028→
+  1029→function CustomPagesList({ nav }: { nav: (p: AdminPage) => void }) {
+  1030→  const [pages, setPages] = useState<CustomPage[]>([]);
+  1031→  const [loading, setLoading] = useState(true);
+  1032→  const load = () => { fetch("/admin/api/pages").then(r => r.json()).then(setPages).finally(() => setLoading(false)); };
+  1033→  useEffect(() => { load(); }, []);
+  1034→  const handleDelete = async (id: string) => {
+  1035→    if (!confirm("Delete this page?")) return;
+  1036→    await fetch(`/admin/api/pages?id=${id}`, { method: "DELETE" }); load();
+  1037→  };
+  1038→
+  1039→  if (loading) return <Spinner />;
+  1040→
+  1041→  return (
+  1042→    <div className="space-y-6">
+  1043→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  1044→        <div><h1 className="text-2xl font-bold text-gray-900">Custom Pages</h1><p className="text-sm text-gray-500 mt-1">{pages.length} pages</p></div>
+  1045→        <button onClick={() => nav("pages-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Page</button>
+  1046→      </div>
+  1047→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+  1048→        <table className="w-full text-sm">
+  1049→          <thead><tr className="bg-gray-50 border-b border-gray-100">
+  1050→            <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+  1051→            <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Slug</th>
+  1052→            <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+  1053→            <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+  1054→          </tr></thead>
+  1055→          <tbody className="divide-y divide-gray-50">
+  1056→            {pages.map(p => (
+  1057→              <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+  1058→                <td className="py-3 px-4 font-medium text-gray-900">{p.title}</td>
+  1059→                <td className="py-3 px-4 text-gray-500 hidden md:table-cell font-mono text-xs">/{p.slug}</td>
+  1060→                <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded ${p.status === "published" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>{p.status}</span></td>
+  1061→                <td className="py-3 px-4 text-right">
+  1062→                  <button onClick={() => { nav("pages-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = p.id; }} className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm mr-1">✏️</button>
+  1063→                  <button onClick={() => handleDelete(p.id)} className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+  1064→                </td>
+  1065→              </tr>
+  1066→            ))}
+  1067→            {pages.length === 0 && <tr><td colSpan={4} className="py-12 text-center text-gray-400">No custom pages yet.</td></tr>}
+  1068→          </tbody>
+  1069→        </table>
+  1070→      </div>
+  1071→    </div>
+  1072→  );
+  1073→}
+  1074→
+  1075→function CustomPageForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+  1076→  const [loading, setLoading] = useState(!!editId);
+  1077→  const [saving, setSaving] = useState(false);
+  1078→  const [form, setForm] = useState({ title: "", slug: "", content: "", status: "draft" as "published" | "draft" });
+  1079→
+  1080→  useEffect(() => {
+  1081→    if (!editId) return;
+  1082→    fetch("/admin/api/pages").then(r => r.json()).then((items: CustomPage[]) => {
+  1083→      const p = items.find(x => x.id === editId);
+  1084→      if (p) setForm({ title: p.title, slug: p.slug, content: p.content, status: p.status });
+  1085→    }).finally(() => setLoading(false));
+  1086→  }, [editId]);
+  1087→
+  1088→  const handleSubmit = async (e: React.FormEvent) => {
+  1089→    e.preventDefault();
+  1090→    if (!form.title.trim()) return;
+  1091→    setSaving(true);
+  1092→    try {
+  1093→      await fetch("/admin/api/pages", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+  1094→      onBack();
+  1095→    } catch { alert("Failed"); } finally { setSaving(false); }
+  1096→  };
+  1097→
+  1098→  if (loading) return <Spinner />;
+  1099→  const u = (k: string, v: string) => setForm({ ...form, [k]: v });
+  1100→
+  1101→  return (
+  1102→    <div className="max-w-3xl mx-auto space-y-6">
+  1103→      <div className="flex items-center gap-3">
+  1104→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+  1105→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Custom Page</h1>
+  1106→      </div>
+  1107→      <div className="bg-white rounded-xl shadow-sm p-6">
+  1108→        <form onSubmit={handleSubmit} className="space-y-5">
+  1109→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => { u("title", e.target.value); if (!editId) u("slug", e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")); }} placeholder="Page Title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+  1110→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">URL Slug</label><input value={form.slug} onChange={e => u("slug", e.target.value)} placeholder="my-page-slug" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+  1111→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Content</label><textarea value={form.content} onChange={e => u("content", e.target.value)} placeholder="Write your page content here..." rows={12} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-y" /></div>
+  1112→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+  1113→            <p className="text-sm font-medium text-gray-700">Status</p>
+  1114→            <select value={form.status} onChange={e => u("status", e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
+  1115→          </div>
+  1116→          <div className="flex gap-3 pt-2">
+  1117→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "Saving..." : editId ? "Save Changes" : "Create Page"}</button>
+  1118→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+  1119→          </div>
+  1120→        </form>
+  1121→      </div>
+  1122→    </div>
+  1123→  );
+  1124→}
+  1125→
+  1126→/* ─── UPGRADED APPLICATIONS (with CV download) ─── */
+  1127→interface AppItem { id: string; fullName: string; email: string; phone: string; gender: string; education: string; institution: string; experienceYears: string; currentEmployer: string; currentPosition: string; keyQualifications: string; cvName: string; cvFile: string; coverLetterName: string; coverLetterFile: string; vacancyTitle: string; vacancyId: string; appliedAt: string; status: string; }
+  1128→
+  1129→function ApplicationsPageV2() {
+  1130→  const [apps, setApps] = useState<AppItem[]>([]);
+  1131→  const [selected, setSelected] = useState<AppItem | null>(null);
+  1132→  const [loading, setLoading] = useState(true);
+  1133→  const [search, setSearch] = useState("");
+  1134→
+  1135→  useEffect(() => { fetch("/admin/api/applications-admin").then(r => r.json()).then(setApps).finally(() => setLoading(false)); }, []);
+  1136→
+  1137→  const updateStatus = async (id: string, status: string) => {
+  1138→    await fetch("/admin/api/applications-admin", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+  1139→    setApps(apps.map(a => a.id === id ? { ...a, status } : a));
+  1140→    if (selected?.id === id) setSelected({ ...selected, status });
+  1141→  };
+  1142→
+  1143→  const deleteApp = async (id: string) => {
+  1144→    if (!confirm("Delete this application?")) return;
+  1145→    await fetch(`/admin/api/applications-admin?id=${id}`, { method: "DELETE" });
+  1146→    setApps(apps.filter(a => a.id !== id));
+  1147→    if (selected?.id === id) setSelected(null);
+  1148→  };
+  1149→
+  1150→  const filtered = apps.filter(a => a.fullName.toLowerCase().includes(search.toLowerCase()) || a.email.toLowerCase().includes(search.toLowerCase()) || a.vacancyTitle.toLowerCase().includes(search.toLowerCase()));
+  1151→
+  1152→  if (loading) return <Spinner />;
+  1153→
+  1154→  const statusColor = (s: string) => s === "Shortlisted" || s === "Interviewed" ? "bg-green-50 text-green-700" : s === "Rejected" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-700";
+  1155→
+  1156→  if (selected) {
+  1157→    return (
+  1158→      <div className="space-y-6">
+  1159→        <button onClick={() => setSelected(null)} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">← Back to list</button>
+  1160→        <div className="bg-white rounded-xl shadow-sm p-6">
+  1161→          <div className="grid md:grid-cols-2 gap-6">
+  1162→            <div className="space-y-4">
+  1163→              <h3 className="text-lg font-bold text-gray-900">{selected.fullName}</h3>
+  1164→              <div className="space-y-2 text-sm">
+  1165→                {[["Email", selected.email], ["Phone", selected.phone], ["Gender", selected.gender], ["Education", selected.education], ["Institution", selected.institution], ["Experience", selected.experienceYears + " years"], ["Current Employer", selected.currentEmployer || "N/A"], ["Current Position", selected.currentPosition || "N/A"]].map(([k, v]) => (
+  1166→                  <div key={k} className="flex justify-between py-1.5 border-b border-gray-50"><span className="text-gray-500">{k}</span><span className="font-medium text-gray-900">{v || "N/A"}</span></div>
+  1167→                ))}
+  1168→              </div>
+  1169→            </div>
+  1170→            <div className="space-y-4">
+  1171→              <div className="bg-gray-50 rounded-xl p-4">
+  1172→                <h4 className="text-sm font-bold text-gray-700 mb-2">Applied For</h4>
+  1173→                <p className="font-bold text-[#0B3D2E]">{selected.vacancyTitle}</p>
+  1174→                <p className="text-xs text-gray-500 mt-1">Applied: {new Date(selected.appliedAt).toLocaleString()}</p>
+  1175→              </div>
+  1176→              <div className="bg-gray-50 rounded-xl p-4">
+  1177→                <h4 className="text-sm font-bold text-gray-700 mb-2">Key Qualifications</h4>
+  1178→                <p className="text-sm text-gray-600">{selected.keyQualifications}</p>
+  1179→              </div>
+  1180→              <div className="bg-blue-50 rounded-xl p-4">
+  1181→                <h4 className="text-sm font-bold text-blue-800 mb-3">📎 Documents</h4>
+  1182→                {selected.cvFile && (
+  1183→                  <a href={`/admin/api/download?file=${encodeURIComponent(selected.cvFile)}`} target="_blank" className="flex items-center gap-2 text-sm text-blue-700 hover:text-blue-900 mb-2 underline">
+  1184→                    📄 CV: {selected.cvName || selected.cvFile} ↗
+  1185→                  </a>
+  1186→                )}
+  1187→                {selected.cvName && !selected.cvFile && <p className="text-sm text-gray-500 mb-2">📄 CV: {selected.cvName}</p>}
+  1188→                {selected.coverLetterFile && (
+  1189→                  <a href={`/admin/api/download?file=${encodeURIComponent(selected.coverLetterFile)}`} target="_blank" className="flex items-center gap-2 text-sm text-blue-700 hover:text-blue-900 underline">
+  1190→                    📄 Cover Letter: {selected.coverLetterName || selected.coverLetterFile} ↗
+  1191→                  </a>
+  1192→                )}
+  1193→                {selected.coverLetterName && !selected.coverLetterFile && <p className="text-sm text-gray-500">📄 Cover Letter: {selected.coverLetterName}</p>}
+  1194→                {!selected.cvName && !selected.cvFile && !selected.coverLetterName && !selected.coverLetterFile && <p className="text-sm text-gray-400">No documents uploaded</p>}
+  1195→              </div>
+  1196→              <div className="flex flex-wrap gap-2">
+  1197→                {["Under Review", "Shortlisted", "Interviewed", "Rejected"].map(s => (
+  1198→                  <button key={s} onClick={() => updateStatus(selected.id, s)} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${selected.status === s ? (s === "Rejected" ? "bg-red-100 text-red-700" : "bg-[#0B3D2E] text-white") : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{s}</button>
+  1199→                ))}
+  1200→              </div>
+  1201→            </div>
+  1202→          </div>
+  1203→        </div>
+  1204→      </div>
+  1205→    );
+  1206→  }
+  1207→
+  1208→  return (
+  1209→    <div className="space-y-6">
+  1210→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  1211→        <div><h1 className="text-2xl font-bold text-gray-900">Applications ({apps.length})</h1><p className="text-sm text-gray-500 mt-1">Click a row to view details & download CV</p></div>
+  1212→      </div>
+  1213→      <div className="relative max-w-sm">
+  1214→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+  1215→        <input placeholder="Search name, email, position..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+  1216→      </div>
+  1217→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+  1218→        <table className="w-full text-sm">
+  1219→          <thead className="bg-gray-50 border-b border-gray-100">
+  1220→            <tr>
+  1221→              <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase">Applicant</th>
+  1222→              <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase hidden md:table-cell">Position</th>
+  1223→              <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase hidden lg:table-cell">CV</th>
+  1224→              <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase">Status</th>
+  1225→              <th className="text-left py-3 px-4 font-semibold text-gray-500 text-xs uppercase hidden sm:table-cell">Date</th>
+  1226→              <th className="py-3 px-4"></th>
+  1227→            </tr>
+  1228→          </thead>
+  1229→          <tbody className="divide-y divide-gray-50">
+  1230→            {filtered.map(app => (
+  1231→              <tr key={app.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setSelected(app)}>
+  1232→                <td className="py-3 px-4">
+  1233→                  <div className="flex items-center gap-3">
+  1234→                    <div className="w-8 h-8 rounded-full bg-[#0B3D2E] text-white flex items-center justify-center shrink-0 text-xs font-bold">{app.fullName.split(" ").map((n: string) => n[0]).join("")}</div>
+  1235→                    <div><span className="font-medium text-gray-900">{app.fullName}</span><div className="text-xs text-gray-400">{app.email}</div></div>
+  1236→                  </div>
+  1237→                </td>
+  1238→                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{app.vacancyTitle}</td>
+  1239→                <td className="py-3 px-4 hidden lg:table-cell">
+  1240→                  {(app.cvFile || app.cvName) ? <span className="text-xs text-blue-600 font-medium">📎 {app.cvName || "Uploaded"}</span> : <span className="text-xs text-gray-400">None</span>}
+  1241→                </td>
+  1242→                <td className="py-3 px-4"><span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor(app.status)}`}>{app.status}</span></td>
+  1243→                <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(app.appliedAt).toLocaleDateString()}</td>
+  1244→                <td className="py-3 px-4"><button onClick={e => { e.stopPropagation(); deleteApp(app.id); }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></td>
+  1245→              </tr>
+  1246→            ))}
+  1247→            {filtered.length === 0 && <tr><td colSpan={6} className="py-12 text-center text-gray-400">No applications found.</td></tr>}
+  1248→          </tbody>
+  1249→        </table>
+  1250→      </div>
+  1251→    </div>
+  1252→  );
+  1253→}
+  1254→
+  1255→/* ─── MAIN ─── */
+  1256→export default function AdminPage() {
+  1257→  const [page, setPage] = useState<AdminPage>("dashboard");
+  1258→  const [editId, setEditId] = useState<string | null>(null);
+  1259→
+  1260→  const nav = useCallback((p: AdminPage) => {
+  1261→    if (p === "news-edit" || p === "bids-edit" || p === "vacancy-edit" || p === "pages-edit") {
+  1262→      setEditId((window as unknown as { __adminEditId: string }).__adminEditId || null);
+  1263→    } else {
+  1264→      setEditId(null);
+  1265→    }
+  1266→    setPage(p);
+  1267→    // close mobile sidebar
+  1268→    const s = document.getElementById("admin-sidebar");
+  1269→    const o = document.getElementById("sidebar-overlay");
+  1270→    if (s) s.classList.add("-translate-x-full");
+  1271→    if (o) o.classList.add("hidden");
+  1272→  }, []);
+  1273→
+  1274→  const handleLogout = async () => {
+  1275→    await fetch("/admin/api/logout", { method: "POST" });
+  1276→    window.location.href = "/admin/login";
+  1277→  };
+  1278→
+  1279→  return (
+  1280→    <div className="min-h-screen flex bg-gray-50">
+  1281→      <Sidebar page={page} nav={nav} onLogout={handleLogout} />
+  1282→      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
+  1283→        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+  1284→          <div className="flex items-center gap-3">
+  1285→            <button onClick={() => { const s = document.getElementById("admin-sidebar"); if (s) s.classList.toggle("-translate-x-full"); const o = document.getElementById("sidebar-overlay"); if (o) o.classList.toggle("hidden"); }} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600" aria-label="Toggle menu">
+  1286→              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+  1287→            </button>
+  1288→            <div>
+  1289→              <h2 className="text-sm font-semibold text-gray-900">Amhara Sint Woreda</h2>
+  1290→              <p className="text-xs text-gray-400">Administration Panel</p>
+  1291→            </div>
+  1292→          </div>
+  1293→          <div className="flex items-center gap-3">
+  1294→            <form action="/admin/api/logout" method="POST"><button type="submit" className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
+  1295→              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+  1296→              Logout
+  1297→            </button></form>
+  1298→            <a href="/" target="_blank" className="text-xs text-gray-500 hover:text-[#0B3D2E] flex items-center gap-1 transition-colors">View Website <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>
+  1299→          </div>
+  1300→        </header>
+  1301→        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+  1302→          {page === "dashboard" && <DashboardPage nav={nav} />}
+  1303→          {page === "news" && <NewsListPage nav={nav} />}
+  1304→          {page === "news-new" && <NewsForm editId={null} onBack={() => nav("news")} />}
+  1305→          {page === "news-edit" && <NewsForm editId={editId} onBack={() => nav("news")} />}
+  1306→          {page === "bids" && <BidsListPage nav={nav} />}
+  1307→          {page === "bids-new" && <BidForm editId={null} onBack={() => nav("bids")} />}
+  1308→          {page === "bids-edit" && <BidForm editId={editId} onBack={() => nav("bids")} />}
+  1309→          {page === "vacancy" && <VacancyListPage nav={nav} />}
+  1310→          {page === "vacancy-new" && <VacancyForm editId={null} onBack={() => nav("vacancy")} />}
+  1311→          {page === "vacancy-edit" && <VacancyForm editId={editId} onBack={() => nav("vacancy")} />}
+  1312→          {page === "subscribers" && <SubscribersPage />}
+  1313→          {page === "menus" && <MenusPage />}
+  1314→          {page === "applications" && <ApplicationsPageV2 />}
+  1315→          {page === "content" && <ContentManagerPage />}
+  1316→          {page === "pages" && <CustomPagesList nav={nav} />}
+  1317→          {page === "pages-new" && <CustomPageForm editId={null} onBack={() => nav("pages")} />}
+  1318→          {page === "pages-edit" && <CustomPageForm editId={editId} onBack={() => nav("pages")} />}
+  1319→          {page === "contact-messages" && <ContactMessagesPage />}
+  1320→          {page === "settings" && <SettingsPage />}
+  1321→        </main>
+  1322→      </div>
+  1323→    </div>
+  1324→  );
+  1325→}

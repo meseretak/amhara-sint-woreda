@@ -1,0 +1,39 @@
+🚀 Initializing Z-AI SDK...
+🔎 Searching images: "Ethiopian road construction development"
+✅ Got 4 images
+{
+  "success": true,
+  "query": "Ethiopian road construction development",
+  "count": 4,
+  "ranked": false,
+  "results": [
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/925322394c32.png",
+      "caption": "",
+      "source": "Yirgalem Construction",
+      "original_width": "1235px",
+      "original_height": "639px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/15e928c7ad4d.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "821px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/2f2ed51a32bf.jpg",
+      "caption": "",
+      "source": "Alamy",
+      "original_width": "1300px",
+      "original_height": "956px"
+    },
+    {
+      "original_url": "https://sfile.chatglm.cn/images-ppt/98f0714317f8.jpg",
+      "caption": "",
+      "source": "Ethiopia Insight",
+      "original_width": "1492px",
+      "original_height": "1600px"
+    }
+  ]
+}

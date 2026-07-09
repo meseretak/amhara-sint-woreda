@@ -1,0 +1,771 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState, useCallback } from "react";
+     4→
+     5→/* ─── types ─── */
+     6→type AdminPage = "dashboard" | "news" | "news-new" | "news-edit" | "bids" | "bids-new" | "bids-edit" | "vacancy" | "vacancy-new" | "vacancy-edit" | "menus" | "subscribers" | "settings";
+     7→
+     8→interface DashboardStats {
+     9→  totalNews: number;
+    10→  totalBids: number;
+    11→  totalVacancies: number;
+    12→  totalSubscribers: number;
+    13→  openBids: number;
+    14→  publishedNews: number;
+    15→  newsByMonth: Record<string, number>;
+    16→  recentActivity: { type: string; message: string; date: string }[];
+    17→}
+    18→
+    19→interface NewsItem { id: string; title: string; summary: string; category: string; author: string; status: string; featured: boolean; date: string; content?: string; imageUrl?: string; }
+    20→interface BidItem { id: string; title: string; description: string; budget: string; budgetAmount: number; deadline: string; status: string; }
+    21→interface VacancyItem { id: string; title: string; department: string; type: string; deadline: string; description?: string; requirements?: string; }
+    22→interface Subscriber { id: string; email: string; subscribedAt: string; }
+    23→
+    24→const CATEGORIES = ["Education", "Health", "Agriculture", "Infrastructure", "Governance", "Water", "Finance", "Transport", "Other"];
+    25→const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    26→
+    27→/* ─── spinner ─── */
+    28→function Spinner() {
+    29→  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-[3px] border-[#0B3D2E]/20 border-t-[#0B3D2E] rounded-full animate-spin" /></div>;
+    30→}
+    31→
+    32→/* ─── SIDEBAR ─── */
+    33→function Sidebar({ page, nav, onLogout }: { page: AdminPage; nav: (p: AdminPage) => void; onLogout: () => void }) {
+    34→  const items: { label: string; key: AdminPage; icon: string }[] = [
+    35→    { label: "Dashboard", key: "dashboard", icon: "📊" },
+    36→    { label: "News", key: "news", icon: "📰" },
+    37→    { label: "Bids & Tenders", key: "bids", icon: "💼" },
+    38→    { label: "Vacancies", key: "vacancy", icon: "📋" },
+    39→    { label: "Menu Manager", key: "menus", icon: "📑" },
+    40→    { label: "Subscribers", key: "subscribers", icon: "✉️" },
+    41→    { label: "Settings", key: "settings", icon: "⚙️" },
+    42→  ];
+    43→
+    44→  const active = (key: AdminPage) => {
+    45→    if (key === "dashboard") return page === "dashboard";
+    46→    return page === key || page === (key + "-new" as AdminPage) || page === (key + "-edit" as AdminPage);
+    47→  };
+    48→
+    49→  return (
+    50→    <>
+    51→      <div id="sidebar-overlay" className="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} />
+    52→      <aside id="admin-sidebar" className="fixed top-0 left-0 z-50 w-64 h-screen bg-[#0B3D2E] flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    53→        <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
+    54→          <button onClick={() => nav("dashboard")} className="flex items-center gap-3">
+    55→            <img src="/logo.png" alt="AS" className="w-9 h-9 rounded-lg shadow-md ring-1 ring-white/20 object-contain" />
+    56→            <div>
+    57→              <div className="text-white font-bold text-sm leading-tight">Admin Panel</div>
+    58→              <div className="text-[#86EFAC] text-[10px] font-medium">Amhara Sint</div>
+    59→            </div>
+    60→          </button>
+    61→          <button onClick={() => { const s = document.getElementById("admin-sidebar"); const o = document.getElementById("sidebar-overlay"); if (s) s.classList.add("-translate-x-full"); if (o) o.classList.add("hidden"); }} className="lg:hidden text-white/60 hover:text-white p-1">✕</button>
+    62→        </div>
+    63→        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    64→          {items.map((item) => (
+    65→            <button key={item.key} onClick={() => nav(item.key)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active(item.key) ? "bg-[#EAB308]/15 text-[#EAB308]" : "text-white/60 hover:text-white hover:bg-white/8"}`}>
+    66→              <span className="w-[18px] text-center shrink-0">{item.icon}</span>
+    67→              {item.label}
+    68→            </button>
+    69→          ))}
+    70→        </nav>
+    71→        <div className="px-3 pb-4 space-y-1 border-t border-white/10 pt-3">
+    72→          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/8 transition-all duration-200">
+    73→            <span className="w-[18px] text-center">↗</span> Back to Website
+    74→          </a>
+    75→          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300/80 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200">
+    76→            <span className="w-[18px] text-center">↩</span> Logout
+    77→          </button>
+    78→        </div>
+    79→      </aside>
+    80→    </>
+    81→  );
+    82→}
+    83→
+    84→/* ─── DASHBOARD ─── */
+    85→function DashboardPage({ nav }: { nav: (p: AdminPage) => void }) {
+    86→  const [stats, setStats] = useState<DashboardStats | null>(null);
+    87→  useEffect(() => { fetch("/admin/api/stats").then(r => r.json()).then(setStats); }, []);
+    88→  if (!stats) return <Spinner />;
+    89→
+    90→  const maxCount = Math.max(...Object.values(stats.newsByMonth), 1);
+    91→  const barData = MONTHS.map((m, i) => { const key = `2026-${String(i + 1).padStart(2, "0")}`; return { month: m, count: stats.newsByMonth[key] || 0 }; });
+    92→
+    93→  const cards = [
+    94→    { label: "Total News", value: stats.totalNews, icon: "📰", bg: "bg-[#0B3D2E]", click: () => nav("news") },
+    95→    { label: "Total Bids", value: stats.totalBids, icon: "💼", bg: "bg-amber-50", click: () => nav("bids") },
+    96→    { label: "Vacancies", value: stats.totalVacancies, icon: "📋", bg: "bg-emerald-50", click: () => nav("vacancy") },
+    97→    { label: "Subscribers", value: stats.totalSubscribers, icon: "✉️", bg: "bg-rose-50", click: () => nav("subscribers") },
+    98→  ];
+    99→
+   100→  const actions = [
+   101→    { label: "Add News", desc: "Create a new news article", page: "news-new" as AdminPage },
+   102→    { label: "Add Bid", desc: "Post a new tender", page: "bids-new" as AdminPage },
+   103→    { label: "Add Vacancy", desc: "Post a job opening", page: "vacancy-new" as AdminPage },
+   104→    { label: "View Subscribers", desc: "Manage email list", page: "subscribers" as AdminPage },
+   105→  ];
+   106→
+   107→  return (
+   108→    <div className="space-y-6">
+   109→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   110→        <div>
+   111→          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+   112→          <p className="text-sm text-gray-500 mt-1">Overview of your woreda administration</p>
+   113→        </div>
+   114→        <div className="flex gap-2">
+   115→          <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ New Post</button>
+   116→          <button onClick={() => nav("bids-new")} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">＋ New Bid</button>
+   117→        </div>
+   118→      </div>
+   119→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   120→        {cards.map((c) => (
+   121→          <button key={c.label} onClick={c.click} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 text-left">
+   122→            <div className="flex items-center justify-between">
+   123→              <div>
+   124→                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{c.label}</p>
+   125→                <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
+   126→              </div>
+   127→              <div className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center text-lg`}>{c.icon}</div>
+   128→            </div>
+   129→          </button>
+   130→        ))}
+   131→      </div>
+   132→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+   133→        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+   134→          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">📈 Posts Over Time</h3>
+   135→          <div className="flex items-end gap-2 h-48 mt-4">
+   136→            {barData.map((d) => (
+   137→              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+   138→                <span className="text-[10px] text-gray-400 font-medium">{d.count > 0 ? d.count : ""}</span>
+   139→                <div className="w-full rounded-t-md transition-all duration-500 min-h-[4px]" style={{ height: `${Math.max((d.count / maxCount) * 100, 4)}%`, backgroundColor: d.count > 0 ? "#0B3D2E" : "#f3f4f6" }} />
+   140→                <span className="text-[10px] text-gray-400">{d.month}</span>
+   141→              </div>
+   142→            ))}
+   143→          </div>
+   144→        </div>
+   145→        <div className="bg-white rounded-xl shadow-sm p-6">
+   146→          <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
+   147→          <div className="space-y-2">
+   148→            {actions.map((a) => (
+   149→              <button key={a.page} onClick={() => nav(a.page)} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group text-left">
+   150→                <div>
+   151→                  <p className="text-sm font-medium text-gray-900">{a.label}</p>
+   152→                  <p className="text-xs text-gray-400">{a.desc}</p>
+   153→                </div>
+   154→                <span className="text-gray-300 group-hover:text-[#0B3D2E] transition-colors">→</span>
+   155→              </button>
+   156→            ))}
+   157→          </div>
+   158→        </div>
+   159→      </div>
+   160→      <div className="bg-white rounded-xl shadow-sm p-6">
+   161→        <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h3>
+   162→        <div className="space-y-3">
+   163→          {stats.recentActivity.length === 0 && <p className="text-sm text-gray-400 text-center py-6">No recent activity</p>}
+   164→          {stats.recentActivity.map((a, i) => (
+   165→            <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+   166→              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${a.type === "news" ? "bg-blue-50 text-blue-600" : a.type === "bid" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>{a.type}</span>
+   167→              <p className="text-sm text-gray-600 flex-1 truncate">{a.message}</p>
+   168→              <span className="text-xs text-gray-400 shrink-0">{new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+   169→            </div>
+   170→          ))}
+   171→        </div>
+   172→      </div>
+   173→    </div>
+   174→  );
+   175→}
+   176→
+   177→/* ─── NEWS LIST ─── */
+   178→function NewsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   179→  const [news, setNews] = useState<NewsItem[]>([]);
+   180→  const [search, setSearch] = useState("");
+   181→  const [loading, setLoading] = useState(true);
+   182→  const load = () => { fetch("/admin/api/news").then(r => r.json()).then(setNews).finally(() => setLoading(false)); };
+   183→  useEffect(() => { load(); }, []);
+   184→  const handleDelete = async (id: string) => { if (!confirm("Delete this article?")) return; await fetch(`/admin/api/news?id=${id}`, { method: "DELETE" }); load(); };
+   185→  const filtered = news.filter(n => n.title.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+   186→  if (loading) return <Spinner />;
+   187→  return (
+   188→    <div className="space-y-6">
+   189→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   190→        <div><h1 className="text-2xl font-bold text-gray-900">News Management</h1><p className="text-sm text-gray-500 mt-1">{news.length} articles total</p></div>
+   191→        <button onClick={() => nav("news-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add News</button>
+   192→      </div>
+   193→      <div className="relative max-w-sm">
+   194→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   195→        <input placeholder="Search news..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   196→      </div>
+   197→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   198→        <div className="overflow-x-auto">
+   199→          <table className="w-full text-sm">
+   200→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   201→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   202→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Category</th>
+   203→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Date</th>
+   204→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   205→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   206→            </tr></thead>
+   207→            <tbody className="divide-y divide-gray-50">
+   208→              {filtered.map(item => (
+   209→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   210→                  <td className="py-3 px-4">
+   211→                    <div className="flex items-center gap-2">
+   212→                      {item.featured && <span className="bg-[#EAB308]/10 text-[#A16207] text-[10px] px-1.5 py-0.5 rounded font-medium">Featured</span>}
+   213→                      <span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span>
+   214→                    </div>
+   215→                  </td>
+   216→                  <td className="py-3 px-4 hidden md:table-cell"><span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{item.category}</span></td>
+   217→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.date}</td>
+   218→                  <td className="py-3 px-4">
+   219→                    <span className={`text-xs px-2 py-0.5 rounded ${item.status === "published" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>{item.status === "published" ? "👁 Published" : "🚫 Draft"}</span>
+   220→                  </td>
+   221→                  <td className="py-3 px-4">
+   222→                    <div className="flex items-center justify-end gap-1">
+   223→                      <button onClick={() => { nav("news-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   224→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   225→                    </div>
+   226→                  </td>
+   227→                </tr>
+   228→              ))}
+   229→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No news articles found.</td></tr>}
+   230→            </tbody>
+   231→          </table>
+   232→        </div>
+   233→      </div>
+   234→    </div>
+   235→  );
+   236→}
+   237→
+   238→/* ─── NEWS FORM (new + edit) ─── */
+   239→function NewsForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   240→  const [loading, setLoading] = useState(!!editId);
+   241→  const [saving, setSaving] = useState(false);
+   242→  const [form, setForm] = useState({ title: "", summary: "", content: "", category: "Education", author: "", imageUrl: "", featured: false, status: "draft" as "published" | "draft", date: new Date().toISOString().split("T")[0] });
+   243→
+   244→  useEffect(() => {
+   245→    if (!editId) return;
+   246→    fetch("/admin/api/news").then(r => r.json()).then((items: NewsItem[]) => {
+   247→      const item = items.find(n => n.id === editId);
+   248→      if (item) setForm({ title: item.title || "", summary: item.summary || "", content: item.content || "", category: item.category || "Education", author: item.author || "", imageUrl: item.imageUrl || "", featured: item.featured || false, status: item.status || "draft", date: item.date || "" });
+   249→    }).finally(() => setLoading(false));
+   250→  }, [editId]);
+   251→
+   252→  const handleSubmit = async (e: React.FormEvent) => {
+   253→    e.preventDefault();
+   254→    if (!form.title.trim()) return;
+   255→    setSaving(true);
+   256→    try {
+   257→      await fetch("/admin/api/news", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   258→      onBack();
+   259→    } catch { alert("Failed to save article"); } finally { setSaving(false); }
+   260→  };
+   261→
+   262→  if (loading) return <Spinner />;
+   263→  const u = (k: string, v: string | boolean) => setForm({ ...form, [k]: v });
+   264→
+   265→  return (
+   266→    <div className="max-w-3xl mx-auto space-y-6">
+   267→      <div className="flex items-center gap-3">
+   268→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   269→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} News Article</h1>
+   270→      </div>
+   271→      <div className="bg-white rounded-xl shadow-sm p-6">
+   272→        <h3 className="text-base font-semibold text-gray-900 mb-4">Article Details</h3>
+   273→        <form onSubmit={handleSubmit} className="space-y-5">
+   274→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter article title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   275→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   276→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Category</label><select value={form.category} onChange={e => u("category", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+   277→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Author</label><input value={form.author} onChange={e => u("author", e.target.value)} placeholder="e.g. Communication Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   278→          </div>
+   279→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   280→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Publish Date</label><input type="date" value={form.date} onChange={e => u("date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   281→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Image URL</label><input value={form.imageUrl} onChange={e => u("imageUrl", e.target.value)} placeholder="https://..." className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   282→          </div>
+   283→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Summary</label><textarea value={form.summary} onChange={e => u("summary", e.target.value)} placeholder="Brief summary" rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   284→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Full Content</label><textarea value={form.content} onChange={e => u("content", e.target.value)} placeholder="Full article content..." rows={8} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-y" /></div>
+   285→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   286→            <div><p className="text-sm font-medium text-gray-700">Featured Article</p><p className="text-xs text-gray-400">Featured articles appear on the homepage</p></div>
+   287→            <button type="button" onClick={() => u("featured", !form.featured)} className={`relative w-11 h-6 rounded-full transition-colors ${form.featured ? "bg-[#0B3D2E]" : "bg-gray-300"}`}><span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${form.featured ? "translate-x-5" : ""}`} /></button>
+   288→          </div>
+   289→          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+   290→            <div><p className="text-sm font-medium text-gray-700">Status</p><p className="text-xs text-gray-400">Draft articles are not public</p></div>
+   291→            <select value={form.status} onChange={e => u("status", e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
+   292→          </div>
+   293→          <div className="flex gap-3 pt-2">
+   294→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Article"}</button>
+   295→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   296→          </div>
+   297→        </form>
+   298→      </div>
+   299→    </div>
+   300→  );
+   301→}
+   302→
+   303→/* ─── BIDS LIST ─── */
+   304→function BidsListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   305→  const [bids, setBids] = useState<BidItem[]>([]);
+   306→  const [search, setSearch] = useState("");
+   307→  const [loading, setLoading] = useState(true);
+   308→  const load = () => { fetch("/admin/api/bids").then(r => r.json()).then(setBids).finally(() => setLoading(false)); };
+   309→  useEffect(() => { load(); }, []);
+   310→  const handleDelete = async (id: string) => { if (!confirm("Delete this bid?")) return; await fetch(`/admin/api/bids?id=${id}`, { method: "DELETE" }); load(); };
+   311→  const filtered = bids.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+   312→  const statusColor = (s: string) => s === "Open" ? "bg-green-50 text-green-600" : s === "Closed" ? "bg-gray-100 text-gray-500" : "bg-amber-50 text-amber-600";
+   313→  if (loading) return <Spinner />;
+   314→  return (
+   315→    <div className="space-y-6">
+   316→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   317→        <div><h1 className="text-2xl font-bold text-gray-900">Bids & Tenders</h1><p className="text-sm text-gray-500 mt-1">{bids.length} total bids</p></div>
+   318→        <button onClick={() => nav("bids-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Bid</button>
+   319→      </div>
+   320→      <div className="relative max-w-sm">
+   321→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   322→        <input placeholder="Search bids..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   323→      </div>
+   324→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   325→        <div className="overflow-x-auto">
+   326→          <table className="w-full text-sm">
+   327→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   328→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   329→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Budget</th>
+   330→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   331→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+   332→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   333→            </tr></thead>
+   334→            <tbody className="divide-y divide-gray-50">
+   335→              {filtered.map(item => (
+   336→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   337→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   338→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell font-medium">{item.budget}</td>
+   339→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   340→                  <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded ${statusColor(item.status)}`}>{item.status}</span></td>
+   341→                  <td className="py-3 px-4">
+   342→                    <div className="flex items-center justify-end gap-1">
+   343→                      <button onClick={() => { nav("bids-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   344→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   345→                    </div>
+   346→                  </td>
+   347→                </tr>
+   348→              ))}
+   349→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No bids found.</td></tr>}
+   350→            </tbody>
+   351→          </table>
+   352→        </div>
+   353→      </div>
+   354→    </div>
+   355→  );
+   356→}
+   357→
+   358→/* ─── BID FORM (new + edit) ─── */
+   359→function BidForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   360→  const [loading, setLoading] = useState(!!editId);
+   361→  const [saving, setSaving] = useState(false);
+   362→  const [form, setForm] = useState({ title: "", description: "", budget: "", budgetAmount: 0, deadline: "", status: "Open" as "Open" | "Closed" | "Awarded" });
+   363→
+   364→  useEffect(() => {
+   365→    if (!editId) return;
+   366→    fetch("/admin/api/bids").then(r => r.json()).then((items: BidItem[]) => {
+   367→      const item = items.find(b => b.id === editId);
+   368→      if (item) setForm({ title: item.title || "", description: item.description || "", budget: item.budget || "", budgetAmount: item.budgetAmount || 0, deadline: item.deadline || "", status: item.status || "Open" });
+   369→    }).finally(() => setLoading(false));
+   370→  }, [editId]);
+   371→
+   372→  const handleSubmit = async (e: React.FormEvent) => {
+   373→    e.preventDefault();
+   374→    if (!form.title.trim()) return;
+   375→    setSaving(true);
+   376→    try {
+   377→      await fetch("/admin/api/bids", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   378→      onBack();
+   379→    } catch { alert("Failed to save bid"); } finally { setSaving(false); }
+   380→  };
+   381→  const u = (k: string, v: string | number) => setForm({ ...form, [k]: v });
+   382→  if (loading) return <Spinner />;
+   383→
+   384→  return (
+   385→    <div className="max-w-3xl mx-auto space-y-6">
+   386→      <div className="flex items-center gap-3">
+   387→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   388→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Bid / Tender</h1>
+   389→      </div>
+   390→      <div className="bg-white rounded-xl shadow-sm p-6">
+   391→        <h3 className="text-base font-semibold text-gray-900 mb-4">Bid Details</h3>
+   392→        <form onSubmit={handleSubmit} className="space-y-5">
+   393→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="Enter bid title" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   394→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Describe the bid..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   395→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   396→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Label</label><input value={form.budget} onChange={e => u("budget", e.target.value)} placeholder="e.g. ETB 5 Million" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   397→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Budget Amount (ETB)</label><input type="number" value={form.budgetAmount || ""} onChange={e => u("budgetAmount", Number(e.target.value))} placeholder="e.g. 5000000" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   398→          </div>
+   399→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   400→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   401→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Status</label><select value={form.status} onChange={e => u("status", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Open">Open</option><option value="Closed">Closed</option><option value="Awarded">Awarded</option></select></div>
+   402→          </div>
+   403→          <div className="flex gap-3 pt-2">
+   404→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Bid"}</button>
+   405→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   406→          </div>
+   407→        </form>
+   408→      </div>
+   409→    </div>
+   410→  );
+   411→}
+   412→
+   413→/* ─── VACANCY LIST ─── */
+   414→function VacancyListPage({ nav }: { nav: (p: AdminPage) => void }) {
+   415→  const [vacancies, setVacancies] = useState<VacancyItem[]>([]);
+   416→  const [search, setSearch] = useState("");
+   417→  const [loading, setLoading] = useState(true);
+   418→  const load = () => { fetch("/admin/api/vacancies").then(r => r.json()).then(setVacancies).finally(() => setLoading(false)); };
+   419→  useEffect(() => { load(); }, []);
+   420→  const handleDelete = async (id: string) => { if (!confirm("Delete this vacancy?")) return; await fetch(`/admin/api/vacancies?id=${id}`, { method: "DELETE" }); load(); };
+   421→  const filtered = vacancies.filter(v => v.title.toLowerCase().includes(search.toLowerCase()) || v.department.toLowerCase().includes(search.toLowerCase()));
+   422→  if (loading) return <Spinner />;
+   423→  return (
+   424→    <div className="space-y-6">
+   425→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   426→        <div><h1 className="text-2xl font-bold text-gray-900">Vacancies</h1><p className="text-sm text-gray-500 mt-1">{vacancies.length} total vacancies</p></div>
+   427→        <button onClick={() => nav("vacancy-new")} className="bg-[#EAB308] hover:bg-[#CA8A04] text-[#0B3D2E] text-sm font-semibold shadow-sm px-4 py-2 rounded-lg transition-colors">＋ Add Vacancy</button>
+   428→      </div>
+   429→      <div className="relative max-w-sm">
+   430→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   431→        <input placeholder="Search vacancies..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   432→      </div>
+   433→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   434→        <div className="overflow-x-auto">
+   435→          <table className="w-full text-sm">
+   436→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   437→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Title</th>
+   438→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden md:table-cell">Department</th>
+   439→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Type</th>
+   440→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Deadline</th>
+   441→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   442→            </tr></thead>
+   443→            <tbody className="divide-y divide-gray-50">
+   444→              {filtered.map(item => (
+   445→                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+   446→                  <td className="py-3 px-4"><span className="font-medium text-gray-900 truncate max-w-[250px] block">{item.title}</span></td>
+   447→                  <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{item.department}</td>
+   448→                  <td className="py-3 px-4 hidden sm:table-cell"><span className="bg-[#0B3D2E] text-white text-xs px-2 py-0.5 rounded">{item.type}</span></td>
+   449→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{item.deadline}</td>
+   450→                  <td className="py-3 px-4">
+   451→                    <div className="flex items-center justify-end gap-1">
+   452→                      <button onClick={() => { nav("vacancy-edit"); (window as unknown as { __adminEditId: string }).__adminEditId = item.id; }} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0B3D2E] hover:bg-gray-100 transition-colors text-sm">✏️</button>
+   453→                      <button onClick={() => handleDelete(item.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button>
+   454→                    </div>
+   455→                  </td>
+   456→                </tr>
+   457→              ))}
+   458→              {filtered.length === 0 && <tr><td colSpan={5} className="py-12 text-center text-gray-400">No vacancies found.</td></tr>}
+   459→            </tbody>
+   460→          </table>
+   461→        </div>
+   462→      </div>
+   463→    </div>
+   464→  );
+   465→}
+   466→
+   467→/* ─── VACANCY FORM (new + edit) ─── */
+   468→function VacancyForm({ editId, onBack }: { editId: string | null; onBack: () => void }) {
+   469→  const [loading, setLoading] = useState(!!editId);
+   470→  const [saving, setSaving] = useState(false);
+   471→  const [form, setForm] = useState({ title: "", department: "", type: "Full-Time" as "Full-Time" | "Part-Time" | "Contract", deadline: "", description: "", requirements: "" });
+   472→
+   473→  useEffect(() => {
+   474→    if (!editId) return;
+   475→    fetch("/admin/api/vacancies").then(r => r.json()).then((items: VacancyItem[]) => {
+   476→      const item = items.find(v => v.id === editId);
+   477→      if (item) setForm({ title: item.title || "", department: item.department || "", type: item.type || "Full-Time", deadline: item.deadline || "", description: item.description || "", requirements: item.requirements || "" });
+   478→    }).finally(() => setLoading(false));
+   479→  }, [editId]);
+   480→
+   481→  const handleSubmit = async (e: React.FormEvent) => {
+   482→    e.preventDefault();
+   483→    if (!form.title.trim()) return;
+   484→    setSaving(true);
+   485→    try {
+   486→      await fetch("/admin/api/vacancies", { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editId ? { id: editId, ...form } : form) });
+   487→      onBack();
+   488→    } catch { alert("Failed to save vacancy"); } finally { setSaving(false); }
+   489→  };
+   490→  const u = (k: string, v: string) => setForm({ ...form, [k]: v });
+   491→  if (loading) return <Spinner />;
+   492→
+   493→  return (
+   494→    <div className="max-w-3xl mx-auto space-y-6">
+   495→      <div className="flex items-center gap-3">
+   496→        <button onClick={onBack} className="text-gray-500 hover:text-gray-900 text-sm">← Back</button>
+   497→        <h1 className="text-2xl font-bold text-gray-900">{editId ? "Edit" : "Add"} Vacancy</h1>
+   498→      </div>
+   499→      <div className="bg-white rounded-xl shadow-sm p-6">
+   500→        <h3 className="text-base font-semibold text-gray-900 mb-4">Vacancy Details</h3>
+   501→        <form onSubmit={handleSubmit} className="space-y-5">
+   502→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Title *</label><input value={form.title} onChange={e => u("title", e.target.value)} placeholder="e.g. Health Extension Workers" required className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   503→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   504→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Department</label><input value={form.department} onChange={e => u("department", e.target.value)} placeholder="e.g. Health Office" className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   505→            <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Type</label><select value={form.type} onChange={e => u("type", e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"><option value="Full-Time">Full-Time</option><option value="Part-Time">Part-Time</option><option value="Contract">Contract</option></select></div>
+   506→          </div>
+   507→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Application Deadline</label><input type="date" value={form.deadline} onChange={e => u("deadline", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" /></div>
+   508→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Description</label><textarea value={form.description} onChange={e => u("description", e.target.value)} placeholder="Job description..." rows={4} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   509→          <div className="space-y-2"><label className="text-sm font-medium text-gray-700">Requirements</label><textarea value={form.requirements} onChange={e => u("requirements", e.target.value)} placeholder="Required qualifications..." rows={3} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E] resize-none" /></div>
+   510→          <div className="flex gap-3 pt-2">
+   511→            <button type="submit" disabled={saving || !form.title.trim()} className="bg-[#0B3D2E] hover:bg-[#145A44] disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">{saving ? "⏳ Saving..." : editId ? "Save Changes" : "Create Vacancy"}</button>
+   512→            <button type="button" onClick={onBack} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Cancel</button>
+   513→          </div>
+   514→        </form>
+   515→      </div>
+   516→    </div>
+   517→  );
+   518→}
+   519→
+   520→/* ─── SUBSCRIBERS ─── */
+   521→function SubscribersPage() {
+   522→  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+   523→  const [search, setSearch] = useState("");
+   524→  const [loading, setLoading] = useState(true);
+   525→  const load = () => { fetch("/admin/api/subscribers").then(r => r.json()).then(setSubscribers).finally(() => setLoading(false)); };
+   526→  useEffect(() => { load(); }, []);
+   527→  const handleDelete = async (id: string) => { if (!confirm("Delete this subscriber?")) return; await fetch(`/admin/api/subscribers?id=${id}`, { method: "DELETE" }); load(); };
+   528→  const handleExport = () => {
+   529→    const csv = ["Email,Subscribed At", ...subscribers.map(s => `${s.email},${s.subscribedAt}`)].join("\n");
+   530→    const blob = new Blob([csv], { type: "text/csv" });
+   531→    const url = URL.createObjectURL(blob);
+   532→    const a = document.createElement("a"); a.href = url; a.download = "subscribers.csv"; a.click();
+   533→    URL.revokeObjectURL(url);
+   534→  };
+   535→  const filtered = subscribers.filter(s => s.email.toLowerCase().includes(search.toLowerCase()));
+   536→  if (loading) return <Spinner />;
+   537→  return (
+   538→    <div className="space-y-6">
+   539→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   540→        <div><h1 className="text-2xl font-bold text-gray-900">Subscribers</h1><p className="text-sm text-gray-500 mt-1">{subscribers.length} email subscribers</p></div>
+   541→        <button onClick={handleExport} className="border border-gray-200 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors">📥 Export CSV</button>
+   542→      </div>
+   543→      <div className="relative max-w-sm">
+   544→        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+   545→        <input placeholder="Search subscribers..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/20 focus:border-[#0B3D2E]" />
+   546→      </div>
+   547→      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+   548→        <div className="overflow-x-auto">
+   549→          <table className="w-full text-sm">
+   550→            <thead><tr className="bg-gray-50/80 border-b border-gray-100">
+   551→              <th className="text-left py-3 px-4 font-semibold text-gray-600">Email</th>
+   552→              <th className="text-left py-3 px-4 font-semibold text-gray-600 hidden sm:table-cell">Subscribed At</th>
+   553→              <th className="text-right py-3 px-4 font-semibold text-gray-600">Actions</th>
+   554→            </tr></thead>
+   555→            <tbody className="divide-y divide-gray-50">
+   556→              {filtered.map(sub => (
+   557→                <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+   558→                  <td className="py-3 px-4">
+   559→                    <div className="flex items-center gap-2">
+   560→                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-xs">✉️</div>
+   561→                      <span className="font-medium text-gray-900">{sub.email}</span>
+   562→                    </div>
+   563→                  </td>
+   564→                  <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">{new Date(sub.subscribedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+   565→                  <td className="py-3 px-4"><div className="flex items-center justify-end"><button onClick={() => handleDelete(sub.id)} className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-sm">🗑️</button></div></td>
+   566→                </tr>
+   567→              ))}
+   568→              {filtered.length === 0 && <tr><td colSpan={3} className="py-12 text-center text-gray-400">No subscribers found.</td></tr>}
+   569→            </tbody>
+   570→          </table>
+   571→        </div>
+   572→      </div>
+   573→    </div>
+   574→  );
+   575→}
+   576→
+   577→/* ─── MENU MANAGER ─── */
+   578→interface MenuItem { id: string; label: string; href: string; order: number; children?: { id: string; label: string; href: string; order: number }[]; }
+   579→
+   580→function MenusPage() {
+   581→  const [menus, setMenus] = useState<MenuItem[]>([]);
+   582→  const [loading, setLoading] = useState(true);
+   583→  const [saving, setSaving] = useState(false);
+   584→  const [saved, setSaved] = useState(false);
+   585→
+   586→  useEffect(() => { fetch("/admin/api/menu").then(r => r.json()).then(d => { setMenus(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+   587→
+   588→  const updateMenu = (idx: number, field: string, value: string | number) => {
+   589→    const m = [...menus];
+   590→    (m[idx] as any)[field] = value;
+   591→    setMenus(m); setSaved(false);
+   592→  };
+   593→  const updateChild = (pIdx: number, cIdx: number, field: string, value: string | number) => {
+   594→    const m = [...menus];
+   595→    if (m[pIdx].children) { (m[pIdx].children![cIdx] as any)[field] = value; }
+   596→    setMenus(m); setSaved(false);
+   597→  };
+   598→  const addChild = (pIdx: number) => {
+   599→    const m = [...menus];
+   600→    if (!m[pIdx].children) m[pIdx].children = [];
+   601→    m[pIdx].children!.push({ id: Date.now().toString(), label: "New Item", href: "", order: m[pIdx].children!.length });
+   602→    setMenus(m); setSaved(false);
+   603→  };
+   604→  const removeChild = (pIdx: number, cIdx: number) => {
+   605→    const m = [...menus];
+   606→    m[pIdx].children?.splice(cIdx, 1);
+   607→    setMenus(m); setSaved(false);
+   608→  };
+   609→  const addMenu = () => {
+   610→    setMenus([...menus, { id: Date.now().toString(), label: "New Menu", href: "", order: menus.length, children: [] }]);
+   611→    setSaved(false);
+   612→  };
+   613→  const removeMenu = (idx: number) => {
+   614→    const m = [...menus]; m.splice(idx, 1);
+   615→    setMenus(m); setSaved(false);
+   616→  };
+   617→  const moveMenu = (idx: number, dir: -1 | 1) => {
+   618→    const target = idx + dir;
+   619→    if (target < 0 || target >= menus.length) return;
+   620→    const m = [...menus];
+   621→    [m[idx], m[target]] = [m[target], m[idx]];
+   622→    m.forEach((item, i) => item.order = i);
+   623→    setMenus(m); setSaved(false);
+   624→  };
+   625→  const save = async () => {
+   626→    setSaving(true);
+   627→    try {
+   628→      const res = await fetch("/admin/api/menu", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(menus) });
+   629→      if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+   630→    } finally { setSaving(false); }
+   631→  };
+   632→
+   633→  if (loading) return <Spinner />;
+   634→
+   635→  return (
+   636→    <div>
+   637→      <div className="flex items-center justify-between mb-6">
+   638→        <div><h1 className="text-2xl font-bold text-gray-900">Menu Manager</h1><p className="text-sm text-gray-500 mt-1">Manage navigation menus and sub-menus</p></div>
+   639→        <div className="flex gap-2">
+   640→          <button onClick={addMenu} className="px-4 py-2 bg-[#0B3D2E] text-white text-sm font-medium rounded-lg hover:bg-[#145A44] transition-colors">+ Add Menu</button>
+   641→          <button onClick={save} disabled={saving} className="px-4 py-2 bg-[#EAB308] text-[#0B3D2E] text-sm font-bold rounded-lg hover:bg-[#CA8A04] transition-colors disabled:opacity-60 flex items-center gap-2">
+   642→            {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save All"}
+   643→          </button>
+   644→        </div>
+   645→      </div>
+   646→      <div className="space-y-4">
+   647→        {menus.map((menu, idx) => (
+   648→          <div key={menu.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+   649→            <div className="p-4 border-b border-gray-50 flex items-center gap-3 flex-wrap">
+   650→              <div className="flex flex-col gap-1">
+   651→                <input type="text" value={menu.label} onChange={e => updateMenu(idx, "label", e.target.value)} className="text-sm font-bold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" />
+   652→                <input type="text" value={menu.href} onChange={e => updateMenu(idx, "href", e.target.value)} className="text-xs text-gray-400 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" placeholder="Page ID (href)" />
+   653→              </div>
+   654→              <div className="ml-auto flex items-center gap-1">
+   655→                <span className="text-[10px] text-gray-400 mr-1">Order: {idx}</span>
+   656→                <button onClick={() => moveMenu(idx, -1)} disabled={idx === 0} className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-30 text-xs">↑</button>
+   657→                <button onClick={() => moveMenu(idx, 1)} disabled={idx === menus.length - 1} className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-30 text-xs">↓</button>
+   658→                <button onClick={() => addChild(idx)} className="ml-1 px-2.5 py-1 text-xs font-medium text-[#0B3D2E] bg-[#F0FDF4] rounded-lg hover:bg-[#dcfce7] transition-colors">+ Sub</button>
+   659→                <button onClick={() => removeMenu(idx)} className="ml-1 px-2.5 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">Delete</button>
+   660→              </div>
+   661→            </div>
+   662→            {menu.children && menu.children.length > 0 && (
+   663→              <div className="divide-y divide-gray-50">
+   664→                {menu.children.map((child, cIdx) => (
+   665→                  <div key={child.id} className="px-4 py-3 ml-8 flex items-center gap-3">
+   666→                    <span className="text-gray-300 text-xs">↳</span>
+   667→                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+   668→                      <input type="text" value={child.label} onChange={e => updateChild(idx, cIdx, "label", e.target.value)} className="text-sm text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors" />
+   669→                      <input type="text" value={child.href} onChange={e => updateChild(idx, cIdx, "href", e.target.value)} className="text-xs text-gray-400 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-[#0B3D2E] focus:outline-none px-1 py-0.5 transition-colors w-48" placeholder="Page ID (href)" />
+   670→                    </div>
+   671→                    <button onClick={() => removeChild(idx, cIdx)} className="px-2 py-0.5 text-xs text-red-500 hover:bg-red-50 rounded transition-colors">Remove</button>
+   672→                  </div>
+   673→                ))}
+   674→              </div>
+   675→            )}
+   676→          </div>
+   677→        ))}
+   678→      </div>
+   679→    </div>
+   680→  );
+   681→}
+   682→
+   683→/* ─── SETTINGS ─── */
+   684→function SettingsPage() {
+   685→  return (
+   686→    <div className="space-y-6 max-w-2xl">
+   687→      <div><h1 className="text-2xl font-bold text-gray-900">Settings</h1><p className="text-sm text-gray-500 mt-1">Admin panel configuration</p></div>
+   688→      <div className="bg-white rounded-xl shadow-sm p-6">
+   689→        <h3 className="text-base font-semibold text-gray-900 mb-4">System Information</h3>
+   690→        <div className="space-y-4">
+   691→          {[["Application", "Amhara Sint Woreda Portal"], ["Version", "1.0.0"], ["Framework", "Next.js 16"], ["Storage", "JSON File Storage"]].map(([k, v]) => (
+   692→            <div key={k} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+   693→              <span className="text-sm text-gray-600">{k}</span>
+   694→              <span className="text-sm font-medium text-gray-900">{v}</span>
+   695→            </div>
+   696→          ))}
+   697→        </div>
+   698→      </div>
+   699→      <div className="bg-white rounded-xl shadow-sm p-6">
+   700→        <h3 className="text-base font-semibold text-gray-900 mb-2">Admin Access</h3>
+   701→        <p className="text-sm text-gray-500">Admin authentication is password-based. The password is configured via the <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-xs mx-1">ADMIN_PASSWORD</code> environment variable.</p>
+   702→      </div>
+   703→    </div>
+   704→  );
+   705→}
+   706→
+   707→/* ─── MAIN ─── */
+   708→export default function AdminPage() {
+   709→  const [page, setPage] = useState<AdminPage>("dashboard");
+   710→  const [editId, setEditId] = useState<string | null>(null);
+   711→
+   712→  const nav = useCallback((p: AdminPage) => {
+   713→    if (p === "news-edit" || p === "bids-edit" || p === "vacancy-edit") {
+   714→      setEditId((window as unknown as { __adminEditId: string }).__adminEditId || null);
+   715→    } else {
+   716→      setEditId(null);
+   717→    }
+   718→    setPage(p);
+   719→    // close mobile sidebar
+   720→    const s = document.getElementById("admin-sidebar");
+   721→    const o = document.getElementById("sidebar-overlay");
+   722→    if (s) s.classList.add("-translate-x-full");
+   723→    if (o) o.classList.add("hidden");
+   724→  }, []);
+   725→
+   726→  const handleLogout = async () => {
+   727→    await fetch("/admin/api/logout", { method: "POST" });
+   728→    window.location.href = "/admin/login";
+   729→  };
+   730→
+   731→  return (
+   732→    <div className="min-h-screen flex bg-gray-50">
+   733→      <Sidebar page={page} nav={nav} onLogout={handleLogout} />
+   734→      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
+   735→        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+   736→          <div className="flex items-center gap-3">
+   737→            <button onClick={() => { const s = document.getElementById("admin-sidebar"); if (s) s.classList.toggle("-translate-x-full"); const o = document.getElementById("sidebar-overlay"); if (o) o.classList.toggle("hidden"); }} className="lg:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600" aria-label="Toggle menu">
+   738→              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+   739→            </button>
+   740→            <div>
+   741→              <h2 className="text-sm font-semibold text-gray-900">Amhara Sint Woreda</h2>
+   742→              <p className="text-xs text-gray-400">Administration Panel</p>
+   743→            </div>
+   744→          </div>
+   745→          <div className="flex items-center gap-3">
+   746→            <form action="/admin/api/logout" method="POST"><button type="submit" className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
+   747→              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+   748→              Logout
+   749→            </button></form>
+   750→            <a href="/" target="_blank" className="text-xs text-gray-500 hover:text-[#0B3D2E] flex items-center gap-1 transition-colors">View Website <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a>
+   751→          </div>
+   752→        </header>
+   753→        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+   754→          {page === "dashboard" && <DashboardPage nav={nav} />}
+   755→          {page === "news" && <NewsListPage nav={nav} />}
+   756→          {page === "news-new" && <NewsForm editId={null} onBack={() => nav("news")} />}
+   757→          {page === "news-edit" && <NewsForm editId={editId} onBack={() => nav("news")} />}
+   758→          {page === "bids" && <BidsListPage nav={nav} />}
+   759→          {page === "bids-new" && <BidForm editId={null} onBack={() => nav("bids")} />}
+   760→          {page === "bids-edit" && <BidForm editId={editId} onBack={() => nav("bids")} />}
+   761→          {page === "vacancy" && <VacancyListPage nav={nav} />}
+   762→          {page === "vacancy-new" && <VacancyForm editId={null} onBack={() => nav("vacancy")} />}
+   763→          {page === "vacancy-edit" && <VacancyForm editId={editId} onBack={() => nav("vacancy")} />}
+   764→          {page === "subscribers" && <SubscribersPage />}
+   765→          {page === "menus" && <MenusPage />}
+   766→          {page === "settings" && <SettingsPage />}
+   767→        </main>
+   768→      </div>
+   769→    </div>
+   770→  );
+   771→}

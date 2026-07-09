@@ -1,0 +1,155 @@
+[
+  {
+    "pageId": "contact",
+    "title": "Contact Us",
+    "content": "Contact information...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524417-xsxiw",
+    "updatedAt": "2026-07-01T09:02:04.417Z"
+  },
+  {
+    "pageId": "news-announcements",
+    "title": "Announcements",
+    "content": "Announcements and events...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524414-gnya8",
+    "updatedAt": "2026-07-01T09:02:04.414Z"
+  },
+  {
+    "pageId": "news-bids",
+    "title": "Bids & Tenders",
+    "content": "Bids and tenders information...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524414-v7vml",
+    "updatedAt": "2026-07-01T09:02:04.414Z"
+  },
+  {
+    "pageId": "news-news",
+    "title": "News",
+    "content": "Latest news and updates...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524414-z1pup",
+    "updatedAt": "2026-07-01T09:02:04.414Z"
+  },
+  {
+    "pageId": "svc-finance",
+    "title": "Finance & Revenue",
+    "content": "Finance and revenue services...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524414-u3zte",
+    "updatedAt": "2026-07-01T09:02:04.414Z"
+  },
+  {
+    "pageId": "svc-justice",
+    "title": "Justice & Security",
+    "content": "Justice and security services...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524414-18rzf",
+    "updatedAt": "2026-07-01T09:02:04.414Z"
+  },
+  {
+    "pageId": "svc-water",
+    "title": "Water & Sanitation",
+    "content": "Water and sanitation services...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524413-mrbpn",
+    "updatedAt": "2026-07-01T09:02:04.413Z"
+  },
+  {
+    "pageId": "svc-transport",
+    "title": "Transport",
+    "content": "Transport infrastructure...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524413-an5iy",
+    "updatedAt": "2026-07-01T09:02:04.413Z"
+  },
+  {
+    "pageId": "svc-agriculture",
+    "title": "Agriculture",
+    "content": "Agricultural development programs...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524413-zrzl6",
+    "updatedAt": "2026-07-01T09:02:04.413Z"
+  },
+  {
+    "pageId": "svc-health",
+    "title": "Health Services",
+    "content": "Health services and facilities...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524413-7u8f4",
+    "updatedAt": "2026-07-01T09:02:04.413Z"
+  },
+  {
+    "pageId": "svc-education",
+    "title": "Education Services",
+    "content": "Education services and schools...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524412-qkm8c",
+    "updatedAt": "2026-07-01T09:02:04.412Z"
+  },
+  {
+    "pageId": "gov-offices",
+    "title": "Offices & Departments",
+    "content": "Government offices and departments...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524410-fmwoy",
+    "updatedAt": "2026-07-01T09:02:04.410Z"
+  },
+  {
+    "pageId": "gov-structure",
+    "title": "Administrative Structure",
+    "content": "Administrative structure details...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524409-xt483",
+    "updatedAt": "2026-07-01T09:02:04.409Z"
+  },
+  {
+    "pageId": "gov-leadership",
+    "title": "Leadership",
+    "content": "Woreda leadership information...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524408-d6ss0",
+    "updatedAt": "2026-07-01T09:02:04.408Z"
+  },
+  {
+    "pageId": "about-location",
+    "title": "Location & Geography",
+    "content": "Geographical information about the woreda...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524407-de8d5",
+    "updatedAt": "2026-07-01T09:02:04.407Z"
+  },
+  {
+    "pageId": "about-overview",
+    "title": "Overview",
+    "content": "Amhara Sint Woreda is located in South Wollo Zone...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524407-ymt00",
+    "updatedAt": "2026-07-01T09:02:04.407Z"
+  },
+  {
+    "pageId": "about-history",
+    "title": "History & Background",
+    "content": "The rich history of Amhara Sint Woreda...",
+    "imageUrl": "",
+    "status": "published",
+    "id": "page-1782896524406-w97zh",
+    "updatedAt": "2026-07-01T09:02:04.406Z"
+  }
+]
