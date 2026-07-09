@@ -21,7 +21,9 @@ RUN npx prisma generate || true
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=--max-old-space-size=512
 
-RUN npm run build
+# Build Next.js standalone, then copy static assets
+RUN npx next build
+RUN cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
 
 # ── Stage 3: Production runner ────────────────────────────────
 FROM node:22-alpine AS runner
@@ -36,19 +38,14 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the standalone build
+# Copy the standalone build (already contains public/ from builder step)
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
 
 # Copy data directory (JSON-based storage) — writable at runtime
 COPY --from=builder /app/data ./data
 
-# Create uploads directory
-RUN mkdir -p ./public/uploads
-
-# Own everything as nextjs user
-RUN chown -R nextjs:nodejs /app
+# Create uploads directory with correct ownership
+RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs /app
 
 USER nextjs
 
