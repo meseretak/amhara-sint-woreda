@@ -33,7 +33,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=8000
+ENV PORT=10000
 ENV HOSTNAME=0.0.0.0
 
 # Create non-root user
@@ -51,6 +51,6 @@ RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs /app
 
 USER nextjs
 
-EXPOSE 8000
+EXPOSE 10000
 
 CMD ["node", "server.js"]
